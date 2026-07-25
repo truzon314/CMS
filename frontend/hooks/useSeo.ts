@@ -60,38 +60,29 @@ export function useRedirectActions() {
   return { createRedirect, updateRedirect, deleteRedirect };
 }
 
-export function usePageSpeed(url?: string) {
+export function useExportReport() {
+  return useQuery({ queryKey: ["seo-export"], queryFn: seoService.exportReport, enabled: false });
+}
+
+export function useAutocomplete() {
+  return useMutation({
+    mutationFn: (q: string) => seoService.getAutocomplete(q),
+    onError: (err) => toast.error(err instanceof ApiError ? err.message : "Autocomplete lookup failed."),
+  });
+}
+
+export function usePageSpeed(url: string) {
   return useQuery({
     queryKey: ["pagespeed", url],
     queryFn: () => seoService.getPageSpeed(url),
-  });
-}
-
-export function useKeywordRankings() {
-  return useQuery({
-    queryKey: ["keyword-rankings"],
-    queryFn: seoService.getKeywordRankings,
-  });
-}
-
-export function useCompetitors() {
-  return useQuery({
-    queryKey: ["competitors"],
-    queryFn: seoService.getCompetitors,
-  });
-}
-
-export function useExportReport() {
-  return useQuery({
-    queryKey: ["seo-export"],
-    queryFn: seoService.exportReport,
     enabled: false,
   });
 }
 
-export function useBacklinks() {
-  return useQuery({
-    queryKey: ["backlinks"],
-    queryFn: seoService.getBacklinks,
-  });
+export function useRankings() {
+  return useQuery({ queryKey: ["seo-rankings"], queryFn: seoService.getRankings });
+}
+
+export function useBacklinks(target: string) {
+  return useQuery({ queryKey: ["seo-backlinks", target], queryFn: () => seoService.getBacklinks(target) });
 }

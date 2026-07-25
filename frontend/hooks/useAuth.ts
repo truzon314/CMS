@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authService } from "@/services/auth";
-import { setAccessToken } from "@/lib/api-client";
+import { getAccessToken, tryRefresh } from "@/lib/api-client";
 import { useSessionStore } from "@/store/session";
 
 export function useLogin() {
@@ -57,26 +57,42 @@ export function useResetPassword() {
 /**
  * Runs once on app load: the access token only lives in memory, so a page
  * refresh needs to silently re-establish the session from the httpOnly
- * refresh cookie before anything renders as "logged out".
+ * refresh cookie before anything renders as "logged out". Skips the network
+ * round-trip entirely if a session is already live (e.g. just logged in via
+ * `useLogin`) — calling this unconditionally on every mount used to fire a
+ * *raw*, unguarded `/auth/refresh` request that bypassed api-client's
+ * single-flight + cross-tab lock, which could race the token rotation and
+ * trip the backend's reuse-detection (revoking every session). Routing
+ * through `tryRefresh()` here closes that gap — it's the same chokepoint
+ * every other 401-triggered refresh in the app already goes through.
  */
 export function useBootstrapSession() {
   const ranOnce = useRef(false);
+  const isAuthenticated = useSessionStore((s) => s.isAuthenticated);
   const setSession = useSessionStore((s) => s.setSession);
   const finishBootstrap = useSessionStore((s) => s.finishBootstrap);
 
   useEffect(() => {
-    if (ranOnce.current) return;
+    // eslint-disable-next-line no-console
+    console.warn(`[auth-debug] useBootstrapSession effect fired, isAuthenticated=${isAuthenticated}, ranOnce=${ranOnce.current}`);
+    if (ranOnce.current || isAuthenticated) {
+      if (isAuthenticated) finishBootstrap();
+      return;
+    }
     ranOnce.current = true;
 
     (async () => {
+      const refreshed = await tryRefresh();
+      if (!refreshed) {
+        finishBootstrap();
+        return;
+      }
       try {
-        const refreshed = await authService.refresh();
-        setAccessToken(refreshed.access_token);
         const user = await authService.me();
-        setSession(user, refreshed.access_token);
+        setSession(user, getAccessToken() ?? "");
       } catch {
         finishBootstrap();
       }
     })();
-  }, [setSession, finishBootstrap]);
+  }, [isAuthenticated, setSession, finishBootstrap]);
 }

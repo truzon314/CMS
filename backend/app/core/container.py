@@ -46,6 +46,7 @@ from app.services.property_service import PropertyService
 from app.services.public_service import PublicService
 from app.services.role_service import RoleService
 from app.services.search_service import SearchService
+from app.services.seo_integrations_service import SeoIntegrationsService
 from app.services.settings_service import SettingsService
 from app.services.tag_service import TagService
 from app.services.trash_service import TrashService
@@ -307,3 +308,9 @@ def get_dashboard_service(
     session: AsyncSession = Depends(get_db),
 ) -> DashboardService:
     return DashboardService(session)
+
+
+def get_seo_integrations_service(
+    settings: SqlAlchemySettingsRepository = Depends(get_settings_repository),
+) -> SeoIntegrationsService:
+    return SeoIntegrationsService(settings)

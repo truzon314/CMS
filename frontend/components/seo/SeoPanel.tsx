@@ -88,7 +88,7 @@ export function SeoPanel({ value, onChange, slug = "" }: SeoPanelProps) {
   };
 
   return (
-    <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+    <div className="@container rounded-lg border bg-white shadow-sm overflow-hidden">
       {/* Panel Header & Navigation Tabs */}
       <div className="flex flex-wrap border-b bg-neutral-50 px-4 pt-3 gap-1">
         <button
@@ -323,7 +323,7 @@ export function SeoPanel({ value, onChange, slug = "" }: SeoPanelProps) {
         )}
 
         {activeTab === "preview" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
             <SerpPreview
               title={current.seo_title ?? ""}
               description={current.meta_description ?? ""}

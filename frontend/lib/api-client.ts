@@ -24,6 +24,10 @@ export function setAccessToken(token: string | null) {
   accessToken = token;
 }
 
+export function getAccessToken(): string | null {
+  return accessToken;
+}
+
 async function doFetch<T>(path: string, init: RequestInit): Promise<{ status: number; envelope: ApiEnvelope<T> }> {
   const headers = new Headers(init.headers);
   // FormData bodies (file uploads) need the browser to set their own
@@ -64,20 +68,48 @@ async function doFetch<T>(path: string, init: RequestInit): Promise<{ status: nu
   return { status: response.status, envelope };
 }
 
+const TAB_DEBUG_ID = typeof window !== "undefined" ? Math.random().toString(36).slice(2, 8) : "server";
+function dbg(msg: string) {
+  // TEMP DIAGNOSTIC — remove once the reuse-detection issue is root-caused.
+  console.warn(`[auth-debug ${new Date().toISOString().slice(11, 23)}] tab=${TAB_DEBUG_ID} ${msg}`);
+}
+
+async function doRefreshRequest(): Promise<boolean> {
+  dbg("doRefreshRequest() called");
+  const { status, envelope } = await doFetch<{ access_token: string }>("/api/v1/auth/refresh", {
+    method: "POST",
+  });
+  dbg(`doRefreshRequest() result status=${status} ok=${status === 200}`);
+  if (status === 200 && envelope.data?.access_token) {
+    setAccessToken(envelope.data.access_token);
+    return true;
+  }
+  return false;
+}
+
 let refreshInFlight: Promise<boolean> | null = null;
 
-/** A single shared in-flight refresh so simultaneous 401s don't fire N refresh calls. */
-async function tryRefresh(): Promise<boolean> {
+/**
+ * A single shared in-flight refresh so simultaneous 401s within this tab don't
+ * fire N refresh calls. That alone isn't enough across *tabs*, though — the
+ * refresh token rotates on every use, and two tabs racing to refresh at once
+ * (each still holding the pre-rotation cookie value when they dispatch) trips
+ * the backend's reuse detection and revokes every session for the user
+ * (`auth_service.py`'s `refresh()`). The Web Locks API serializes the actual
+ * network call across all tabs of this origin, so a losing tab only sends its
+ * request after the winning tab's response has already rotated the cookie —
+ * it then gets a legitimate fresh rotation instead of a stale, already-used
+ * token. Falls back to the in-tab-only guard on browsers without Web Locks.
+ */
+export async function tryRefresh(): Promise<boolean> {
+  const hasLocks = typeof navigator !== "undefined" && "locks" in navigator;
+  dbg(`tryRefresh() called alreadyInFlight=${refreshInFlight !== null} hasLocks=${hasLocks}`);
   refreshInFlight ??= (async () => {
     try {
-      const { status, envelope } = await doFetch<{ access_token: string }>("/api/v1/auth/refresh", {
-        method: "POST",
-      });
-      if (status === 200 && envelope.data?.access_token) {
-        setAccessToken(envelope.data.access_token);
-        return true;
+      if (typeof navigator !== "undefined" && "locks" in navigator) {
+        return await navigator.locks.request("truzon-cms-auth-refresh", () => doRefreshRequest());
       }
-      return false;
+      return await doRefreshRequest();
     } finally {
       refreshInFlight = null;
     }
@@ -98,6 +130,7 @@ export async function apiFetch<T>(
   let { status, envelope } = await doFetch<T>(path, init);
 
   if (!opts.skipRefreshRetry && status === 401 && path !== "/api/v1/auth/refresh") {
+    dbg(`401 triggered refresh (apiFetch) path=${path}`);
     const refreshed = await tryRefresh();
     if (refreshed) {
       ({ status, envelope } = await doFetch<T>(path, init));
@@ -132,6 +165,7 @@ export async function apiFetchPage<T>(
   let { status, envelope } = await doFetch<T>(path, init);
 
   if (status === 401 && path !== "/api/v1/auth/refresh") {
+    dbg(`401 triggered refresh (apiFetchPage) path=${path}`);
     const refreshed = await tryRefresh();
     if (refreshed) {
       ({ status, envelope } = await doFetch<T>(path, init));

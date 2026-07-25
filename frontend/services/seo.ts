@@ -26,9 +26,61 @@ export interface RedirectRuleItem {
   created_at: string;
 }
 
+export interface AutocompleteResult {
+  query: string;
+  suggestions: string[];
+}
+
+export type NotConfigured = { configured: false };
+
+export interface PageSpeedScores {
+  performance: number | null;
+  accessibility: number | null;
+  best_practices: number | null;
+  seo: number | null;
+}
+
+export interface PageSpeedMetric {
+  value: string | null;
+  score: number | null;
+}
+
+export interface PageSpeedResult {
+  configured: true;
+  url: string;
+  scores: PageSpeedScores;
+  metrics: Record<string, PageSpeedMetric | null>;
+  diagnostics: Array<{ id: string; title: string; score: number }>;
+}
+
+export interface RankingRow {
+  keyword: string;
+  clicks: number;
+  impressions: number;
+  ctr_percent: number;
+  avg_position: number;
+}
+
+export interface RankingsResult {
+  configured: true;
+  date_range: { start: string; end: string };
+  rows: RankingRow[];
+}
+
+export interface BacklinksResult {
+  configured: true;
+  target: string;
+  metrics: Record<string, unknown>;
+  backlinks: Record<string, unknown>;
+}
+
+export interface SeoExportReport extends SeoAuditReport {
+  generated_at: string;
+}
+
 export const seoService = {
   getAuditReport: () => apiFetch<SeoAuditReport>("/api/v1/seo/audit"),
-  
+
   aiGenerate: (payload: AiGeneratePayload) =>
     apiFetch<Record<string, unknown>>("/api/v1/seo/ai-generate", {
       method: "POST",
@@ -56,18 +108,16 @@ export const seoService = {
       method: "DELETE",
     }),
 
-  getPageSpeed: (url?: string) =>
-    apiFetch<Record<string, unknown>>(`/api/v1/seo/pagespeed${url ? `?url=${encodeURIComponent(url)}` : ""}`),
+  exportReport: () => apiFetch<SeoExportReport>("/api/v1/seo/export"),
 
-  getKeywordRankings: () =>
-    apiFetch<Array<{ keyword: string; google_pos: number; bing_pos: number; ai_search: string; volume: string; change: string }>>("/api/v1/seo/rankings"),
+  getAutocomplete: (q: string) =>
+    apiFetch<AutocompleteResult>(`/api/v1/seo/autocomplete?q=${encodeURIComponent(q)}`),
 
-  getCompetitors: () =>
-    apiFetch<Record<string, unknown>>("/api/v1/seo/competitors"),
+  getPageSpeed: (url: string) =>
+    apiFetch<PageSpeedResult | NotConfigured>(`/api/v1/seo/pagespeed?url=${encodeURIComponent(url)}`),
 
-  exportReport: () =>
-    apiFetch<Record<string, unknown>>("/api/v1/seo/export"),
+  getRankings: () => apiFetch<RankingsResult | NotConfigured>("/api/v1/seo/rankings"),
 
-  getBacklinks: () =>
-    apiFetch<Record<string, unknown>>("/api/v1/seo/backlinks/dashboard"),
+  getBacklinks: (target: string) =>
+    apiFetch<BacklinksResult | NotConfigured>(`/api/v1/seo/backlinks?target=${encodeURIComponent(target)}`),
 };

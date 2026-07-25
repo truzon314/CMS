@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
@@ -7,10 +7,10 @@ import {
   useRedirectsList,
   useRedirectActions,
   useAiGenerate,
-  usePageSpeed,
-  useKeywordRankings,
-  useCompetitors,
   useExportReport,
+  useAutocomplete,
+  usePageSpeed,
+  useRankings,
   useBacklinks,
 } from "@/hooks/useSeo";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
@@ -31,18 +31,17 @@ import {
   Trash2,
   ExternalLink,
   ShieldCheck,
+  Download,
   Gauge,
   TrendingUp,
-  Zap,
-  Download,
-  Users,
   Search,
   Link as LinkIcon,
-  ShieldAlert,
+  KeyRound,
+  Zap,
 } from "lucide-react";
 import type { SettingsUpdatePayload } from "@/types/settings";
 
-type Tab = "audit" | "pagespeed" | "rankings" | "competitors" | "backlinks" | "global" | "local" | "redirects" | "ai" | "schema";
+type Tab = "audit" | "pagespeed" | "rankings" | "autocomplete" | "backlinks" | "global" | "local" | "redirects" | "ai" | "schema";
 
 export default function SeoManagementPage() {
   const [activeTab, setActiveTab] = useState<Tab>("audit");
@@ -55,16 +54,24 @@ export default function SeoManagementPage() {
   const { data: redirects } = useRedirectsList();
   const { createRedirect, deleteRedirect } = useRedirectActions();
   const aiGenerate = useAiGenerate();
+  const { refetch: fetchExportReport, isFetching: exporting } = useExportReport();
 
-  // PageSpeed, Rankings, Competitors & Backlinks queries
-  const [targetUrl, setTargetUrl] = useState("https://truzonhomes.com");
-  const { data: pageSpeedData, isLoading: loadingPageSpeed, refetch: refetchPageSpeed } = usePageSpeed(targetUrl);
-  const { data: rankingsData } = useKeywordRankings();
-  const { data: competitorData } = useCompetitors();
-  const { data: backlinkData } = useBacklinks();
-  const { refetch: fetchExportReport } = useExportReport();
+  // PageSpeed
+  const [pageSpeedUrl, setPageSpeedUrl] = useState("https://truzonhomes.com");
+  const { data: pageSpeedData, isFetching: loadingPageSpeed, refetch: refetchPageSpeed } = usePageSpeed(pageSpeedUrl);
 
-  const handleExportCSV = async () => {
+  // Rankings (Google Search Console)
+  const { data: rankingsData, isLoading: loadingRankings } = useRankings();
+
+  // Backlinks (Ahrefs)
+  const [backlinksTarget, setBacklinksTarget] = useState("truzonhomes.com");
+  const { data: backlinksData, isLoading: loadingBacklinks } = useBacklinks(backlinksTarget);
+
+  // Autocomplete
+  const [autocompleteQuery, setAutocompleteQuery] = useState("");
+  const autocomplete = useAutocomplete();
+
+  const handleExportReport = async () => {
     const res = await fetchExportReport();
     if (res.data) {
       const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" });
@@ -73,7 +80,14 @@ export default function SeoManagementPage() {
       a.href = url;
       a.download = `seo-audit-report-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
+      URL.revokeObjectURL(url);
     }
+  };
+
+  const handleAutocompleteSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!autocompleteQuery.trim()) return;
+    autocomplete.mutate(autocompleteQuery.trim());
   };
 
   // Settings form state
@@ -126,11 +140,11 @@ export default function SeoManagementPage() {
         <div>
           <h1 className="text-xl font-bold text-neutral-900">SEO Management Module</h1>
           <p className="text-sm text-neutral-500">
-            Centralized Search Engine Optimization, PageSpeed Insights, Keyword Rankings, Local SEO & AI Assistant.
+            Centralized Search Engine Optimization, PageSpeed, Rankings, Local SEO & AI Assistant.
           </p>
         </div>
-        <Button onClick={handleExportCSV} variant="outline" size="sm" className="self-start sm:self-auto">
-          <Download size={15} className="mr-1.5" /> Export Audit Report (JSON/CSV)
+        <Button onClick={handleExportReport} variant="outline" size="sm" disabled={exporting} className="self-start sm:self-auto">
+          <Download size={15} className="mr-1.5" /> {exporting ? "Exporting…" : "Export Audit Report (JSON)"}
         </Button>
       </div>
 
@@ -150,7 +164,7 @@ export default function SeoManagementPage() {
             activeTab === "pagespeed" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
           }`}
         >
-          <Gauge size={15} /> Google PageSpeed & Vitals
+          <Gauge size={15} /> PageSpeed & Vitals
         </button>
         <button
           onClick={() => setActiveTab("rankings")}
@@ -161,12 +175,12 @@ export default function SeoManagementPage() {
           <TrendingUp size={15} /> Search Rankings
         </button>
         <button
-          onClick={() => setActiveTab("competitors")}
+          onClick={() => setActiveTab("autocomplete")}
           className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-md transition-colors ${
-            activeTab === "competitors" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
+            activeTab === "autocomplete" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
           }`}
         >
-          <Users size={15} /> Competitors & Autocomplete
+          <Search size={15} /> Autocomplete Monitor
         </button>
         <button
           onClick={() => setActiveTab("backlinks")}
@@ -174,7 +188,7 @@ export default function SeoManagementPage() {
             activeTab === "backlinks" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
           }`}
         >
-          <LinkIcon size={15} /> Backlinks & Link Quality
+          <LinkIcon size={15} /> Backlinks
         </button>
         <button
           onClick={() => setActiveTab("global")}
@@ -301,332 +315,236 @@ export default function SeoManagementPage() {
         </div>
       )}
 
-      {/* TAB 2: GOOGLE PAGESPEED & CORE WEB VITALS */}
+      {/* TAB: PAGESPEED & CORE WEB VITALS (real Google PageSpeed Insights) */}
       {activeTab === "pagespeed" && (
         <div className="flex flex-col gap-6">
-          {/* Test Bar */}
           <div className="rounded-xl border bg-white p-5 shadow-sm flex flex-col md:flex-row gap-4 items-end">
             <div className="flex-1 w-full">
               <TextField
                 label="Target URL to Audit"
-                value={targetUrl}
-                onChange={(e) => setTargetUrl(e.target.value)}
+                value={pageSpeedUrl}
+                onChange={(e) => setPageSpeedUrl(e.target.value)}
                 placeholder="https://truzonhomes.com"
               />
             </div>
             <Button onClick={() => refetchPageSpeed()} disabled={loadingPageSpeed}>
-              <Zap size={16} className="mr-1.5" /> Run PageSpeed Diagnostic
+              <Zap size={16} className="mr-1.5" /> {loadingPageSpeed ? "Running…" : "Run PageSpeed Diagnostic"}
             </Button>
           </div>
 
-          {/* Score Gauges */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border shadow-sm">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Performance</span>
-              <div className="mt-2 text-4xl font-extrabold text-emerald-600">
-                {(pageSpeedData?.scores as any)?.performance ?? 96}/100
-              </div>
-              <span className="text-xs text-emerald-600 mt-1 font-medium">Fast Loading</span>
+          {pageSpeedData && "configured" in pageSpeedData && pageSpeedData.configured === false ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-neutral-50 p-10 text-center">
+              <Gauge size={28} className="text-neutral-400" />
+              <p className="text-sm font-semibold text-neutral-700">Not connected to Google PageSpeed Insights</p>
+              <p className="text-xs text-neutral-500 max-w-md">
+                Add a free Google PageSpeed API key under Global Settings → API Integrations to see real Core Web
+                Vitals for this URL.
+              </p>
+              <Button size="sm" variant="outline" onClick={() => setActiveTab("global")}>
+                Go to Global Settings
+              </Button>
             </div>
+          ) : pageSpeedData && "scores" in pageSpeedData ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {(["performance", "accessibility", "best_practices", "seo"] as const).map((key) => (
+                  <div key={key} className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border shadow-sm">
+                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">{key.replace("_", " ")}</span>
+                    <div className="mt-2 text-4xl font-extrabold text-emerald-600">
+                      {pageSpeedData.scores[key] ?? "—"}
+                      {pageSpeedData.scores[key] != null ? "/100" : ""}
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-            <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border shadow-sm">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Accessibility</span>
-              <div className="mt-2 text-4xl font-extrabold text-emerald-600">
-                {(pageSpeedData?.scores as any)?.accessibility ?? 98}/100
-              </div>
-              <span className="text-xs text-emerald-600 mt-1 font-medium">Fully Accessible</span>
-            </div>
-
-            <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border shadow-sm">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Best Practices</span>
-              <div className="mt-2 text-4xl font-extrabold text-emerald-600">
-                {(pageSpeedData?.scores as any)?.best_practices ?? 95}/100
-              </div>
-              <span className="text-xs text-emerald-600 mt-1 font-medium">Modern Standards</span>
-            </div>
-
-            <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border shadow-sm">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">SEO Score</span>
-              <div className="mt-2 text-4xl font-extrabold text-emerald-600">
-                {(pageSpeedData?.scores as any)?.seo ?? 100}/100
-              </div>
-              <span className="text-xs text-emerald-600 mt-1 font-medium">Perfect SEO</span>
-            </div>
-          </div>
-
-          {/* Core Web Vitals Breakdown */}
-          <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-4">
-            <h3 className="font-bold text-base text-neutral-900">Core Web Vitals Metrics</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="rounded-lg border p-4 bg-neutral-50 flex flex-col gap-1">
-                <span className="text-xs font-semibold text-neutral-500">Largest Contentful Paint (LCP)</span>
-                <span className="text-xl font-extrabold text-emerald-600">
-                  {((pageSpeedData?.metrics as any)?.largest_contentful_paint?.value) ?? "1.2 s"}
-                </span>
-                <span className="text-[11px] text-neutral-400">Target &lt; 2.5s</span>
-              </div>
-              <div className="rounded-lg border p-4 bg-neutral-50 flex flex-col gap-1">
-                <span className="text-xs font-semibold text-neutral-500">Cumulative Layout Shift (CLS)</span>
-                <span className="text-xl font-extrabold text-emerald-600">
-                  {((pageSpeedData?.metrics as any)?.cumulative_layout_shift?.value) ?? "0.01"}
-                </span>
-                <span className="text-[11px] text-neutral-400">Target &lt; 0.1</span>
-              </div>
-              <div className="rounded-lg border p-4 bg-neutral-50 flex flex-col gap-1">
-                <span className="text-xs font-semibold text-neutral-500">Interaction to Next Paint (INP)</span>
-                <span className="text-xl font-extrabold text-emerald-600">
-                  {((pageSpeedData?.metrics as any)?.interaction_to_next_paint?.value) ?? "45 ms"}
-                </span>
-                <span className="text-[11px] text-neutral-400">Target &lt; 200ms</span>
-              </div>
-            </div>
-
-            <h4 className="font-semibold text-sm text-neutral-900 mt-2">Passed Diagnostics & Optimizations</h4>
-            <div className="flex flex-col gap-2">
-              {((pageSpeedData?.diagnostics as any[]) ?? []).map((diag, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs text-neutral-700 bg-emerald-50/60 p-2.5 rounded border border-emerald-200">
-                  <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
-                  <span>{diag.message}</span>
+              <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-4">
+                <h3 className="font-bold text-base text-neutral-900">Core Web Vitals Metrics</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {Object.entries(pageSpeedData.metrics).map(([key, metric]) => (
+                    <div key={key} className="rounded-lg border p-4 bg-neutral-50 flex flex-col gap-1">
+                      <span className="text-xs font-semibold text-neutral-500">{key.replace(/_/g, " ")}</span>
+                      <span className="text-xl font-extrabold text-emerald-600">{metric?.value ?? "—"}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+
+                {pageSpeedData.diagnostics.length > 0 && (
+                  <>
+                    <h4 className="font-semibold text-sm text-neutral-900 mt-2">Failing Diagnostics</h4>
+                    <div className="flex flex-col gap-2">
+                      {pageSpeedData.diagnostics.map((diag) => (
+                        <div key={diag.id} className="flex items-center gap-2 text-xs text-neutral-700 bg-amber-50/60 p-2.5 rounded border border-amber-200">
+                          <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+                          <span>{diag.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-xl border border-dashed bg-neutral-50 p-10 text-center text-sm text-neutral-500">
+              Click &ldquo;Run PageSpeed Diagnostic&rdquo; to fetch real Lighthouse data for this URL.
             </div>
-          </div>
+          )}
         </div>
       )}
 
-      {/* TAB 3: KEYWORD RANKINGS */}
+      {/* TAB: SEARCH RANKINGS (real Google Search Console query performance) */}
       {activeTab === "rankings" && (
         <div className="rounded-xl border bg-white shadow-sm overflow-hidden flex flex-col gap-4 p-6">
           <div>
-            <h3 className="font-bold text-base text-neutral-900">Search Engine Position Tracker</h3>
-            <p className="text-xs text-neutral-500">Track rankings across Google, Bing, DuckDuckGo, and AI Search Engines (ChatGPT & Perplexity).</p>
+            <h3 className="font-bold text-base text-neutral-900">Search Console Query Performance</h3>
+            <p className="text-xs text-neutral-500">Real clicks, impressions, CTR, and average position from Google Search Console (last 28 days, 3-day data lag).</p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-neutral-700">
-              <thead className="bg-neutral-50 text-neutral-500 uppercase font-medium border-b">
-                <tr>
-                  <th className="px-4 py-3">Focus Keyword</th>
-                  <th className="px-4 py-3">Google Rank</th>
-                  <th className="px-4 py-3">Bing Rank</th>
-                  <th className="px-4 py-3">AI Search Snippet</th>
-                  <th className="px-4 py-3">Est. Search Vol</th>
-                  <th className="px-4 py-3 text-right">Trend</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {(rankingsData ?? []).map((item, idx) => (
-                  <tr key={idx} className="hover:bg-neutral-50">
-                    <td className="px-4 py-3 font-semibold text-neutral-900">{item.keyword}</td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
-                        #{item.google_pos}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-medium">#{item.bing_pos}</td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold border border-amber-200">
-                        {item.ai_search}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-medium">{item.volume}</td>
-                    <td className="px-4 py-3 text-right font-bold text-emerald-600">{item.change}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 4: COMPETITORS & AUTOCOMPLETE */}
-      {activeTab === "competitors" && (
-        <div className="flex flex-col gap-6">
-          <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-4">
-            <div>
-              <h3 className="font-bold text-base text-neutral-900">Competitor Domain Overlap</h3>
-              <p className="text-xs text-neutral-500">Analyze keyword overlap, domain authority, and gap opportunities.</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-neutral-700">
-                <thead className="bg-neutral-50 text-neutral-500 uppercase font-medium border-b">
-                  <tr>
-                    <th className="px-4 py-3">Competitor Domain</th>
-                    <th className="px-4 py-3">Keyword Overlap</th>
-                    <th className="px-4 py-3">Avg Position</th>
-                    <th className="px-4 py-3">Backlinks</th>
-                    <th className="px-4 py-3 text-right">Opportunity</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {(((competitorData as any)?.competitors as any[]) ?? []).map((comp, i) => (
-                    <tr key={i} className="hover:bg-neutral-50">
-                      <td className="px-4 py-3 font-semibold text-neutral-900">{comp.domain}</td>
-                      <td className="px-4 py-3 font-medium">{comp.keyword_overlap}</td>
-                      <td className="px-4 py-3">#{comp.avg_position}</td>
-                      <td className="px-4 py-3 font-medium">{comp.backlinks}</td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
-                          {comp.gap_opportunity}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-3">
-              <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
-                <Search size={16} className="text-amber-500" /> Google Autocomplete Monitoring
-              </h4>
-              <div className="flex flex-col gap-2">
-                {(((competitorData as any)?.autocomplete_suggestions as string[]) ?? []).map((term, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs bg-neutral-50 p-2.5 rounded border">
-                    <span className="font-mono text-neutral-800">{term}</span>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">New Suggestion</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-3">
-              <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
-                <Sparkles size={16} className="text-blue-500" /> People Also Ask (PAA) Questions
-              </h4>
-              <div className="flex flex-col gap-2">
-                {(((competitorData as any)?.paa_questions as string[]) ?? []).map((q, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs bg-neutral-50 p-2.5 rounded border">
-                    <span className="font-medium text-neutral-800">{q}</span>
-                    <span className="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded border border-blue-200">FAQ Candidate</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 5: BACKLINKS & LINK QUALITY */}
-      {activeTab === "backlinks" && (
-        <div className="flex flex-col gap-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="flex flex-col p-5 bg-white rounded-xl border shadow-sm">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Total Backlinks</span>
-              <div className="mt-2 text-2xl font-extrabold text-neutral-900">
-                {((backlinkData as any)?.summary?.total_backlinks) ?? "1,420"}
-              </div>
-              <span className="text-xs text-neutral-500 mt-1">Live indexed links</span>
-            </div>
-
-            <div className="flex flex-col p-5 bg-white rounded-xl border shadow-sm">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Referring Domains</span>
-              <div className="mt-2 text-2xl font-bold text-neutral-900">
-                {((backlinkData as any)?.summary?.referring_domains) ?? "284"}
-              </div>
-              <span className="text-xs text-neutral-500 mt-1">Unique root domains</span>
-            </div>
-
-            <div className="flex flex-col p-5 bg-white rounded-xl border shadow-sm">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Domain Rating (DR)</span>
-              <div className="mt-2 text-2xl font-bold text-emerald-600">
-                {((backlinkData as any)?.summary?.domain_rating) ?? "78"}/100
-              </div>
-              <span className="text-xs text-emerald-600 mt-1 font-medium">High Authority</span>
-            </div>
-
-            <div className="flex flex-col p-5 bg-white rounded-xl border shadow-sm">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">DoFollow Ratio</span>
-              <div className="mt-2 text-2xl font-bold text-blue-600">
-                {((backlinkData as any)?.summary?.dofollow_ratio) ?? "84%"}
-              </div>
-              <span className="text-xs text-blue-600 mt-1 font-medium">Healthy Link Profile</span>
-            </div>
-
-            <div className="flex flex-col p-5 bg-white rounded-xl border shadow-sm">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Toxic Links</span>
-              <div className="mt-2 text-2xl font-bold text-amber-600">
-                {((backlinkData as any)?.summary?.toxic_backlinks) ?? "2"}
-              </div>
-              <span className="text-xs text-amber-600 mt-1 font-medium">Requires Disavow</span>
-            </div>
-          </div>
-
-          {/* Backlink Explorer Table */}
-          <div className="rounded-xl border bg-white shadow-sm overflow-hidden flex flex-col gap-4 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-base text-neutral-900">Backlink Explorer & Toxic Link Manager</h3>
-                <p className="text-xs text-neutral-500">Inspect inbound referring URLs, anchor text diversity, authority score, and toxic links.</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const domains = ((backlinkData as any)?.disavow_domains as string[]) ?? ["spam-directory-list.xyz"];
-                  const content = `# Google Search Console Disavow File\n# Generated by Truzon CMS SEO Module\n` + domains.map((d) => `domain:${d}`).join("\n");
-                  const blob = new Blob([content], { type: "text/plain" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = "disavow.txt";
-                  a.click();
-                }}
-              >
-                <ShieldAlert size={15} className="mr-1.5 text-amber-600" /> Export Disavow.txt
+          {loadingRankings ? (
+            <div className="p-10 text-center text-sm text-neutral-500">Loading…</div>
+          ) : rankingsData && "configured" in rankingsData && rankingsData.configured === false ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-neutral-50 p-10 text-center">
+              <TrendingUp size={28} className="text-neutral-400" />
+              <p className="text-sm font-semibold text-neutral-700">Not connected to Google Search Console</p>
+              <p className="text-xs text-neutral-500 max-w-md">
+                Add a Search Console service account under Global Settings → API Integrations to see real ranking
+                data. This needs Google Cloud + Search Console setup — see the instructions there.
+              </p>
+              <Button size="sm" variant="outline" onClick={() => setActiveTab("global")}>
+                Go to Global Settings
               </Button>
             </div>
-
+          ) : rankingsData && "rows" in rankingsData ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-neutral-700">
                 <thead className="bg-neutral-50 text-neutral-500 uppercase font-medium border-b">
                   <tr>
-                    <th className="px-4 py-3">Source Domain</th>
-                    <th className="px-4 py-3">Anchor Text</th>
-                    <th className="px-4 py-3">Target Page</th>
-                    <th className="px-4 py-3">Domain Authority</th>
-                    <th className="px-4 py-3">Link Type</th>
-                    <th className="px-4 py-3 text-right">Toxicity Status</th>
+                    <th className="px-4 py-3">Query</th>
+                    <th className="px-4 py-3">Clicks</th>
+                    <th className="px-4 py-3">Impressions</th>
+                    <th className="px-4 py-3">CTR</th>
+                    <th className="px-4 py-3 text-right">Avg Position</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {(((backlinkData as any)?.backlinks as any[]) ?? []).map((link, i) => (
-                    <tr key={i} className="hover:bg-neutral-50">
-                      <td className="px-4 py-3 font-semibold text-neutral-900">{link.domain}</td>
-                      <td className="px-4 py-3 font-mono text-neutral-800">{link.anchor}</td>
-                      <td className="px-4 py-3 font-mono text-neutral-500">{link.target_url}</td>
-                      <td className="px-4 py-3 font-bold text-emerald-600">DA {link.da}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                          link.type === "DoFollow" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-neutral-100 text-neutral-600"
-                        }`}>
-                          {link.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {link.toxic ? (
-                          <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 font-bold border border-red-200">
-                            Toxic Link
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">
-                            Clean
-                          </span>
-                        )}
-                      </td>
+                  {rankingsData.rows.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-neutral-50">
+                      <td className="px-4 py-3 font-semibold text-neutral-900">{row.keyword}</td>
+                      <td className="px-4 py-3 font-medium">{row.clicks}</td>
+                      <td className="px-4 py-3 font-medium">{row.impressions}</td>
+                      <td className="px-4 py-3 font-medium">{row.ctr_percent}%</td>
+                      <td className="px-4 py-3 text-right font-bold text-emerald-600">#{row.avg_position}</td>
                     </tr>
                   ))}
+                  {rankingsData.rows.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
+                        No query data returned for this date range yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
-          </div>
+          ) : null}
         </div>
       )}
 
-      {/* TAB 4: GLOBAL SEO SETTINGS */}
+      {/* TAB: AUTOCOMPLETE MONITOR (real Google Autocomplete, free public endpoint) */}
+      {activeTab === "autocomplete" && (
+        <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-6 max-w-2xl">
+          <div>
+            <h3 className="font-bold text-base text-neutral-900">Google Autocomplete Monitor</h3>
+            <p className="text-xs text-neutral-500">
+              Real suggestions pulled live from Google&rsquo;s public autocomplete endpoint — no API key needed. This
+              is an unofficial endpoint (the same one browser address bars use), so treat results as best-effort,
+              not a guaranteed API.
+            </p>
+          </div>
+
+          <form onSubmit={handleAutocompleteSubmit} className="flex gap-3 items-end">
+            <div className="flex-1">
+              <TextField
+                label="Seed Keyword"
+                value={autocompleteQuery}
+                onChange={(e) => setAutocompleteQuery(e.target.value)}
+                placeholder="e.g. truzon homes"
+              />
+            </div>
+            <Button type="submit" disabled={autocomplete.isPending}>
+              <Search size={15} className="mr-1.5" /> {autocomplete.isPending ? "Fetching…" : "Get Suggestions"}
+            </Button>
+          </form>
+
+          {autocomplete.data && (
+            <div className="flex flex-col gap-2">
+              {autocomplete.data.suggestions.length === 0 && (
+                <p className="text-xs text-neutral-500">Google returned no suggestions for this query.</p>
+              )}
+              {autocomplete.data.suggestions.map((term, i) => (
+                <div key={i} className="flex items-center justify-between text-xs bg-neutral-50 p-2.5 rounded border">
+                  <span className="font-mono text-neutral-800">{term}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB: BACKLINKS (real Ahrefs Site Explorer data) */}
+      {activeTab === "backlinks" && (
+        <div className="flex flex-col gap-6">
+          <div className="rounded-xl border bg-white p-5 shadow-sm flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1 w-full">
+              <TextField
+                label="Target Domain"
+                value={backlinksTarget}
+                onChange={(e) => setBacklinksTarget(e.target.value)}
+                placeholder="truzonhomes.com"
+              />
+            </div>
+          </div>
+
+          {loadingBacklinks ? (
+            <div className="p-10 text-center text-sm text-neutral-500">Loading…</div>
+          ) : backlinksData && "configured" in backlinksData && backlinksData.configured === false ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-neutral-50 p-10 text-center">
+              <LinkIcon size={28} className="text-neutral-400" />
+              <p className="text-sm font-semibold text-neutral-700">Not connected to Ahrefs</p>
+              <p className="text-xs text-neutral-500 max-w-md">
+                Add your Ahrefs API key under Global Settings → API Integrations to see real backlink data.
+              </p>
+              <Button size="sm" variant="outline" onClick={() => setActiveTab("global")}>
+                Go to Global Settings
+              </Button>
+            </div>
+          ) : backlinksData && "metrics" in backlinksData ? (
+            <div className="rounded-xl border bg-white shadow-sm overflow-hidden flex flex-col gap-4 p-6">
+              <h3 className="font-bold text-base text-neutral-900">Raw Ahrefs Response</h3>
+              <p className="text-xs text-neutral-500">
+                Showing the raw API response rather than a fixed field mapping — Ahrefs&rsquo; exact response shape
+                depends on your plan/API version, so nothing here is guessed or faked.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-xs font-bold text-neutral-700 uppercase mb-2">Domain Metrics</h4>
+                  <pre className="text-[11px] font-mono bg-neutral-900 text-emerald-400 p-3 rounded h-64 overflow-y-auto">
+                    {JSON.stringify(backlinksData.metrics, null, 2)}
+                  </pre>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-neutral-700 uppercase mb-2">Backlinks</h4>
+                  <pre className="text-[11px] font-mono bg-neutral-900 text-emerald-400 p-3 rounded h-64 overflow-y-auto">
+                    {JSON.stringify(backlinksData.backlinks, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {/* TAB 2: GLOBAL SEO SETTINGS */}
       {activeTab === "global" && (
         <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-6 max-w-4xl">
           <div className="flex items-center justify-between border-b pb-4">
@@ -736,10 +654,72 @@ export default function SeoManagementPage() {
               className="w-full rounded-md border border-neutral-300 p-2.5 font-mono text-xs focus:border-neutral-900 focus:outline-none bg-neutral-900 text-emerald-400"
             />
           </div>
+
+          <h4 className="font-semibold text-sm text-neutral-900 pt-2 border-t flex items-center gap-2">
+            <KeyRound size={15} className="text-neutral-500" /> API Integrations
+          </h4>
+          <p className="text-xs text-neutral-500 -mt-3">
+            These power the PageSpeed, Search Rankings, and Backlinks tabs with real third-party data. Each is
+            optional — those tabs show a &ldquo;not connected&rdquo; state until the matching key below is set.
+          </p>
+
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 flex flex-col gap-2">
+            <span className="text-xs font-bold text-neutral-800">Google PageSpeed Insights (free)</span>
+            <TextField
+              label="API Key"
+              type="password"
+              value={currentSettings.google_pagespeed_api_key ?? ""}
+              onChange={(e) => handleSettingChange("google_pagespeed_api_key", e.target.value)}
+              placeholder="AIza…"
+            />
+            <p className="text-[11px] text-neutral-500">
+              Google Cloud Console → APIs &amp; Services → Library → enable &ldquo;PageSpeed Insights API&rdquo; →
+              Credentials → Create API Key. Free tier: 25,000 requests/day, no billing account required.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 flex flex-col gap-2">
+            <span className="text-xs font-bold text-neutral-800">Google Search Console (free, needs a verified property)</span>
+            <TextField
+              label="Site URL (exactly as shown in Search Console)"
+              value={currentSettings.google_gsc_site_url ?? ""}
+              onChange={(e) => handleSettingChange("google_gsc_site_url", e.target.value)}
+              placeholder="sc-domain:truzonhomes.com or https://www.truzonhomes.com/"
+            />
+            <label className="text-xs font-medium text-neutral-700 mt-1">Service Account JSON Key</label>
+            <textarea
+              value={currentSettings.google_gsc_service_account_json ?? ""}
+              onChange={(e) => handleSettingChange("google_gsc_service_account_json", e.target.value)}
+              placeholder="Paste the full downloaded service account JSON key here"
+              rows={4}
+              className="w-full rounded-md border border-neutral-300 p-2.5 font-mono text-xs focus:border-neutral-900 focus:outline-none"
+            />
+            <p className="text-[11px] text-neutral-500">
+              1) In Google Cloud Console, enable &ldquo;Search Console API&rdquo; and create a Service Account, then
+              generate + download its JSON key. 2) In Search Console → Settings → Users and permissions → Add user,
+              add the service account&rsquo;s email (from the JSON&rsquo;s <code>client_email</code>) with
+              &ldquo;Restricted&rdquo; access — that&rsquo;s enough for read-only query data. 3) Paste the JSON above.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 flex flex-col gap-2">
+            <span className="text-xs font-bold text-neutral-800">Ahrefs (paid)</span>
+            <TextField
+              label="API Key"
+              type="password"
+              value={currentSettings.ahrefs_api_key ?? ""}
+              onChange={(e) => handleSettingChange("ahrefs_api_key", e.target.value)}
+              placeholder="Your Ahrefs API token"
+            />
+            <p className="text-[11px] text-neutral-500">
+              From your Ahrefs account → API Access. The Backlinks tab shows Ahrefs&rsquo; raw response — verify the
+              field shape matches your plan once connected.
+            </p>
+          </div>
         </div>
       )}
 
-      {/* TAB 5: LOCAL SEO */}
+      {/* TAB 3: LOCAL SEO */}
       {activeTab === "local" && (
         <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-6 max-w-4xl">
           <div className="flex items-center justify-between border-b pb-4">
@@ -795,7 +775,7 @@ export default function SeoManagementPage() {
         </div>
       )}
 
-      {/* TAB 6: REDIRECTS (301/302) */}
+      {/* TAB 4: REDIRECTS (301/302) */}
       {activeTab === "redirects" && (
         <div className="flex flex-col gap-6">
           {/* Add Redirect Form */}
@@ -879,7 +859,7 @@ export default function SeoManagementPage() {
         </div>
       )}
 
-      {/* TAB 7: AI SEO ASSISTANT */}
+      {/* TAB 5: AI SEO ASSISTANT */}
       {activeTab === "ai" && (
         <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-6 max-w-4xl">
           <div>
@@ -934,7 +914,7 @@ export default function SeoManagementPage() {
         </div>
       )}
 
-      {/* TAB 8: JSON-LD SCHEMAS */}
+      {/* TAB 6: JSON-LD SCHEMAS */}
       {activeTab === "schema" && (
         <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-6 max-w-4xl">
           <div>

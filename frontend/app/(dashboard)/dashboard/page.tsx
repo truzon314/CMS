@@ -8,7 +8,6 @@ import {
   HardDrive,
   Clock,
   ArrowRight,
-  TrendingUp,
   Building2,
   Globe,
   PlusCircle,
@@ -120,15 +119,6 @@ export default function DashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-extrabold text-slate-900">{stats.draft_pages}</div>
             <span className="text-[10px] text-slate-400 mt-1">Unpublished Pages</span>
-          </div>
-
-          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">SEO Health</span>
-              <TrendingUp size={16} className="text-emerald-600" />
-            </div>
-            <div className="mt-2 text-2xl font-extrabold text-emerald-600">96/100</div>
-            <span className="text-[10px] text-emerald-600 font-semibold mt-1">Technical Rating</span>
           </div>
         </div>
       )}

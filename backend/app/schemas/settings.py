@@ -43,6 +43,10 @@ KNOWN_SETTING_KEYS = [
     "latitude",
     "longitude",
     "service_areas",
+    "google_pagespeed_api_key",
+    "google_gsc_service_account_json",
+    "google_gsc_site_url",
+    "ahrefs_api_key",
 ]
 
 
@@ -85,6 +89,10 @@ class SettingsRead(BaseModel):
     latitude: float | None = None
     longitude: float | None = None
     service_areas: list[str] | None = None
+    google_pagespeed_api_key: str | None = None
+    google_gsc_service_account_json: str | None = None
+    google_gsc_site_url: str | None = None
+    ahrefs_api_key: str | None = None
 
 
 class SettingsUpdate(BaseModel):
@@ -126,3 +134,7 @@ class SettingsUpdate(BaseModel):
     latitude: float | None = None
     longitude: float | None = None
     service_areas: list[str] | None = None
+    google_pagespeed_api_key: str | None = None
+    google_gsc_service_account_json: str | None = None
+    google_gsc_site_url: str | None = None
+    ahrefs_api_key: str | None = None

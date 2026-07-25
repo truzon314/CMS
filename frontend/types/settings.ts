@@ -35,6 +35,10 @@ export interface Settings {
   latitude: number | null;
   longitude: number | null;
   service_areas: string[] | null;
+  google_pagespeed_api_key: string | null;
+  google_gsc_service_account_json: string | null;
+  google_gsc_site_url: string | null;
+  ahrefs_api_key: string | null;
 }
 
 export type SettingsUpdatePayload = Partial<Settings>;

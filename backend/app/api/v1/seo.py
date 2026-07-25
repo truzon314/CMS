@@ -1,6 +1,8 @@
 import uuid
+from datetime import datetime, timezone
 from typing import Literal
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -11,6 +13,7 @@ from app.core.container import (
     get_media_repository,
     get_page_repository,
     get_property_repository,
+    get_seo_integrations_service,
     get_settings_repository,
 )
 from app.domain.repositories.blog_post_repository import BlogPostRepository
@@ -24,25 +27,17 @@ from app.models.user import User
 from app.schemas.common import ok
 from app.schemas.settings import KNOWN_SETTING_KEYS
 from app.services.schema_service import SchemaService
+from app.services.seo_integrations_service import SeoIntegrationsService
 
 router = APIRouter(prefix="/seo", tags=["seo"])
 
 
-class AiGenerateRequest(BaseModel):
-    task_type: Literal["title", "description", "keywords", "alt_text", "faqs", "property_description"]
-    topic_or_context: str
-    target_keyword: str | None = None
-
-
-@router.get("/audit")
-async def get_seo_audit(
-    pages_repo: PageRepository = Depends(get_page_repository),
-    posts_repo: BlogPostRepository = Depends(get_blog_post_repository),
-    props_repo: PropertyRepository = Depends(get_property_repository),
-    media_repo: MediaRepository = Depends(get_media_repository),
-    _=Depends(require_permission("pages.view")),
-):
-    """Run technical SEO audit across pages, blog posts, properties, and media."""
+async def _run_audit(
+    pages_repo: PageRepository,
+    posts_repo: BlogPostRepository,
+    props_repo: PropertyRepository,
+    media_repo: MediaRepository,
+) -> dict:
     pages = await pages_repo.list_all()
     posts, _ = await posts_repo.list(page=1, per_page=1000, status=None, category_id=None, tag_id=None, search=None)
     properties, _ = await props_repo.list(page=1, per_page=1000, status=None, city=None, category_id=None, budget_bracket=None, is_signature=None)
@@ -50,7 +45,7 @@ async def get_seo_audit(
 
     missing_meta_desc = []
     missing_seo_title = []
-    duplicate_titles = {}
+    duplicate_titles: dict[str, list[dict]] = {}
 
     all_entities = (
         [("Page", p.title, p.seo, f"/pages/{p.page_type.value}") for p in pages] +
@@ -87,7 +82,7 @@ async def get_seo_audit(
         penalty = (len(missing_meta_desc) * 5 + len(missing_seo_title) * 5 + len(duplicates) * 10 + len(missing_alt_images) * 2)
         health_score = max(0, 100 - min(100, penalty))
 
-    return ok({
+    return {
         "health_score": health_score,
         "total_pages_scanned": total_entities,
         "total_images_scanned": len([m for m in media_items if m.mime_type.startswith("image/")]),
@@ -95,7 +90,25 @@ async def get_seo_audit(
         "missing_seo_title": missing_seo_title,
         "duplicate_titles": duplicates,
         "missing_alt_images": missing_alt_images,
-    })
+    }
+
+
+class AiGenerateRequest(BaseModel):
+    task_type: Literal["title", "description", "keywords", "alt_text", "faqs", "property_description"]
+    topic_or_context: str
+    target_keyword: str | None = None
+
+
+@router.get("/audit")
+async def get_seo_audit(
+    pages_repo: PageRepository = Depends(get_page_repository),
+    posts_repo: BlogPostRepository = Depends(get_blog_post_repository),
+    props_repo: PropertyRepository = Depends(get_property_repository),
+    media_repo: MediaRepository = Depends(get_media_repository),
+    _=Depends(require_permission("pages.view")),
+):
+    """Run technical SEO audit across pages, blog posts, properties, and media."""
+    return ok(await _run_audit(pages_repo, posts_repo, props_repo, media_repo))
 
 
 @router.post("/ai-generate")
@@ -159,119 +172,75 @@ async def get_global_schema(
     })
 
 
-@router.get("/pagespeed")
-async def get_pagespeed_insights(
-    url: str = "https://truzonhomes.com",
+@router.get("/export")
+async def export_seo_report(
+    pages_repo: PageRepository = Depends(get_page_repository),
+    posts_repo: BlogPostRepository = Depends(get_blog_post_repository),
+    props_repo: PropertyRepository = Depends(get_property_repository),
+    media_repo: MediaRepository = Depends(get_media_repository),
     _=Depends(require_permission("pages.view")),
 ):
-    """Google PageSpeed Insights & Core Web Vitals diagnostic endpoint."""
-    return ok({
-        "url": url,
-        "scores": {
-          "performance": 96,
-          "accessibility": 98,
-          "best_practices": 95,
-          "seo": 100,
-        },
-        "metrics": {
-          "largest_contentful_paint": {"value": "1.2 s", "status": "good"},
-          "first_contentful_paint": {"value": "0.6 s", "status": "good"},
-          "cumulative_layout_shift": {"value": "0.01", "status": "good"},
-          "interaction_to_next_paint": {"value": "45 ms", "status": "good"},
-          "total_blocking_time": {"value": "20 ms", "status": "good"},
-          "speed_index": {"value": "0.9 s", "status": "good"},
-        },
-        "diagnostics": [
-          {"type": "passed", "message": "Properly size images & serve in next-gen WebP format"},
-          {"type": "passed", "message": "Minify JavaScript & CSS bundles"},
-          {"type": "passed", "message": "Eliminate render-blocking resources"},
-          {"type": "passed", "message": "Ensure text remains visible during webfont load"},
-          {"type": "passed", "message": "Preconnect to required origins"},
-        ]
-    })
+    """Real exportable SEO report — the same live audit data as GET /seo/audit,
+    stamped with a genuine generation timestamp (not a fixed fake one)."""
+    audit = await _run_audit(pages_repo, posts_repo, props_repo, media_repo)
+    return ok({"generated_at": datetime.now(timezone.utc).isoformat(), **audit})
+
+
+@router.get("/autocomplete")
+async def get_autocomplete(
+    q: str,
+    integrations: SeoIntegrationsService = Depends(get_seo_integrations_service),
+    _=Depends(require_permission("pages.view")),
+):
+    """Real Google Autocomplete suggestions for a seed keyword — free public
+    endpoint, no API key required."""
+    try:
+        suggestions = await integrations.autocomplete(q)
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Autocomplete lookup failed: {e}") from e
+    return ok({"query": q, "suggestions": suggestions})
+
+
+@router.get("/pagespeed")
+async def get_pagespeed(
+    url: str = "https://truzonhomes.com",
+    integrations: SeoIntegrationsService = Depends(get_seo_integrations_service),
+    _=Depends(require_permission("pages.view")),
+):
+    """Real Google PageSpeed Insights run. Returns {"configured": false} until
+    `google_pagespeed_api_key` is set in Settings."""
+    try:
+        return ok(await integrations.pagespeed(url))
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"PageSpeed Insights request failed: {e}") from e
 
 
 @router.get("/rankings")
-async def get_keyword_rankings(
+async def get_rankings(
+    integrations: SeoIntegrationsService = Depends(get_seo_integrations_service),
     _=Depends(require_permission("pages.view")),
 ):
-    """Track keyword rankings across Google, Bing, DuckDuckGo, and AI Search Engines."""
-    rankings = [
-        {"keyword": "3 BHK villas in Hyderabad", "google_pos": 2, "bing_pos": 3, "ai_search": "Featured Snippet", "volume": "8.4K", "change": "+1"},
-        {"keyword": "luxury real estate Jubilee Hills", "google_pos": 1, "bing_pos": 1, "ai_search": "Cited Source", "volume": "5.1K", "change": "0"},
-        {"keyword": "gated community villas Gachibowli", "google_pos": 3, "bing_pos": 2, "ai_search": "Cited Source", "volume": "4.2K", "change": "+2"},
-        {"keyword": "Truzon Homes reviews", "google_pos": 1, "bing_pos": 1, "ai_search": "Direct Answer", "volume": "1.8K", "change": "0"},
-        {"keyword": "buy 4 BHK luxury villa Banjara Hills", "google_pos": 4, "bing_pos": 3, "ai_search": "Cited Source", "volume": "3.9K", "change": "+3"},
-    ]
-    return ok(rankings)
+    """Real Google Search Console query performance. Returns {"configured": false}
+    until `google_gsc_service_account_json` and `google_gsc_site_url` are set."""
+    try:
+        return ok(await integrations.search_console_rankings())
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Search Console request failed: {e}") from e
+    except (KeyError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=f"Invalid Search Console credentials: {e}") from e
 
 
-@router.get("/competitors")
-async def get_competitor_analysis(
+@router.get("/backlinks")
+async def get_backlinks(
+    target: str = "truzonhomes.com",
+    integrations: SeoIntegrationsService = Depends(get_seo_integrations_service),
     _=Depends(require_permission("pages.view")),
 ):
-    """Competitor autocomplete suggestions, keyword overlap, and content gap analysis."""
-    return ok({
-        "competitors": [
-            {"domain": "competitor-a.com", "keyword_overlap": "74%", "avg_position": 3.2, "backlinks": "1.4K", "gap_opportunity": "High"},
-            {"domain": "competitor-b.com", "keyword_overlap": "61%", "avg_position": 4.1, "backlinks": "890", "gap_opportunity": "Medium"},
-        ],
-        "autocomplete_suggestions": [
-            "truzon homes luxury villas hyderabad",
-            "truzon homes jubilee hills pricing",
-            "truzon homes rera approved projects",
-            "truzon homes vs competitor villas",
-        ],
-        "paa_questions": [
-            "Is Truzon Homes RERA registered?",
-            "What are the amenities provided in Truzon luxury villas?",
-            "How to book a site visit at Truzon Homes Hyderabad?",
-        ]
-    })
-
-
-@router.get("/export")
-async def export_seo_report(
-    format: str = "json",
-    _=Depends(require_permission("pages.view")),
-):
-    """Generate exportable SEO report data for CSV/PDF generation."""
-    return ok({
-        "generated_at": "2026-07-25T16:35:00Z",
-        "site_url": "https://truzonhomes.com",
-        "overall_health": 96,
-        "indexed_pages": 42,
-        "keywords_tracked": 120,
-        "top_performing_keywords": ["3 BHK villas in Hyderabad", "luxury real estate Jubilee Hills"],
-        "open_action_items": ["Add alt text to 2 new gallery images"],
-    })
-
-
-@router.get("/backlinks/dashboard")
-async def get_backlink_dashboard(
-    _=Depends(require_permission("pages.view")),
-):
-    """Backlink & Link Intelligence Analysis endpoint."""
-    return ok({
-        "summary": {
-            "total_backlinks": 1420,
-            "referring_domains": 284,
-            "domain_rating": 78,
-            "dofollow_ratio": "84%",
-            "toxic_backlinks": 2,
-        },
-        "backlinks": [
-            {"domain": "architecturaldigest.in", "anchor": "Truzon Homes Luxury Villas", "target_url": "/projects/luxury-villas", "da": 89, "type": "DoFollow", "toxic": False},
-            {"domain": "realtytimes.com", "anchor": "3 BHK villas in Jubilee Hills", "target_url": "/properties/jubilee-villas", "da": 82, "type": "DoFollow", "toxic": False},
-            {"domain": "housingnews.in", "anchor": "https://truzonhomes.com", "target_url": "/", "da": 76, "type": "DoFollow", "toxic": False},
-            {"domain": "spam-directory-list.xyz", "anchor": "cheap real estate", "target_url": "/", "da": 12, "type": "NoFollow", "toxic": True},
-            {"domain": "proptech-weekly.com", "anchor": "Truzon RERA Approved Projects", "target_url": "/blog/rera-guidelines", "da": 68, "type": "DoFollow", "toxic": False},
-        ],
-        "disavow_domains": [
-            "spam-directory-list.xyz",
-            "malware-links-network.info"
-        ]
-    })
-
+    """Real Ahrefs Site Explorer data. Returns {"configured": false} until
+    `ahrefs_api_key` is set in Settings."""
+    try:
+        return ok(await integrations.ahrefs_backlinks(target))
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Ahrefs request failed: {e}") from e
 
 
