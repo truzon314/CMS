@@ -6,33 +6,33 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.api.media_files import router as media_files_router
-from app.api.public import router as public_router
-from app.api.v1.audit_logs import router as audit_logs_router
-from app.api.v1.auth import router as auth_router
-from app.api.v1.blog import router as blog_router
-from app.api.v1.dashboard import router as dashboard_router
-from app.api.v1.forms import router as forms_router
-from app.api.v1.media import router as media_router
-from app.api.v1.menus import router as menus_router
-from app.api.v1.notifications import router as notifications_router
-from app.api.v1.pages import router as pages_router
-from app.api.v1.properties import router as properties_router
-from app.api.v1.redirects import router as redirects_router
-from app.api.v1.roles import router as roles_router
-from app.api.v1.search import router as search_router
-from app.api.v1.seo import router as seo_router
-from app.api.v1.settings import router as settings_router
-from app.api.v1.taxonomy import router as taxonomy_router
-from app.api.v1.trash import router as trash_router
-from app.api.v1.users import router as users_router
-from app.core.audit_context import AuditContextMiddleware
-from app.core.config import get_settings
-from app.core.exceptions import AppError
-from app.core.logging import configure_logging
-from app.core.rate_limit import global_backstop
-from app.core.security_headers import SecurityHeadersMiddleware
-from app.database.session import engine
+from app.modules.auth.presentation.router import router as auth_router
+from app.modules.blog.presentation.router import router as blog_router
+from app.modules.cms.presentation.menus_router import router as menus_router
+from app.modules.cms.presentation.pages_router import router as pages_router
+from app.modules.cms.presentation.search_router import router as search_router
+from app.modules.cms.presentation.taxonomy_router import router as taxonomy_router
+from app.modules.leads.presentation.router import router as forms_router
+from app.modules.notifications.presentation.router import router as notifications_router
+from app.modules.properties.presentation.router import router as properties_router
+from app.modules.seo.presentation.redirects_router import router as redirects_router
+from app.modules.seo.presentation.router import router as seo_router
+from app.modules.system.presentation.audit_logs_router import router as audit_logs_router
+from app.modules.system.presentation.dashboard_router import router as dashboard_router
+from app.modules.system.presentation.public_router import router as public_router
+from app.modules.system.presentation.settings_router import router as settings_router
+from app.modules.system.presentation.trash_router import router as trash_router
+from app.modules.uploads.presentation.media_files_router import router as media_files_router
+from app.modules.uploads.presentation.router import router as media_router
+from app.modules.users.presentation.roles_router import router as roles_router
+from app.modules.users.presentation.users_router import router as users_router
+from app.shared.config.config import get_settings
+from app.shared.database.session import engine
+from app.shared.exceptions.exceptions import AppError
+from app.shared.logging.logging import configure_logging
+from app.shared.middleware.audit_context import AuditContextMiddleware
+from app.shared.security.rate_limit import global_backstop
+from app.shared.security.security_headers import SecurityHeadersMiddleware
 
 configure_logging()
 settings = get_settings()

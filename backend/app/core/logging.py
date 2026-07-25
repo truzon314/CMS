@@ -1,9 +1,3 @@
-import logging
+from app.shared.logging.logging import configure_logging
 
-
-def configure_logging() -> None:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)-8s [%(name)s] %(message)s",
-        datefmt="%H:%M:%S",
-    )
+__all__ = ["configure_logging"]
