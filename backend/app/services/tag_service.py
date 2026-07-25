@@ -1,6 +1,6 @@
 import uuid
 
-from app.core.exceptions import ConflictError, NotFoundError
+from app.shared.exceptions.exceptions import ConflictError, NotFoundError
 from app.domain.repositories.tag_repository import TagRepository
 from app.models.tag import Tag
 from app.schemas.taxonomy import TagCreate, TagUpdate

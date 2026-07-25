@@ -6,7 +6,7 @@ from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, UUIDPrimaryKeyMixin, utcnow
+from app.shared.database.base import Base, UUIDPrimaryKeyMixin, utcnow
 
 
 class EntityType(str, enum.Enum):

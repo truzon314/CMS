@@ -1,6 +1,6 @@
 import uuid
 
-from app.core.exceptions import ConflictError, NotFoundError
+from app.shared.exceptions.exceptions import ConflictError, NotFoundError
 from app.domain.repositories.category_repository import CategoryRepository
 from app.domain.repositories.media_usage_repository import MediaUsageRepository
 from app.domain.repositories.property_repository import PropertyRepository

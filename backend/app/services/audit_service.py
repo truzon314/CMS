@@ -2,7 +2,7 @@ import logging
 import uuid
 from datetime import datetime
 
-from app.core.audit_context import current_ip, current_user_agent
+from app.shared.middleware.audit_context import current_ip, current_user_agent
 from app.domain.repositories.audit_log_repository import AuditLogRepository
 from app.models.audit_log import AuditLog
 

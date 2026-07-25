@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import Integer, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, UUIDPrimaryKeyMixin
+from app.shared.database.base import Base, UUIDPrimaryKeyMixin
 
 
 class RedirectRule(UUIDPrimaryKeyMixin, Base):

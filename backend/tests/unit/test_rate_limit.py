@@ -3,7 +3,7 @@ pure logic, no DB, no HTTP."""
 
 import pytest
 
-from app.core.rate_limit import RateLimitExceededError, _SlidingWindowLimiter
+from app.shared.security.rate_limit import RateLimitExceededError, _SlidingWindowLimiter
 
 
 def test_allows_up_to_the_limit():

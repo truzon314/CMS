@@ -2,7 +2,7 @@ import asyncio
 
 import boto3
 
-from app.core.config import get_settings
+from app.shared.config.config import get_settings
 
 
 class R2StorageAdapter:

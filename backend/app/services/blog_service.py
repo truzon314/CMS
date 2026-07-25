@@ -2,7 +2,7 @@ import math
 import uuid
 from datetime import datetime, timezone
 
-from app.core.exceptions import ConflictError, NotFoundError
+from app.shared.exceptions.exceptions import ConflictError, NotFoundError
 from app.domain.repositories.blog_post_repository import BlogPostRepository
 from app.domain.repositories.category_repository import CategoryRepository
 from app.domain.repositories.entity_version_repository import EntityVersionRepository

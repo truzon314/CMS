@@ -1,6 +1,6 @@
 import uuid
 
-from app.core.exceptions import ConflictError, NotFoundError
+from app.shared.exceptions.exceptions import ConflictError, NotFoundError
 from app.domain.repositories.category_repository import CategoryRepository
 from app.models.category import Category
 from app.schemas.taxonomy import CategoryCreate, CategoryUpdate

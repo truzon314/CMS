@@ -1,6 +1,6 @@
 import uuid
 
-from app.core.exceptions import NotFoundError
+from app.shared.exceptions.exceptions import NotFoundError
 from app.domain.repositories.blog_post_repository import BlogPostRepository
 from app.domain.repositories.media_repository import MediaRepository
 from app.domain.repositories.property_repository import PropertyRepository

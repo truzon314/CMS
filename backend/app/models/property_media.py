@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, UUIDPrimaryKeyMixin
+from app.shared.database.base import Base, UUIDPrimaryKeyMixin
 
 
 class PropertyMedia(UUIDPrimaryKeyMixin, Base):

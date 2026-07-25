@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, ForeignKey, String, Table
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from app.shared.database.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 role_permission = Table(
     "role_permission",

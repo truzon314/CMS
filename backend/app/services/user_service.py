@@ -3,8 +3,8 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from app.core.exceptions import ConflictError, NotFoundError
-from app.core.security import generate_opaque_token, hash_opaque_token, hash_password
+from app.shared.exceptions.exceptions import ConflictError, NotFoundError
+from app.shared.security.security import generate_opaque_token, hash_opaque_token, hash_password
 from app.domain.repositories.auth_token_repository import AuthTokenRepository
 from app.domain.repositories.role_repository import RoleRepository
 from app.domain.repositories.user_repository import UserRepository

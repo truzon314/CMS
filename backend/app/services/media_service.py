@@ -3,7 +3,7 @@ import uuid
 
 from PIL import Image
 
-from app.core.exceptions import ConflictError, NotFoundError, ValidationAppError
+from app.shared.exceptions.exceptions import ConflictError, NotFoundError, ValidationAppError
 from app.domain.repositories.media_folder_repository import MediaFolderRepository
 from app.domain.repositories.media_repository import MediaRepository
 from app.domain.repositories.media_usage_repository import MediaUsageRepository

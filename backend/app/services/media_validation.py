@@ -8,8 +8,8 @@ import re
 
 import filetype
 
-from app.core.config import get_settings
-from app.core.exceptions import ValidationAppError
+from app.shared.config.config import get_settings
+from app.shared.exceptions.exceptions import ValidationAppError
 
 _ALLOWED_MIME_TYPES = {
     # Images

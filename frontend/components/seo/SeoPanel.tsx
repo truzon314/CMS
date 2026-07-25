@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { TextField } from "@/components/forms/TextField";
 import { ImagePickerField } from "@/components/forms/ImagePickerField";
 import { SelectField } from "@/components/forms/SelectField";
@@ -37,6 +37,7 @@ type TabType = "general" | "og" | "twitter" | "robots" | "schema" | "preview";
 
 export function SeoPanel({ value, onChange, slug = "" }: SeoPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>("general");
+  const tabSelectId = useId();
 
   const current: SeoPanelValue = value ?? {};
 
@@ -87,76 +88,58 @@ export function SeoPanel({ value, onChange, slug = "" }: SeoPanelProps) {
     }
   };
 
+  const TABS: Array<{ id: TabType; label: string; icon: typeof Globe }> = [
+    { id: "general", label: "General SEO", icon: Globe },
+    { id: "og", label: "Open Graph", icon: Share2 },
+    { id: "twitter", label: "Twitter / X", icon: MessageCircle },
+    { id: "robots", label: "Robots Directives", icon: Bot },
+    { id: "schema", label: "Schema (JSON-LD)", icon: Code },
+    { id: "preview", label: "Live Previews", icon: Eye },
+  ];
+
   return (
     <div className="@container rounded-lg border bg-white shadow-sm overflow-hidden">
       {/* Panel Header & Navigation Tabs */}
-      <div className="flex flex-wrap border-b bg-neutral-50 px-4 pt-3 gap-1">
-        <button
-          type="button"
-          onClick={() => setActiveTab("general")}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-md border-b-2 transition-colors ${
-            activeTab === "general"
-              ? "border-neutral-900 bg-white text-neutral-900"
-              : "border-transparent text-neutral-500 hover:text-neutral-900"
-          }`}
-        >
-          <Globe size={14} /> General SEO
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("og")}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-md border-b-2 transition-colors ${
-            activeTab === "og"
-              ? "border-neutral-900 bg-white text-neutral-900"
-              : "border-transparent text-neutral-500 hover:text-neutral-900"
-          }`}
-        >
-          <Share2 size={14} /> Open Graph
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("twitter")}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-md border-b-2 transition-colors ${
-            activeTab === "twitter"
-              ? "border-neutral-900 bg-white text-neutral-900"
-              : "border-transparent text-neutral-500 hover:text-neutral-900"
-          }`}
-        >
-          <MessageCircle size={14} /> Twitter / X
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("robots")}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-md border-b-2 transition-colors ${
-            activeTab === "robots"
-              ? "border-neutral-900 bg-white text-neutral-900"
-              : "border-transparent text-neutral-500 hover:text-neutral-900"
-          }`}
-        >
-          <Bot size={14} /> Robots Directives
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("schema")}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-md border-b-2 transition-colors ${
-            activeTab === "schema"
-              ? "border-neutral-900 bg-white text-neutral-900"
-              : "border-transparent text-neutral-500 hover:text-neutral-900"
-          }`}
-        >
-          <Code size={14} /> Schema (JSON-LD)
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("preview")}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-md border-b-2 transition-colors ml-auto ${
-            activeTab === "preview"
-              ? "border-neutral-900 bg-white text-neutral-900"
-              : "border-transparent text-neutral-600 hover:text-neutral-900"
-          }`}
-        >
-          <Eye size={14} /> Live Previews
-        </button>
+      <div className="border-b bg-neutral-50 px-4 pt-3">
+        {/* Narrow containers (e.g. the block-builder sidebar): a single-line dropdown
+            instead of a button row, since 6 tabs can't fit without wrapping raggedly. */}
+        <div className="pb-3 @lg:hidden">
+          <label className="sr-only" htmlFor={tabSelectId}>
+            SEO panel section
+          </label>
+          <select
+            id={tabSelectId}
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value as TabType)}
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-900 focus:border-neutral-900 focus:outline-none"
+          >
+            {TABS.map((tab) => (
+              <option key={tab.id} value={tab.id}>
+                {tab.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Wide containers: the full horizontal tab row, single line, no wrap. */}
+        <div className="hidden flex-nowrap items-center gap-1 @lg:flex">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2 text-xs font-medium rounded-t-md border-b-2 transition-colors ${
+                tab.id === "preview" ? "ml-auto" : ""
+              } ${
+                activeTab === tab.id
+                  ? "border-neutral-900 bg-white text-neutral-900"
+                  : "border-transparent text-neutral-500 hover:text-neutral-900"
+              }`}
+            >
+              <tab.icon size={14} /> {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab Content */}

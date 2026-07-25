@@ -12,8 +12,8 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.rate_limit import _limiter
-from app.database.session import engine, get_db
+from app.shared.security.rate_limit import _limiter
+from app.shared.database.session import engine, get_db
 from app.main import app
 
 

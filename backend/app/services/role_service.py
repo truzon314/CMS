@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError
+from app.shared.exceptions.exceptions import ConflictError, ForbiddenError, NotFoundError
 from app.domain.repositories.permission_repository import PermissionRepository
 from app.domain.repositories.role_repository import RoleRepository
 from app.models.role import Role

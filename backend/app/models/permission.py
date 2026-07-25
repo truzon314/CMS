@@ -1,7 +1,7 @@
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, UUIDPrimaryKeyMixin
+from app.shared.database.base import Base, UUIDPrimaryKeyMixin
 from app.models.role import role_permission
 
 

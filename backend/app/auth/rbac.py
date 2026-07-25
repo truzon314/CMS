@@ -3,7 +3,7 @@ from collections.abc import Callable
 from fastapi import Depends
 
 from app.auth.dependencies import get_current_user
-from app.core.exceptions import ForbiddenError
+from app.shared.exceptions.exceptions import ForbiddenError
 from app.models.user import User
 
 

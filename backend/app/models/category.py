@@ -3,7 +3,7 @@ import enum
 from sqlalchemy import Enum, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from app.shared.database.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 
 class CategoryAppliesTo(str, enum.Enum):

@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.auth.dependencies import get_current_user
 from app.auth.rbac import require_permission
-from app.database.session import AsyncSessionLocal
+from app.shared.database.session import AsyncSessionLocal
 from app.models.redirect import RedirectRule
 from app.models.user import User
 from app.shared.utils.common import ok

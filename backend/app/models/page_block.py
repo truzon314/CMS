@@ -4,7 +4,7 @@ from sqlalchemy import JSON, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from app.shared.database.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 
 class PageBlock(UUIDPrimaryKeyMixin, TimestampMixin, Base):

@@ -1,6 +1,6 @@
 import uuid
 
-from app.core.exceptions import NotFoundError
+from app.shared.exceptions.exceptions import NotFoundError
 from app.domain.repositories.entity_version_repository import EntityVersionRepository
 from app.domain.repositories.settings_repository import SettingsRepository
 from app.models.entity_version import EntityType, EntityVersion

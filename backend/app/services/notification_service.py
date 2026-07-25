@@ -1,6 +1,6 @@
 import uuid
 
-from app.core.exceptions import NotFoundError
+from app.shared.exceptions.exceptions import NotFoundError
 from app.domain.repositories.notification_repository import NotificationRepository
 from app.models.notification import Notification
 

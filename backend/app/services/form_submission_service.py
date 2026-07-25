@@ -2,7 +2,7 @@ import csv
 import io
 import uuid
 
-from app.core.exceptions import NotFoundError
+from app.shared.exceptions.exceptions import NotFoundError
 from app.domain.repositories.form_submission_repository import FormSubmissionRepository
 from app.models.form_submission import FormSubmission
 from app.schemas.form_submission import FormSubmissionUpdate

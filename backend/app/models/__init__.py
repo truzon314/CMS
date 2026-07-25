@@ -1,6 +1,6 @@
 from app.models.audit_log import AuditLog
 from app.models.auth_token import AuthToken, AuthTokenPurpose
-from app.models.base import Base
+from app.shared.database.base import Base
 from app.models.block_definition import BlockDefinition
 from app.models.blog_post import BlogPost, BlogPostStatus, blog_post_category, blog_post_tag
 from app.models.category import Category, CategoryAppliesTo

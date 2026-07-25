@@ -5,7 +5,7 @@ import uuid
 
 import pytest
 
-from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError
+from app.shared.exceptions.exceptions import ConflictError, ForbiddenError, NotFoundError
 from app.models.role import Role
 from app.schemas.role import RoleCreate, RoleUpdate
 from app.services.audit_service import AuditService

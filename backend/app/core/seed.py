@@ -14,8 +14,8 @@ import os
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.core.security import hash_password
-from app.database.session import AsyncSessionLocal
+from app.shared.security.security import hash_password
+from app.shared.database.session import AsyncSessionLocal
 from app.models.block_definition import BlockDefinition
 from app.models.entity_version import EntityType, EntityVersion
 from app.models.form_submission import FormSubmission, FormSubmissionStatus

@@ -1,6 +1,6 @@
 import uuid
 
-from app.core.exceptions import NotFoundError
+from app.shared.exceptions.exceptions import NotFoundError
 from app.domain.repositories.menu_repository import MenuRepository
 from app.models.menu import Menu, MenuItem
 from app.schemas.menu import MenuItemInput, MenuItemRead, MenuRead

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from pydantic import ValidationError
 
-from app.core.exceptions import NotFoundError, ValidationAppError
+from app.shared.exceptions.exceptions import NotFoundError, ValidationAppError
 from app.domain.repositories.block_definition_repository import BlockDefinitionRepository
 from app.domain.repositories.entity_version_repository import EntityVersionRepository
 from app.domain.repositories.media_usage_repository import MediaUsageRepository

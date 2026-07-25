@@ -2,9 +2,9 @@ import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from app.core.config import get_settings
-from app.core.exceptions import UnauthorizedError, ValidationAppError
-from app.core.security import (
+from app.shared.config.config import get_settings
+from app.shared.exceptions.exceptions import UnauthorizedError, ValidationAppError
+from app.shared.security.security import (
     create_access_token,
     generate_opaque_token,
     hash_opaque_token,

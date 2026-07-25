@@ -1,9 +1,9 @@
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.core.container import get_user_repository
-from app.core.exceptions import UnauthorizedError
-from app.core.security import decode_access_token
+from app.shared.dependencies.container import get_user_repository
+from app.shared.exceptions.exceptions import UnauthorizedError
+from app.shared.security.security import decode_access_token
 from app.models.user import User
 from app.repositories.user_repository import SqlAlchemyUserRepository
 

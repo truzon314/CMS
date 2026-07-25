@@ -1,6 +1,6 @@
 import uuid
 
-from app.core.exceptions import NotFoundError, ValidationAppError
+from app.shared.exceptions.exceptions import NotFoundError, ValidationAppError
 from app.domain.repositories.blog_post_repository import BlogPostRepository
 from app.domain.repositories.category_repository import CategoryRepository
 from app.domain.repositories.form_submission_repository import FormSubmissionRepository

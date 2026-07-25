@@ -6,7 +6,7 @@ from sqlalchemy import JSON, Boolean, Column, Enum, ForeignKey, Numeric, String,
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from app.shared.database.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
 
 property_category = Table(
     "property_category",
