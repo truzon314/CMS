@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: truzon_cms
+      POSTGRES_USER: truzon_cms_app
+      POSTGRES_PASSWORD: change_me_locally
+    ports:
+      - "5432:5432"
+    volumes:
+      - truzon_cms_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U truzon_cms_app -d truzon_cms"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://truzon_cms_app:change_me_locally@postgres:5432/truzon_cms
+      JWT_SECRET_KEY: change_me_in_production
+      ENVIRONMENT: production
+      CORS_ORIGINS: http://localhost:3001,http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - truzon_cms_media:/app/media_storage
+
+volumes:
+  truzon_cms_pgdata:
+  truzon_cms_media:

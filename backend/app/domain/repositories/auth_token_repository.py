@@ -1,0 +1,9 @@
+from typing import Protocol
+
+from app.models.auth_token import AuthToken, AuthTokenPurpose
+
+
+class AuthTokenRepository(Protocol):
+    async def create(self, token: AuthToken) -> AuthToken: ...
+    async def get_valid_by_hash(self, token_hash: str, purpose: AuthTokenPurpose) -> AuthToken | None: ...
+    async def mark_used(self, token: AuthToken) -> None: ...

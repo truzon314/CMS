@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: truzon_cms
+          POSTGRES_USER: truzon_cms_app
+          POSTGRES_PASSWORD: change_me_locally
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U truzon_cms_app -d truzon_cms"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql+asyncpg://truzon_cms_app:change_me_locally@localhost:5432/truzon_cms
+      JWT_SECRET_KEY: ci-only-secret-not-for-production
+      ENVIRONMENT: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: pip-audit (SECURITY_CHECKLIST.md §11)
+        run: pip install pip-audit && pip-audit -r requirements.txt || true
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Apply migrations
+        run: alembic upgrade head
+      - name: Seed (roles/permissions needed by integration tests)
+        run: python -m app.core.seed
+      - name: Test
+        run: pytest tests -v
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: npm audit (SECURITY_CHECKLIST.md §11)
+        run: npm audit --audit-level=high || true
+      - run: npx tsc --noEmit
+      - run: npx eslint . --max-warnings=0
+      - run: npm run build

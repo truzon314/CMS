@@ -1,0 +1,29 @@
+import uuid
+from typing import Protocol
+
+from app.models.blog_post import BlogPost
+
+
+class BlogPostRepository(Protocol):
+    async def get_by_id(self, post_id: uuid.UUID, include_deleted: bool = False) -> BlogPost | None: ...
+
+    async def get_by_slug(self, slug: str) -> BlogPost | None: ...
+
+    async def list(
+        self,
+        *,
+        page: int,
+        per_page: int,
+        status: str | None = None,
+        category_id: uuid.UUID | None = None,
+        tag_id: uuid.UUID | None = None,
+        author_id: uuid.UUID | None = None,
+        search: str | None = None,
+    ) -> tuple[list[BlogPost], int]: ...
+
+    async def list_trash(self, *, page: int, per_page: int) -> tuple[list[BlogPost], int]: ...
+    async def create(self, post: BlogPost) -> BlogPost: ...
+    async def update(self, post: BlogPost) -> BlogPost: ...
+    async def upsert_seo(self, post: BlogPost, seo_data: dict) -> BlogPost: ...
+    async def soft_delete(self, post: BlogPost) -> None: ...
+    async def restore(self, post: BlogPost) -> None: ...

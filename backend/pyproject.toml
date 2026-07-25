@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 120
+extend-exclude = ["app/database/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+# The DB engine (app/database/session.py) is a process-wide singleton whose
+# connection pool is bound to whichever event loop first uses it — without
+# this, pytest-asyncio's default function-scoped loop closes between tests
+# and every test after the first hits "Event loop is closed" on teardown.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]

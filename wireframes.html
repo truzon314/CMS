@@ -1,0 +1,686 @@
+<title>Truzon CMS — Admin Wireframes</title>
+<style>
+  :root {
+    --wf-bg: #f7f8fa;
+    --wf-surface: #ffffff;
+    --wf-canvas: #eef0f3;
+    --wf-border: #c3c8d1;
+    --wf-border-strong: #8a92a3;
+    --wf-text: #1f2430;
+    --wf-text-muted: #6b7280;
+    --wf-placeholder: #e2e5ea;
+    --wf-placeholder-line: #b6bcc6;
+    --wf-accent: #2f5fd6;
+    --wf-accent-soft: #e8eefc;
+    --wf-chrome: #dde1e7;
+    --wf-shadow: rgba(20, 24, 33, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --wf-bg: #14161b;
+      --wf-surface: #1c1f26;
+      --wf-canvas: #22252c;
+      --wf-border: #3a3f4a;
+      --wf-border-strong: #565d6b;
+      --wf-text: #e7e9ee;
+      --wf-text-muted: #9aa1af;
+      --wf-placeholder: #2a2e37;
+      --wf-placeholder-line: #454b58;
+      --wf-accent: #6f93ea;
+      --wf-accent-soft: #22314f;
+      --wf-chrome: #2a2e37;
+      --wf-shadow: rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --wf-bg: #14161b; --wf-surface: #1c1f26; --wf-canvas: #22252c; --wf-border: #3a3f4a;
+    --wf-border-strong: #565d6b; --wf-text: #e7e9ee; --wf-text-muted: #9aa1af;
+    --wf-placeholder: #2a2e37; --wf-placeholder-line: #454b58; --wf-accent: #6f93ea;
+    --wf-accent-soft: #22314f; --wf-chrome: #2a2e37; --wf-shadow: rgba(0, 0, 0, 0.35);
+  }
+  :root[data-theme="light"] {
+    --wf-bg: #f7f8fa; --wf-surface: #ffffff; --wf-canvas: #eef0f3; --wf-border: #c3c8d1;
+    --wf-border-strong: #8a92a3; --wf-text: #1f2430; --wf-text-muted: #6b7280;
+    --wf-placeholder: #e2e5ea; --wf-placeholder-line: #b6bcc6; --wf-accent: #2f5fd6;
+    --wf-accent-soft: #e8eefc; --wf-chrome: #dde1e7; --wf-shadow: rgba(20, 24, 33, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .page {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--wf-bg);
+    color: var(--wf-text);
+    min-height: 100vh;
+    padding: 32px 20px 80px;
+  }
+  .masthead { max-width: 1160px; margin: 0 auto 28px; }
+  .masthead h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .masthead p { margin: 0; color: var(--wf-text-muted); font-size: 14px; line-height: 1.6; max-width: 62ch; }
+
+  .tabs {
+    max-width: 1160px; margin: 24px auto 20px;
+    display: flex; gap: 6px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--wf-border);
+    padding-bottom: 0;
+  }
+  .tab {
+    font: inherit; font-size: 13.5px; font-weight: 600;
+    background: none; border: none; cursor: pointer;
+    color: var(--wf-text-muted);
+    padding: 10px 14px; border-radius: 6px 6px 0 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--wf-text); }
+  .tab[aria-selected="true"] {
+    color: var(--wf-text);
+    border-bottom-color: var(--wf-accent);
+    background: var(--wf-accent-soft);
+  }
+
+  .panel { max-width: 1160px; margin: 0 auto; display: none; }
+  .panel.is-active { display: block; }
+  .panel-intro { font-size: 13.5px; color: var(--wf-text-muted); margin: 0 0 16px; line-height: 1.6; max-width: 68ch; }
+  .panel-intro code { background: var(--wf-placeholder); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+
+  .scroll-frame { overflow-x: auto; padding-bottom: 6px; }
+
+  /* Browser chrome wireframe frame */
+  .wf-frame {
+    min-width: 980px;
+    background: var(--wf-surface);
+    border: 1px solid var(--wf-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 30px var(--wf-shadow);
+    overflow: hidden;
+  }
+  .wf-chrome-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px; background: var(--wf-chrome);
+    border-bottom: 1px solid var(--wf-border);
+  }
+  .wf-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--wf-border-strong); opacity: 0.5; }
+  .wf-url {
+    font-size: 12px; color: var(--wf-text-muted); background: var(--wf-surface);
+    border: 1px solid var(--wf-border); border-radius: 5px; padding: 3px 10px;
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  }
+
+  .wf-shell { display: flex; min-height: 560px; background: var(--wf-canvas); }
+
+  /* Sidebar */
+  .wf-sidebar {
+    width: 190px; flex-shrink: 0; background: var(--wf-surface);
+    border-right: 1px solid var(--wf-border);
+    padding: 14px 10px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .wf-logo { height: 24px; width: 100px; background: var(--wf-placeholder); border-radius: 4px; margin: 2px 4px 14px; }
+  .wf-nav-item {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 12.5px; color: var(--wf-text-muted);
+    padding: 7px 9px; border-radius: 6px;
+  }
+  .wf-nav-item .wf-ico { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.7; }
+  .wf-nav-item.is-active { background: var(--wf-accent-soft); color: var(--wf-text); font-weight: 600; }
+  .wf-nav-sub { padding-left: 30px; font-size: 12px; }
+  .wf-nav-group-label { font-size: 10px; letter-spacing: 0.06em; color: var(--wf-text-muted); opacity: 0.7; padding: 10px 9px 2px; text-transform: uppercase; }
+
+  /* Topbar */
+  .wf-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .wf-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; border-bottom: 1px solid var(--wf-border); background: var(--wf-surface);
+  }
+  .wf-breadcrumb { font-size: 12.5px; color: var(--wf-text-muted); }
+  .wf-breadcrumb b { color: var(--wf-text); font-weight: 600; }
+  .wf-topbar-actions { display: flex; align-items: center; gap: 12px; }
+  .wf-icon-btn {
+    width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--wf-border);
+    display: flex; align-items: center; justify-content: center; color: var(--wf-text-muted); position: relative;
+  }
+  .wf-icon-btn .wf-ico { width: 15px; height: 15px; }
+  .wf-badge-dot { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--wf-accent); }
+  .wf-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--wf-placeholder-line); }
+
+  .wf-content { padding: 20px; flex: 1; }
+
+  /* Generic pieces */
+  .wf-row { display: flex; gap: 16px; }
+  .wf-col { flex: 1; min-width: 0; }
+  .wf-card {
+    background: var(--wf-surface); border: 1px solid var(--wf-border); border-radius: 9px;
+    padding: 14px; position: relative;
+  }
+  .wf-line { height: 9px; background: var(--wf-placeholder-line); border-radius: 3px; }
+  .wf-line.w-40 { width: 40%; } .wf-line.w-60 { width: 60%; } .wf-line.w-80 { width: 80%; }
+  .wf-line.w-100 { width: 100%; } .wf-line.w-30 { width: 30%; } .wf-line.w-20 { width: 20%; }
+  .wf-block { background: var(--wf-placeholder); border-radius: 6px; }
+  .wf-img-ph {
+    background: var(--wf-placeholder); border: 1px dashed var(--wf-placeholder-line);
+    border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    color: var(--wf-border-strong);
+  }
+  .wf-img-ph .wf-ico { width: 22px; height: 22px; opacity: 0.6; }
+  .wf-btn {
+    font-size: 12px; font-weight: 600; border-radius: 6px; padding: 7px 12px;
+    border: 1px solid var(--wf-border-strong); color: var(--wf-text); background: var(--wf-surface);
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .wf-btn.primary { background: var(--wf-text); color: var(--wf-surface); border-color: var(--wf-text); }
+  .wf-pill {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em; padding: 3px 9px; border-radius: 20px;
+    border: 1px solid var(--wf-border-strong); color: var(--wf-text-muted);
+  }
+
+  /* Callout badges */
+  .wf-callout {
+    position: absolute; top: -9px; right: -9px; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--wf-accent); color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px var(--wf-surface);
+    z-index: 2;
+  }
+  .wf-callout.tl { top: -9px; left: -9px; right: auto; }
+
+  .legend { margin-top: 18px; }
+  .legend-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--wf-border); font-size: 13px; }
+  .legend-item:last-child { border-bottom: none; }
+  .legend-num {
+    flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--wf-accent); color: #fff;
+    font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .legend-text b { font-weight: 600; }
+  .legend-text .ep { color: var(--wf-text-muted); font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 12px; }
+
+  /* Table wireframe */
+  .wf-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .wf-table th { text-align: left; color: var(--wf-text-muted); font-weight: 600; font-size: 11px; padding: 8px 10px; border-bottom: 1px solid var(--wf-border); }
+  .wf-table td { padding: 10px; border-bottom: 1px solid var(--wf-border); }
+  .wf-checkbox { width: 14px; height: 14px; border: 1.5px solid var(--wf-border-strong); border-radius: 3px; display: inline-block; }
+
+  @media (max-width: 700px) {
+    .page { padding: 20px 14px 60px; }
+  }
+</style>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="ico-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4.5-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="ico-bell" viewBox="0 0 24 24"><path d="M6 10a6 6 0 0 1 12 0v5l2 3H4l2-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 21a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="ico-grip" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="9" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="15" cy="18" r="1.4"/></g></symbol>
+    <symbol id="ico-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ico-img" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="9.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 16l5-5 4 4 3-3 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ico-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></g></symbol>
+    <symbol id="ico-pages" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12h7M9 16h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ico-blog" viewBox="0 0 24 24"><path d="M4 5h16v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 10h8M8 13.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ico-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v10h12V10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="ico-media" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="10" r="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="ico-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="ico-forms" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ico-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ico-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 9a3 3 0 1 1 0-6M15 14c2.8.3 5 2.8 5 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ico-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="ico-log" viewBox="0 0 24 24"><path d="M5 4h14v16l-3-2-3 2-3-2-3 2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 9h8M8 12.5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ico-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="ico-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="page">
+  <div class="masthead">
+    <h1>Truzon CMS — Admin Wireframes</h1>
+    <p>
+      Deliverable #7. Low-fidelity layout only — no color/type/spacing decisions implied here,
+      those come from the eventual design system. Numbered callouts map to component names in
+      <code>COMPONENT_HIERARCHY.md</code> and endpoints in <code>API.md</code>.
+    </p>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Wireframe screens">
+    <button class="tab" role="tab" aria-selected="true" data-panel="dashboard">Dashboard</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="list">List screen</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="edit">Edit screen</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="builder">Page block builder</button>
+  </div>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="panel is-active" id="panel-dashboard">
+    <p class="panel-intro">Route <code>/dashboard</code>. Landing screen right after login.</p>
+    <div class="scroll-frame">
+      <div class="wf-frame">
+        <div class="wf-chrome-bar">
+          <span class="wf-dot"></span><span class="wf-dot"></span><span class="wf-dot"></span>
+          <span class="wf-url">app.truzoncms.com/dashboard</span>
+        </div>
+        <div class="wf-shell">
+          <nav class="wf-sidebar">
+            <div class="wf-logo"></div>
+            <div class="wf-nav-item is-active" style="position:relative">
+              <svg class="wf-ico"><use href="#ico-home"/></svg> Dashboard
+              <span class="wf-callout">1</span>
+            </div>
+            <div class="wf-nav-group-label">Content</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-pages"/></svg> Pages</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-blog"/></svg> Blog</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-home"/></svg> Properties</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-media"/></svg> Media</div>
+            <div class="wf-nav-group-label">Site</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-menu"/></svg> Menus</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-forms"/></svg> Forms</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-settings"/></svg> Settings</div>
+            <div class="wf-nav-group-label">Admin</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-users"/></svg> Users</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-shield"/></svg> Roles</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-log"/></svg> Audit Logs</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-trash"/></svg> Trash</div>
+          </nav>
+
+          <div class="wf-main">
+            <div class="wf-topbar" style="position:relative">
+              <div class="wf-breadcrumb"><b>Dashboard</b></div>
+              <div class="wf-topbar-actions">
+                <div class="wf-icon-btn"><svg class="wf-ico"><use href="#ico-search"/></svg></div>
+                <div class="wf-icon-btn"><svg class="wf-ico"><use href="#ico-bell"/></svg><span class="wf-badge-dot"></span></div>
+                <div class="wf-avatar"></div>
+              </div>
+              <span class="wf-callout" style="top:auto; bottom:-9px;">2</span>
+            </div>
+
+            <div class="wf-content">
+              <div class="wf-row" style="margin-bottom:16px;">
+                <div class="wf-card wf-col"><span class="wf-callout">3</span>
+                  <div class="wf-line w-60" style="height:20px; margin-bottom:8px;"></div>
+                  <div class="wf-line w-80" style="opacity:.6"></div>
+                </div>
+                <div class="wf-card wf-col">
+                  <div class="wf-line w-60" style="height:20px; margin-bottom:8px;"></div>
+                  <div class="wf-line w-80" style="opacity:.6"></div>
+                </div>
+                <div class="wf-card wf-col">
+                  <div class="wf-line w-60" style="height:20px; margin-bottom:8px;"></div>
+                  <div class="wf-line w-80" style="opacity:.6"></div>
+                </div>
+                <div class="wf-card wf-col">
+                  <div class="wf-line w-60" style="height:20px; margin-bottom:8px;"></div>
+                  <div class="wf-line w-80" style="opacity:.6"></div>
+                </div>
+                <div class="wf-card wf-col">
+                  <div class="wf-line w-60" style="height:20px; margin-bottom:8px;"></div>
+                  <div class="wf-line w-80" style="opacity:.6"></div>
+                </div>
+              </div>
+
+              <div class="wf-row" style="margin-bottom:16px;">
+                <div class="wf-card" style="flex: 1.6;"><span class="wf-callout">4</span>
+                  <div class="wf-line w-30" style="height:14px; margin-bottom:12px;"></div>
+                  <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div class="wf-line w-100"></div>
+                    <div class="wf-line w-100"></div>
+                    <div class="wf-line w-80"></div>
+                    <div class="wf-line w-100"></div>
+                    <div class="wf-line w-60"></div>
+                  </div>
+                </div>
+                <div class="wf-col" style="display:flex; flex-direction:column; gap:16px;">
+                  <div class="wf-card"><span class="wf-callout">5</span>
+                    <div class="wf-line w-40" style="height:14px; margin-bottom:10px;"></div>
+                    <div class="wf-btn primary" style="width:100%; justify-content:center; margin-bottom:6px;">+ New Blog Post</div>
+                    <div class="wf-btn" style="width:100%; justify-content:center;">Upload Media</div>
+                  </div>
+                  <div class="wf-card"><span class="wf-callout">6</span>
+                    <div class="wf-line w-40" style="height:14px; margin-bottom:10px;"></div>
+                    <div class="wf-line w-100" style="margin-bottom:8px;"></div>
+                    <div class="wf-line w-80"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wf-row">
+                <div class="wf-card" style="flex:1.4;"><span class="wf-callout">7</span>
+                  <div class="wf-line w-40" style="height:14px; margin-bottom:12px;"></div>
+                  <div style="display:flex; gap:10px;">
+                    <div class="wf-img-ph" style="width:70px; height:70px;"><svg class="wf-ico"><use href="#ico-img"/></svg></div>
+                    <div class="wf-img-ph" style="width:70px; height:70px;"><svg class="wf-ico"><use href="#ico-img"/></svg></div>
+                    <div class="wf-img-ph" style="width:70px; height:70px;"><svg class="wf-ico"><use href="#ico-img"/></svg></div>
+                    <div class="wf-img-ph" style="width:70px; height:70px;"><svg class="wf-ico"><use href="#ico-img"/></svg></div>
+                  </div>
+                </div>
+                <div class="wf-card wf-col"><span class="wf-callout">8</span>
+                  <div class="wf-line w-40" style="height:14px; margin-bottom:12px;"></div>
+                  <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div class="wf-line w-100"></div>
+                    <div class="wf-line w-80"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="legend-num">1</span><span class="legend-text"><b>Sidebar</b> — permission-filtered nav, collapsible</span></div>
+      <div class="legend-item"><span class="legend-num">2</span><span class="legend-text"><b>Topbar</b> — breadcrumbs, ⌘K search, notifications bell, user menu</span></div>
+      <div class="legend-item"><span class="legend-num">3</span><span class="legend-text"><b>StatCard</b> × 5 — Total Users, Published Pages, Draft Pages, Blog Posts, Storage Used — <span class="ep">GET /dashboard/stats</span></span></div>
+      <div class="legend-item"><span class="legend-num">4</span><span class="legend-text"><b>RecentActivityList</b> — <span class="ep">GET /dashboard/recent-activity</span></span></div>
+      <div class="legend-item"><span class="legend-num">5</span><span class="legend-text"><b>QuickActionsPanel</b> — shortcuts into New Post / Upload Media / New Property</span></div>
+      <div class="legend-item"><span class="legend-num">6</span><span class="legend-text"><b>RecentLoginsList</b></span></div>
+      <div class="legend-item"><span class="legend-num">7</span><span class="legend-text"><b>LatestUploadsGrid</b> — thumbnail strip</span></div>
+      <div class="legend-item"><span class="legend-num">8</span><span class="legend-text"><b>PendingReviewsList</b> — drafts awaiting publish</span></div>
+    </div>
+  </section>
+
+  <!-- ============ LIST SCREEN ============ -->
+  <section class="panel" id="panel-list">
+    <p class="panel-intro">
+      Route <code>/blog/posts</code>, shown as the representative case. Same shape for
+      Properties, Users, Forms, Audit Logs, and Roles — only the columns and filters change.
+    </p>
+    <div class="scroll-frame">
+      <div class="wf-frame">
+        <div class="wf-chrome-bar">
+          <span class="wf-dot"></span><span class="wf-dot"></span><span class="wf-dot"></span>
+          <span class="wf-url">app.truzoncms.com/blog/posts</span>
+        </div>
+        <div class="wf-shell">
+          <nav class="wf-sidebar">
+            <div class="wf-logo"></div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-home"/></svg> Dashboard</div>
+            <div class="wf-nav-group-label">Content</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-pages"/></svg> Pages</div>
+            <div class="wf-nav-item is-active"><svg class="wf-ico"><use href="#ico-blog"/></svg> Blog</div>
+            <div class="wf-nav-item wf-nav-sub" style="color:var(--wf-text); font-weight:600;">Posts</div>
+            <div class="wf-nav-item wf-nav-sub">Categories</div>
+            <div class="wf-nav-item wf-nav-sub">Tags</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-home"/></svg> Properties</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-media"/></svg> Media</div>
+          </nav>
+
+          <div class="wf-main">
+            <div class="wf-topbar">
+              <div class="wf-breadcrumb">Blog / <b>Posts</b></div>
+              <div class="wf-topbar-actions">
+                <div class="wf-icon-btn"><svg class="wf-ico"><use href="#ico-search"/></svg></div>
+                <div class="wf-icon-btn"><svg class="wf-ico"><use href="#ico-bell"/></svg></div>
+                <div class="wf-avatar"></div>
+              </div>
+            </div>
+
+            <div class="wf-content">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <div class="wf-line w-30" style="height:20px;"></div>
+                <div class="wf-btn primary"><svg class="wf-ico" style="width:12px;height:12px;"><use href="#ico-plus"/></svg> New Post</div>
+              </div>
+
+              <div class="wf-card" style="margin-bottom:14px; position:relative;"><span class="wf-callout">1</span>
+                <div style="display:flex; gap:10px; align-items:center;">
+                  <div class="wf-block" style="width:200px; height:30px;"></div>
+                  <div class="wf-block" style="width:120px; height:30px;"></div>
+                  <div class="wf-block" style="width:120px; height:30px;"></div>
+                  <div style="flex:1"></div>
+                  <div class="wf-line w-20" style="opacity:.5"></div>
+                </div>
+              </div>
+
+              <div class="wf-card" style="padding:0; position:relative;"><span class="wf-callout">2</span>
+                <table class="wf-table">
+                  <thead>
+                    <tr>
+                      <th><span class="wf-checkbox"></span></th>
+                      <th>Title</th><th>Category</th><th>Author</th><th>Status</th><th>Published</th><th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><span class="wf-checkbox"></span></td><td><div class="wf-line w-80"></div></td><td><div class="wf-line w-60"></div></td><td><div class="wf-line w-60"></div></td><td style="position:relative;"><span class="wf-pill" style="position:static;">Published</span></td><td><div class="wf-line w-60"></div></td><td>⋯</td></tr>
+                    <tr><td><span class="wf-checkbox"></span></td><td><div class="wf-line w-100"></div></td><td><div class="wf-line w-60"></div></td><td><div class="wf-line w-60"></div></td><td><span class="wf-pill">Draft</span></td><td><div class="wf-line w-40" style="opacity:.4"></div></td><td>⋯</td></tr>
+                    <tr><td><span class="wf-checkbox"></span></td><td><div class="wf-line w-60"></div></td><td><div class="wf-line w-60"></div></td><td><div class="wf-line w-60"></div></td><td><span class="wf-pill">Scheduled</span></td><td><div class="wf-line w-60"></div></td><td>⋯</td></tr>
+                    <tr><td><span class="wf-checkbox"></span></td><td><div class="wf-line w-80"></div></td><td><div class="wf-line w-60"></div></td><td><div class="wf-line w-60"></div></td><td><span class="wf-pill">Published</span></td><td><div class="wf-line w-60"></div></td><td>⋯</td></tr>
+                    <tr><td><span class="wf-checkbox"></span></td><td><div class="wf-line w-100"></div></td><td><div class="wf-line w-60"></div></td><td><div class="wf-line w-60"></div></td><td><span class="wf-pill">Published</span></td><td><div class="wf-line w-60"></div></td><td>⋯</td></tr>
+                  </tbody>
+                </table>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px;">
+                  <div class="wf-line w-30" style="opacity:.5"></div>
+                  <div style="display:flex; gap:6px; position:relative;"><span class="wf-callout tl" style="left:auto; right:-9px; top:-30px;">3</span>
+                    <div class="wf-btn">‹</div><div class="wf-btn">1</div><div class="wf-btn">2</div><div class="wf-btn">›</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="legend-num">1</span><span class="legend-text"><b>TableToolbar</b> — search, status filter, category filter; <b>BulkActionsBar</b> appears in place of it once rows are selected</span></div>
+      <div class="legend-item"><span class="legend-num">2</span><span class="legend-text"><b>DataTable</b> — <span class="ep">GET /blog/posts?page&per_page&sort&search&status&category</span>; row click → Edit screen</span></div>
+      <div class="legend-item"><span class="legend-num">3</span><span class="legend-text"><b>Pagination</b> — drives <span class="ep">page</span> / <span class="ep">per_page</span></span></div>
+    </div>
+  </section>
+
+  <!-- ============ EDIT SCREEN ============ -->
+  <section class="panel" id="panel-edit">
+    <p class="panel-intro">
+      Route <code>/blog/posts/[id]</code>, shown as the representative case. Same shape for the
+      Property editor (swap the rich-text body for <b>PropertyDetailsForm</b> + <b>GalleryManager</b>)
+      and Settings tabs (swap for the relevant settings form).
+    </p>
+    <div class="scroll-frame">
+      <div class="wf-frame">
+        <div class="wf-chrome-bar">
+          <span class="wf-dot"></span><span class="wf-dot"></span><span class="wf-dot"></span>
+          <span class="wf-url">app.truzoncms.com/blog/posts/why-luxury-real-estate</span>
+        </div>
+        <div class="wf-shell">
+          <nav class="wf-sidebar">
+            <div class="wf-logo"></div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-home"/></svg> Dashboard</div>
+            <div class="wf-nav-group-label">Content</div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-pages"/></svg> Pages</div>
+            <div class="wf-nav-item is-active"><svg class="wf-ico"><use href="#ico-blog"/></svg> Blog</div>
+          </nav>
+
+          <div class="wf-main">
+            <div class="wf-topbar">
+              <div class="wf-breadcrumb">Blog / Posts / <b>Why Luxury Real Estate…</b></div>
+              <div class="wf-topbar-actions"><div class="wf-avatar"></div></div>
+            </div>
+
+            <div class="wf-content">
+              <div class="wf-card" style="margin-bottom:14px; position:relative;"><span class="wf-callout">1</span>
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="wf-line w-60" style="height:18px;"></div>
+                    <span class="wf-pill">Draft</span>
+                  </div>
+                  <div style="display:flex; gap:8px;">
+                    <div class="wf-btn">Save Draft</div>
+                    <div class="wf-btn">Preview</div>
+                    <div class="wf-btn primary">Publish <svg class="wf-ico" style="width:11px;height:11px;"><use href="#ico-chevron"/></svg></div>
+                    <div class="wf-btn">⋯</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wf-row">
+                <div class="wf-card" style="flex:1.6; position:relative;"><span class="wf-callout">2</span>
+                  <div style="display:flex; gap:6px; margin-bottom:12px;">
+                    <div class="wf-block" style="width:26px; height:26px;"></div>
+                    <div class="wf-block" style="width:26px; height:26px;"></div>
+                    <div class="wf-block" style="width:26px; height:26px;"></div>
+                    <div class="wf-block" style="width:26px; height:26px;"></div>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div class="wf-line w-100"></div><div class="wf-line w-100"></div><div class="wf-line w-80"></div>
+                    <div class="wf-line w-100"></div><div class="wf-line w-100"></div><div class="wf-line w-60"></div>
+                    <div class="wf-line w-100"></div><div class="wf-line w-40"></div>
+                  </div>
+                </div>
+
+                <div class="wf-col" style="display:flex; flex-direction:column; gap:14px;">
+                  <div class="wf-card" style="position:relative;"><span class="wf-callout">3</span>
+                    <div class="wf-line w-40" style="height:13px; margin-bottom:10px;"></div>
+                    <div class="wf-block" style="height:26px; margin-bottom:8px;"></div>
+                    <div class="wf-block" style="height:26px; margin-bottom:8px;"></div>
+                    <div class="wf-block" style="height:26px; margin-bottom:10px;"></div>
+                    <div class="wf-img-ph" style="height:80px; margin-bottom:8px;"><svg class="wf-ico"><use href="#ico-img"/></svg></div>
+                    <div class="wf-btn" style="width:100%; justify-content:center;">Choose Image</div>
+                  </div>
+                  <div class="wf-card" style="position:relative;"><span class="wf-callout">4</span>
+                    <div class="wf-line w-40" style="height:13px; margin-bottom:10px;"></div>
+                    <div class="wf-block" style="height:26px; margin-bottom:8px;"></div>
+                    <div class="wf-block" style="height:44px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute; top:70px; right:0; width:230px; height:300px; background:var(--wf-surface); border-left:1px solid var(--wf-border); border-bottom:1px solid var(--wf-border); box-shadow:-8px 0 20px var(--wf-shadow); padding:14px; opacity:.85;">
+          <span class="wf-callout tl">5</span>
+          <div class="wf-line w-60" style="height:14px; margin-bottom:12px;"></div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div class="wf-line w-100"></div><div class="wf-line w-100"></div><div class="wf-line w-80"></div>
+          </div>
+          <div class="wf-btn" style="margin-top:14px;">Restore this version</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="legend-num">1</span><span class="legend-text"><b>PostEditorHeader</b> — Save/Preview/Publish▾/Duplicate/Version History — <span class="ep">POST /blog/posts/{id}/publish</span> etc.</span></div>
+      <div class="legend-item"><span class="legend-num">2</span><span class="legend-text"><b>RichTextEditor</b> — post body</span></div>
+      <div class="legend-item"><span class="legend-num">3</span><span class="legend-text"><b>PostMetaPanel</b> — category, tags, author, featured image (opens <b>MediaPicker</b>), reading time</span></div>
+      <div class="legend-item"><span class="legend-num">4</span><span class="legend-text"><b>SeoPanel</b> — shared component, identical in Pages &amp; Properties editors</span></div>
+      <div class="legend-item"><span class="legend-num">5</span><span class="legend-text"><b>VersionHistoryDrawer</b> — slides over from the right on demand — <span class="ep">GET /blog/posts/{id}/versions</span></span></div>
+    </div>
+  </section>
+
+  <!-- ============ BLOCK BUILDER ============ -->
+  <section class="panel" id="panel-builder">
+    <p class="panel-intro">
+      Route <code>/pages/home</code>. The one screen that doesn't follow the generic edit-screen
+      shape — Pages are composed from ordered blocks instead of a single form. No create/delete
+      here: exactly 5 fixed pages (<code>ERD.md</code>).
+    </p>
+    <div class="scroll-frame">
+      <div class="wf-frame">
+        <div class="wf-chrome-bar">
+          <span class="wf-dot"></span><span class="wf-dot"></span><span class="wf-dot"></span>
+          <span class="wf-url">app.truzoncms.com/pages/home</span>
+        </div>
+        <div class="wf-shell">
+          <nav class="wf-sidebar">
+            <div class="wf-logo"></div>
+            <div class="wf-nav-item"><svg class="wf-ico"><use href="#ico-home"/></svg> Dashboard</div>
+            <div class="wf-nav-group-label">Content</div>
+            <div class="wf-nav-item is-active"><svg class="wf-ico"><use href="#ico-pages"/></svg> Pages</div>
+          </nav>
+
+          <div class="wf-main">
+            <div class="wf-topbar">
+              <div class="wf-breadcrumb">Pages / <b>Home</b></div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span class="wf-pill">Published</span>
+                <div class="wf-btn">Preview</div>
+                <div class="wf-btn">Unpublish</div>
+                <div class="wf-icon-btn"><svg class="wf-ico"><use href="#ico-log"/></svg></div>
+              </div>
+            </div>
+
+            <div class="wf-content" style="display:flex; gap:14px; padding:14px;">
+              <div class="wf-card" style="width:220px; flex-shrink:0; position:relative;"><span class="wf-callout">1</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                  <div class="wf-line w-40" style="height:13px;"></div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                  <div style="display:flex; align-items:center; gap:6px; padding:7px 8px; border:1px solid var(--wf-border); border-radius:6px;">
+                    <svg class="wf-ico" style="width:13px;height:13px;color:var(--wf-text-muted);"><use href="#ico-grip"/></svg>
+                    <div class="wf-line w-60"></div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px; padding:7px 8px; border:1px solid var(--wf-border); border-radius:6px; background:var(--wf-accent-soft);">
+                    <svg class="wf-ico" style="width:13px;height:13px;color:var(--wf-text-muted);"><use href="#ico-grip"/></svg>
+                    <div class="wf-line w-60"></div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px; padding:7px 8px; border:1px solid var(--wf-border); border-radius:6px;">
+                    <svg class="wf-ico" style="width:13px;height:13px;color:var(--wf-text-muted);"><use href="#ico-grip"/></svg>
+                    <div class="wf-line w-40"></div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px; padding:7px 8px; border:1px solid var(--wf-border); border-radius:6px;">
+                    <svg class="wf-ico" style="width:13px;height:13px;color:var(--wf-text-muted);"><use href="#ico-grip"/></svg>
+                    <div class="wf-line w-60"></div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px; padding:7px 8px; border:1px solid var(--wf-border); border-radius:6px;">
+                    <svg class="wf-ico" style="width:13px;height:13px;color:var(--wf-text-muted);"><use href="#ico-grip"/></svg>
+                    <div class="wf-line w-40"></div>
+                  </div>
+                </div>
+                <div class="wf-btn" style="width:100%; justify-content:center; margin-top:10px;"><svg class="wf-ico" style="width:11px;height:11px;"><use href="#ico-plus"/></svg> Add Block</div>
+              </div>
+
+              <div class="wf-card" style="flex:1; position:relative;"><span class="wf-callout">2</span>
+                <div class="wf-line w-40" style="height:15px; margin-bottom:14px;"></div>
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                  <div><div class="wf-line w-20" style="height:10px; margin-bottom:5px; opacity:.6;"></div><div class="wf-block" style="height:26px;"></div></div>
+                  <div><div class="wf-line w-20" style="height:10px; margin-bottom:5px; opacity:.6;"></div><div class="wf-block" style="height:26px;"></div></div>
+                  <div>
+                    <div class="wf-line w-20" style="height:10px; margin-bottom:5px; opacity:.6;"></div>
+                    <div style="display:flex; gap:8px;">
+                      <div class="wf-img-ph" style="width:90px; height:60px;"><svg class="wf-ico"><use href="#ico-img"/></svg></div>
+                      <div class="wf-img-ph" style="width:90px; height:60px;"><svg class="wf-ico"><use href="#ico-img"/></svg></div>
+                      <div class="wf-img-ph" style="width:90px; height:60px;"><svg class="wf-ico"><use href="#ico-img"/></svg></div>
+                    </div>
+                  </div>
+                  <div><div class="wf-line w-20" style="height:10px; margin-bottom:5px; opacity:.6;"></div><div class="wf-block" style="height:26px; width:50%;"></div></div>
+                </div>
+              </div>
+
+              <div class="wf-card" style="width:210px; flex-shrink:0; position:relative; opacity:.75;"><span class="wf-callout">3</span>
+                <div class="wf-line w-40" style="height:13px; margin-bottom:10px;"></div>
+                <div class="wf-block" style="height:26px; margin-bottom:8px;"></div>
+                <div class="wf-block" style="height:44px; margin-bottom:8px;"></div>
+                <div class="wf-block" style="height:26px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute; inset:0; background:rgba(20,24,33,.35); display:flex; align-items:center; justify-content:center;">
+          <div class="wf-card" style="width:520px; background:var(--wf-surface); position:relative;"><span class="wf-callout tl">4</span>
+            <div class="wf-line w-40" style="height:16px; margin-bottom:14px;"></div>
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
+              <div class="wf-card" style="text-align:center; padding:12px 6px;"><div class="wf-block" style="width:22px;height:22px;margin:0 auto 8px;border-radius:50%;"></div><div class="wf-line w-60" style="margin:0 auto; height:8px;"></div></div>
+              <div class="wf-card" style="text-align:center; padding:12px 6px;"><div class="wf-block" style="width:22px;height:22px;margin:0 auto 8px;border-radius:50%;"></div><div class="wf-line w-60" style="margin:0 auto; height:8px;"></div></div>
+              <div class="wf-card" style="text-align:center; padding:12px 6px;"><div class="wf-block" style="width:22px;height:22px;margin:0 auto 8px;border-radius:50%;"></div><div class="wf-line w-60" style="margin:0 auto; height:8px;"></div></div>
+              <div class="wf-card" style="text-align:center; padding:12px 6px;"><div class="wf-block" style="width:22px;height:22px;margin:0 auto 8px;border-radius:50%;"></div><div class="wf-line w-60" style="margin:0 auto; height:8px;"></div></div>
+              <div class="wf-card" style="text-align:center; padding:12px 6px;"><div class="wf-block" style="width:22px;height:22px;margin:0 auto 8px;border-radius:50%;"></div><div class="wf-line w-60" style="margin:0 auto; height:8px;"></div></div>
+              <div class="wf-card" style="text-align:center; padding:12px 6px;"><div class="wf-block" style="width:22px;height:22px;margin:0 auto 8px;border-radius:50%;"></div><div class="wf-line w-60" style="margin:0 auto; height:8px;"></div></div>
+              <div class="wf-card" style="text-align:center; padding:12px 6px;"><div class="wf-block" style="width:22px;height:22px;margin:0 auto 8px;border-radius:50%;"></div><div class="wf-line w-60" style="margin:0 auto; height:8px;"></div></div>
+              <div class="wf-card" style="text-align:center; padding:12px 6px;"><div class="wf-block" style="width:22px;height:22px;margin:0 auto 8px;border-radius:50%;"></div><div class="wf-line w-60" style="margin:0 auto; height:8px;"></div></div>
+            </div>
+            <div style="text-align:center; margin-top:10px; font-size:11px; color:var(--wf-text-muted);">…18 block types total</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="legend-num">1</span><span class="legend-text"><b>BlockList</b> — drag-and-drop reorder (highlighted row = selected) — <span class="ep">PUT /pages/home/blocks/reorder</span></span></div>
+      <div class="legend-item"><span class="legend-num">2</span><span class="legend-text"><b>BlockEditorPanel</b> — renders the form for whichever block type is selected (18 possible editors, e.g. Hero Banner shown here: heading, subheading, slide images)</span></div>
+      <div class="legend-item"><span class="legend-num">3</span><span class="legend-text"><b>SeoPanel</b> — shared component, collapsed by default on this screen</span></div>
+      <div class="legend-item"><span class="legend-num">4</span><span class="legend-text"><b>BlockPalette</b> modal — <span class="ep">GET /block-definitions</span>, insert via <span class="ep">POST /pages/home/blocks</span></span></div>
+    </div>
+  </section>
+</div>
+
+<script>
+  document.querySelectorAll('.tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (t) { t.setAttribute('aria-selected', 'false'); });
+      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('is-active'); });
+      tab.setAttribute('aria-selected', 'true');
+      document.getElementById('panel-' + tab.dataset.panel).classList.add('is-active');
+    });
+  });
+</script>

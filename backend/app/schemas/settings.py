@@ -1,0 +1,77 @@
+import uuid
+
+from pydantic import BaseModel, ConfigDict
+
+# The fixed set of known setting keys (ERD.md's `Setting` is a generic
+# key-value store; this is the app-level contract for which keys exist and
+# what shape their values take — matches API.md's "partial update of known
+# keys" wording).
+KNOWN_SETTING_KEYS = [
+    "site_name",
+    "logo_media_id",
+    "favicon_media_id",
+    "contact_email",
+    "contact_phone",
+    "callback_phone",
+    "whatsapp_number",
+    "contact_address",
+    "social_facebook_url",
+    "social_instagram_url",
+    "social_linkedin_url",
+    "social_youtube_url",
+    "smtp_host",
+    "smtp_port",
+    "smtp_username",
+    "smtp_password",
+    "smtp_from_email",
+    "smtp_use_tls",
+    "analytics_ga_measurement_id",
+]
+
+
+class SettingsRead(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    site_name: str | None = None
+    logo_media_id: uuid.UUID | None = None
+    favicon_media_id: uuid.UUID | None = None
+    contact_email: str | None = None
+    contact_phone: str | None = None
+    callback_phone: str | None = None
+    whatsapp_number: str | None = None
+    contact_address: str | None = None
+    social_facebook_url: str | None = None
+    social_instagram_url: str | None = None
+    social_linkedin_url: str | None = None
+    social_youtube_url: str | None = None
+    smtp_host: str | None = None
+    smtp_port: int | None = None
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str | None = None
+    smtp_use_tls: bool = True
+    analytics_ga_measurement_id: str | None = None
+
+
+class SettingsUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    site_name: str | None = None
+    logo_media_id: uuid.UUID | None = None
+    favicon_media_id: uuid.UUID | None = None
+    contact_email: str | None = None
+    contact_phone: str | None = None
+    callback_phone: str | None = None
+    whatsapp_number: str | None = None
+    contact_address: str | None = None
+    social_facebook_url: str | None = None
+    social_instagram_url: str | None = None
+    social_linkedin_url: str | None = None
+    social_youtube_url: str | None = None
+    smtp_host: str | None = None
+    smtp_port: int | None = None
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str | None = None
+    smtp_use_tls: bool | None = None
+    analytics_ga_measurement_id: str | None = None
