@@ -10,7 +10,8 @@ const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", 
 
 interface ImagePickerFieldProps {
   label: string;
-  imageUrl: string;
+  mediaId?: string | null;
+  imageUrl?: string | null;
   onChange: (value: { url: string; mediaId: string | null }) => void;
 }
 

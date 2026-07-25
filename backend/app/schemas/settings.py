@@ -26,6 +26,23 @@ KNOWN_SETTING_KEYS = [
     "smtp_from_email",
     "smtp_use_tls",
     "analytics_ga_measurement_id",
+    "default_meta_title",
+    "default_meta_description",
+    "default_keywords",
+    "default_canonical_url",
+    "organization_name",
+    "google_verification_code",
+    "bing_verification_code",
+    "google_tag_manager_id",
+    "meta_pixel_id",
+    "google_search_console_verification",
+    "og_default_image_media_id",
+    "twitter_card_default_type",
+    "robots_txt_content",
+    "working_hours",
+    "latitude",
+    "longitude",
+    "service_areas",
 ]
 
 
@@ -51,6 +68,23 @@ class SettingsRead(BaseModel):
     smtp_from_email: str | None = None
     smtp_use_tls: bool = True
     analytics_ga_measurement_id: str | None = None
+    default_meta_title: str | None = None
+    default_meta_description: str | None = None
+    default_keywords: list[str] | None = None
+    default_canonical_url: str | None = None
+    organization_name: str | None = None
+    google_verification_code: str | None = None
+    bing_verification_code: str | None = None
+    google_tag_manager_id: str | None = None
+    meta_pixel_id: str | None = None
+    google_search_console_verification: str | None = None
+    og_default_image_media_id: uuid.UUID | None = None
+    twitter_card_default_type: str | None = "summary_large_image"
+    robots_txt_content: str | None = None
+    working_hours: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    service_areas: list[str] | None = None
 
 
 class SettingsUpdate(BaseModel):
@@ -75,3 +109,20 @@ class SettingsUpdate(BaseModel):
     smtp_from_email: str | None = None
     smtp_use_tls: bool | None = None
     analytics_ga_measurement_id: str | None = None
+    default_meta_title: str | None = None
+    default_meta_description: str | None = None
+    default_keywords: list[str] | None = None
+    default_canonical_url: str | None = None
+    organization_name: str | None = None
+    google_verification_code: str | None = None
+    bing_verification_code: str | None = None
+    google_tag_manager_id: str | None = None
+    meta_pixel_id: str | None = None
+    google_search_console_verification: str | None = None
+    og_default_image_media_id: uuid.UUID | None = None
+    twitter_card_default_type: str | None = None
+    robots_txt_content: str | None = None
+    working_hours: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    service_areas: list[str] | None = None

@@ -19,6 +19,7 @@ from app.models.property_media import PropertyMedia
 from app.models.refresh_token import RefreshToken
 from app.models.role import Role, role_permission
 from app.models.seo_meta import SeoMeta
+from app.models.redirect import RedirectRule
 from app.models.setting import Setting
 from app.models.tag import Tag
 from app.models.user import User
@@ -63,4 +64,5 @@ __all__ = [
     "FormSubmission",
     "FormSubmissionStatus",
     "Setting",
+    "RedirectRule",
 ]

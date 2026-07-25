@@ -18,6 +18,23 @@ export interface Settings {
   smtp_from_email: string | null;
   smtp_use_tls: boolean;
   analytics_ga_measurement_id: string | null;
+  default_meta_title: string | null;
+  default_meta_description: string | null;
+  default_keywords: string[] | null;
+  default_canonical_url: string | null;
+  organization_name: string | null;
+  google_verification_code: string | null;
+  bing_verification_code: string | null;
+  google_tag_manager_id: string | null;
+  meta_pixel_id: string | null;
+  google_search_console_verification: string | null;
+  og_default_image_media_id: string | null;
+  twitter_card_default_type: string | null;
+  robots_txt_content: string | null;
+  working_hours: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  service_areas: string[] | null;
 }
 
 export type SettingsUpdatePayload = Partial<Settings>;

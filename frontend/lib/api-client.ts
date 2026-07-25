@@ -31,7 +31,23 @@ async function doFetch<T>(path: string, init: RequestInit): Promise<{ status: nu
   if (!(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers, credentials: "include" });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers, credentials: "include" });
+  } catch {
+    return {
+      status: 0,
+      envelope: {
+        success: false,
+        data: null,
+        meta: null,
+        error: {
+          code: "NETWORK_ERROR",
+          message: `Unable to connect to server at ${API_BASE_URL}. Ensure backend is running.`,
+        },
+      },
+    };
+  }
 
   let envelope: ApiEnvelope<T>;
   try {

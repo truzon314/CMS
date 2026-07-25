@@ -17,8 +17,10 @@ from app.api.v1.menus import router as menus_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.pages import router as pages_router
 from app.api.v1.properties import router as properties_router
+from app.api.v1.redirects import router as redirects_router
 from app.api.v1.roles import router as roles_router
 from app.api.v1.search import router as search_router
+from app.api.v1.seo import router as seo_router
 from app.api.v1.settings import router as settings_router
 from app.api.v1.taxonomy import router as taxonomy_router
 from app.api.v1.trash import router as trash_router
@@ -89,6 +91,8 @@ app.include_router(taxonomy_router, prefix="/api/v1")
 app.include_router(menus_router, prefix="/api/v1")
 app.include_router(forms_router, prefix="/api/v1")
 app.include_router(settings_router, prefix="/api/v1")
+app.include_router(seo_router, prefix="/api/v1")
+app.include_router(redirects_router, prefix="/api/v1")
 app.include_router(audit_logs_router, prefix="/api/v1")
 app.include_router(notifications_router, prefix="/api/v1")
 app.include_router(search_router, prefix="/api/v1")

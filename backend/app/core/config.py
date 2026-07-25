@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 30
     environment: str = "development"
-    cors_origins: str = "http://localhost:3001"
+    cors_origins: str = "http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001,http://127.0.0.1:3000"
 
     # Media Library (ARCHITECTURE.md's `StorageAdapter` — local disk for dev/tests,
     # R2 in prod once these are set).

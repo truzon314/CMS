@@ -6,6 +6,7 @@ import { AnalyticsSettingsForm } from "@/modules/settings/AnalyticsSettingsForm"
 import { GeneralSettingsForm } from "@/modules/settings/GeneralSettingsForm";
 import { SmtpSettingsForm } from "@/modules/settings/SmtpSettingsForm";
 import { SocialLinksForm } from "@/modules/settings/SocialLinksForm";
+import { SeoSettingsForm } from "@/modules/settings/SeoSettingsForm";
 
 export function SettingsPage() {
   const { data: settings, isLoading } = useSettings();
@@ -25,6 +26,7 @@ export function SettingsPage() {
           <TabsTrigger value="social">Social Links</TabsTrigger>
           <TabsTrigger value="smtp">SMTP</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="seo">SEO</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -54,6 +56,9 @@ export function SettingsPage() {
             isSaving={updateSettings.isPending}
             onSave={(payload) => updateSettings.mutate(payload)}
           />
+        </TabsContent>
+        <TabsContent value="seo">
+          <SeoSettingsForm settings={settings} isSaving={updateSettings.isPending} onSave={(payload) => updateSettings.mutate(payload)} />
         </TabsContent>
       </Tabs>
     </div>

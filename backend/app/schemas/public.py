@@ -17,6 +17,9 @@ class PublicSeo(BaseModel):
     og_description: str | None = None
     og_image_url: str | None = None
     twitter_card_type: str | None = None
+    twitter_title: str | None = None
+    twitter_description: str | None = None
+    twitter_image_url: str | None = None
     robots: str | None = None
     schema_jsonld: dict | None = None
 
@@ -129,6 +132,22 @@ class PublicSettings(BaseModel):
     social_linkedin_url: str | None = None
     social_youtube_url: str | None = None
     analytics_ga_measurement_id: str | None = None
+    default_meta_title: str | None = None
+    default_meta_description: str | None = None
+    default_keywords: list[str] | None = None
+    default_canonical_url: str | None = None
+    organization_name: str | None = None
+    google_verification_code: str | None = None
+    bing_verification_code: str | None = None
+    google_tag_manager_id: str | None = None
+    meta_pixel_id: str | None = None
+    google_search_console_verification: str | None = None
+    og_default_image_url: str | None = None
+    twitter_card_default_type: str | None = None
+    working_hours: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    service_areas: list[str] | None = None
 
 
 class PublicFormSubmissionCreate(BaseModel):

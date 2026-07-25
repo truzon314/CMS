@@ -6,6 +6,7 @@ import math
 import uuid
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import PlainTextResponse
 
 from app.core.container import get_public_service
 from app.core.rate_limit import rate_limit
@@ -82,6 +83,16 @@ async def get_public_menu(key: str, public_service: PublicService = Depends(get_
 async def get_public_settings(public_service: PublicService = Depends(get_public_service)):
     settings = await public_service.get_settings()
     return ok(settings.model_dump(mode="json"))
+
+
+@router.get("/sitemap")
+async def get_sitemap_data(public_service: PublicService = Depends(get_public_service)):
+    return ok(await public_service.sitemap_entries())
+
+
+@router.get("/robots.txt", response_class=PlainTextResponse)
+async def get_robots_txt(public_service: PublicService = Depends(get_public_service)):
+    return await public_service.robots_txt()
 
 
 @router.get("/categories")

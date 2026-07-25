@@ -83,6 +83,9 @@ class PublicService:
             og_description=seo.og_description,
             og_image_url=await self._media_url(seo.og_image_media_id),
             twitter_card_type=seo.twitter_card_type,
+            twitter_title=seo.twitter_title,
+            twitter_description=seo.twitter_description,
+            twitter_image_url=await self._media_url(seo.twitter_image_media_id),
             robots=seo.robots,
             schema_jsonld=seo.schema_jsonld,
         )
@@ -268,7 +271,52 @@ class PublicService:
             social_linkedin_url=values.get("social_linkedin_url"),
             social_youtube_url=values.get("social_youtube_url"),
             analytics_ga_measurement_id=values.get("analytics_ga_measurement_id"),
+            default_meta_title=values.get("default_meta_title"),
+            default_meta_description=values.get("default_meta_description"),
+            default_keywords=values.get("default_keywords"),
+            default_canonical_url=values.get("default_canonical_url"),
+            organization_name=values.get("organization_name"),
+            google_verification_code=values.get("google_verification_code"),
+            bing_verification_code=values.get("bing_verification_code"),
+            google_tag_manager_id=values.get("google_tag_manager_id"),
+            meta_pixel_id=values.get("meta_pixel_id"),
+            google_search_console_verification=values.get("google_search_console_verification"),
+            og_default_image_url=await self._media_url(uuid.UUID(values["og_default_image_media_id"]) if values.get("og_default_image_media_id") else None),
+            twitter_card_default_type=values.get("twitter_card_default_type"),
+            working_hours=values.get("working_hours"),
+            latitude=values.get("latitude"),
+            longitude=values.get("longitude"),
+            service_areas=values.get("service_areas"),
         )
+
+    async def sitemap_entries(self) -> list[dict[str, str | None]]:
+        """Return only published, canonical site paths for the public-site sitemap."""
+        pages = [page for page in await self.pages.list_all() if page.status == PageStatus.PUBLISHED]
+        posts, _ = await self.blog_posts.list(
+            page=1, per_page=50_000, status=BlogPostStatus.PUBLISHED.value,
+            category_id=None, tag_id=None, author_id=None, search=None,
+        )
+        properties, _ = await self.properties.list(
+            page=1, per_page=50_000, status=PropertyStatus.PUBLISHED.value,
+            city=None, category_id=None, budget_bracket=None, is_signature=None,
+        )
+        entries = [
+            {"path": "/" if page.page_type == PageType.HOME else page.slug, "last_modified": page.updated_at.isoformat()}
+            for page in pages
+        ]
+        entries.extend({"path": f"/blog/{post.slug}", "last_modified": post.updated_at.isoformat()} for post in posts)
+        entries.extend({"path": f"/property/{property_.slug}", "last_modified": property_.updated_at.isoformat()} for property_ in properties)
+        return entries
+
+    async def robots_txt(self) -> str:
+        rows = await self.settings.get_all()
+        values = {row.key: row.value for row in rows if row.key in KNOWN_SETTING_KEYS}
+        content = values.get("robots_txt_content")
+        if isinstance(content, str) and content.strip():
+            return content.strip() + "\n"
+        base_url = str(values.get("default_canonical_url") or "").rstrip("/")
+        sitemap_line = f"Sitemap: {base_url}/sitemap.xml\n" if base_url else ""
+        return f"User-agent: *\nAllow: /\n{sitemap_line}"
 
     # --- Categories ---
 

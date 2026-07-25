@@ -7,6 +7,7 @@ import { BlockBuilderCanvas } from "@/modules/pages/BlockBuilderCanvas";
 import { PageEditorHeader } from "@/modules/pages/PageEditorHeader";
 import { PreviewDialog } from "@/modules/pages/PreviewDialog";
 import { ScheduleDialog } from "@/modules/pages/ScheduleDialog";
+import { SeoPanel } from "@/components/seo/SeoPanel";
 import type { PageType } from "@/types/page";
 
 interface PageEditorPageProps {
@@ -43,6 +44,15 @@ export function PageEditorPage({ pageType }: PageEditorPageProps) {
       />
 
       <BlockBuilderCanvas page={page} blockDefinitions={blockDefinitions ?? []} />
+
+      <div className="mt-4">
+        <h3 className="mb-3 font-semibold text-base text-neutral-900">Page SEO & Social Metadata</h3>
+        <SeoPanel
+          value={page.seo}
+          onChange={(seo) => updatePage.mutate({ seo })}
+          slug={page.slug}
+        />
+      </div>
 
       <PreviewDialog pageType={pageType} open={previewOpen} onClose={() => setPreviewOpen(false)} />
 
