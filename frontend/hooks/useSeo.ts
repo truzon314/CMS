@@ -59,3 +59,17 @@ export function useRedirectActions() {
 
   return { createRedirect, updateRedirect, deleteRedirect };
 }
+
+export function usePageSpeed(url?: string) {
+  return useQuery({
+    queryKey: ["pagespeed", url],
+    queryFn: () => seoService.getPageSpeed(url),
+  });
+}
+
+export function useKeywordRankings() {
+  return useQuery({
+    queryKey: ["keyword-rankings"],
+    queryFn: seoService.getKeywordRankings,
+  });
+}

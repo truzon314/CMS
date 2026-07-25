@@ -55,4 +55,10 @@ export const seoService = {
     apiFetch<{ success: boolean }>(`/api/v1/redirects/${id}`, {
       method: "DELETE",
     }),
+
+  getPageSpeed: (url?: string) =>
+    apiFetch<Record<string, unknown>>(`/api/v1/seo/pagespeed${url ? `?url=${encodeURIComponent(url)}` : ""}`),
+
+  getKeywordRankings: () =>
+    apiFetch<Array<{ keyword: string; google_pos: number; bing_pos: number; ai_search: string; volume: string; change: string }>>("/api/v1/seo/rankings"),
 };
