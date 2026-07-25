@@ -61,4 +61,10 @@ export const seoService = {
 
   getKeywordRankings: () =>
     apiFetch<Array<{ keyword: string; google_pos: number; bing_pos: number; ai_search: string; volume: string; change: string }>>("/api/v1/seo/rankings"),
+
+  getCompetitors: () =>
+    apiFetch<Record<string, unknown>>("/api/v1/seo/competitors"),
+
+  exportReport: () =>
+    apiFetch<Record<string, unknown>>("/api/v1/seo/export"),
 };

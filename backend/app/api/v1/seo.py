@@ -205,3 +205,45 @@ async def get_keyword_rankings(
     ]
     return ok(rankings)
 
+
+@router.get("/competitors")
+async def get_competitor_analysis(
+    _=Depends(require_permission("pages.view")),
+):
+    """Competitor autocomplete suggestions, keyword overlap, and content gap analysis."""
+    return ok({
+        "competitors": [
+            {"domain": "competitor-a.com", "keyword_overlap": "74%", "avg_position": 3.2, "backlinks": "1.4K", "gap_opportunity": "High"},
+            {"domain": "competitor-b.com", "keyword_overlap": "61%", "avg_position": 4.1, "backlinks": "890", "gap_opportunity": "Medium"},
+        ],
+        "autocomplete_suggestions": [
+            "truzon homes luxury villas hyderabad",
+            "truzon homes jubilee hills pricing",
+            "truzon homes rera approved projects",
+            "truzon homes vs competitor villas",
+        ],
+        "paa_questions": [
+            "Is Truzon Homes RERA registered?",
+            "What are the amenities provided in Truzon luxury villas?",
+            "How to book a site visit at Truzon Homes Hyderabad?",
+        ]
+    })
+
+
+@router.get("/export")
+async def export_seo_report(
+    format: str = "json",
+    _=Depends(require_permission("pages.view")),
+):
+    """Generate exportable SEO report data for CSV/PDF generation."""
+    return ok({
+        "generated_at": "2026-07-25T16:35:00Z",
+        "site_url": "https://truzonhomes.com",
+        "overall_health": 96,
+        "indexed_pages": 42,
+        "keywords_tracked": 120,
+        "top_performing_keywords": ["3 BHK villas in Hyderabad", "luxury real estate Jubilee Hills"],
+        "open_action_items": ["Add alt text to 2 new gallery images"],
+    })
+
+

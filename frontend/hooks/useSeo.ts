@@ -73,3 +73,18 @@ export function useKeywordRankings() {
     queryFn: seoService.getKeywordRankings,
   });
 }
+
+export function useCompetitors() {
+  return useQuery({
+    queryKey: ["competitors"],
+    queryFn: seoService.getCompetitors,
+  });
+}
+
+export function useExportReport() {
+  return useQuery({
+    queryKey: ["seo-export"],
+    queryFn: seoService.exportReport,
+    enabled: false,
+  });
+}

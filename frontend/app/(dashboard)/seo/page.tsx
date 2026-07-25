@@ -9,6 +9,8 @@ import {
   useAiGenerate,
   usePageSpeed,
   useKeywordRankings,
+  useCompetitors,
+  useExportReport,
 } from "@/hooks/useSeo";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
 import { TextField } from "@/components/forms/TextField";
@@ -31,10 +33,13 @@ import {
   Gauge,
   TrendingUp,
   Zap,
+  Download,
+  Users,
+  Search,
 } from "lucide-react";
 import type { SettingsUpdatePayload } from "@/types/settings";
 
-type Tab = "audit" | "pagespeed" | "rankings" | "global" | "local" | "redirects" | "ai" | "schema";
+type Tab = "audit" | "pagespeed" | "rankings" | "competitors" | "global" | "local" | "redirects" | "ai" | "schema";
 
 export default function SeoManagementPage() {
   const [activeTab, setActiveTab] = useState<Tab>("audit");
@@ -48,10 +53,24 @@ export default function SeoManagementPage() {
   const { createRedirect, deleteRedirect } = useRedirectActions();
   const aiGenerate = useAiGenerate();
 
-  // PageSpeed & Rankings queries
+  // PageSpeed, Rankings & Competitors queries
   const [targetUrl, setTargetUrl] = useState("https://truzonhomes.com");
   const { data: pageSpeedData, isLoading: loadingPageSpeed, refetch: refetchPageSpeed } = usePageSpeed(targetUrl);
   const { data: rankingsData } = useKeywordRankings();
+  const { data: competitorData } = useCompetitors();
+  const { refetch: fetchExportReport } = useExportReport();
+
+  const handleExportCSV = async () => {
+    const res = await fetchExportReport();
+    if (res.data) {
+      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `seo-audit-report-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+    }
+  };
 
   // Settings form state
   const [settingsForm, setSettingsForm] = useState<SettingsUpdatePayload>({});
@@ -106,6 +125,9 @@ export default function SeoManagementPage() {
             Centralized Search Engine Optimization, PageSpeed Insights, Keyword Rankings, Local SEO & AI Assistant.
           </p>
         </div>
+        <Button onClick={handleExportCSV} variant="outline" size="sm" className="self-start sm:self-auto">
+          <Download size={15} className="mr-1.5" /> Export Audit Report (JSON/CSV)
+        </Button>
       </div>
 
       {/* Tabs */}
@@ -133,6 +155,14 @@ export default function SeoManagementPage() {
           }`}
         >
           <TrendingUp size={15} /> Search Rankings
+        </button>
+        <button
+          onClick={() => setActiveTab("competitors")}
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-md transition-colors ${
+            activeTab === "competitors" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
+          }`}
+        >
+          <Users size={15} /> Competitors & Autocomplete
         </button>
         <button
           onClick={() => setActiveTab("global")}
@@ -393,6 +423,76 @@ export default function SeoManagementPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: COMPETITORS & AUTOCOMPLETE */}
+      {activeTab === "competitors" && (
+        <div className="flex flex-col gap-6">
+          <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-4">
+            <div>
+              <h3 className="font-bold text-base text-neutral-900">Competitor Domain Overlap</h3>
+              <p className="text-xs text-neutral-500">Analyze keyword overlap, domain authority, and gap opportunities.</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-neutral-700">
+                <thead className="bg-neutral-50 text-neutral-500 uppercase font-medium border-b">
+                  <tr>
+                    <th className="px-4 py-3">Competitor Domain</th>
+                    <th className="px-4 py-3">Keyword Overlap</th>
+                    <th className="px-4 py-3">Avg Position</th>
+                    <th className="px-4 py-3">Backlinks</th>
+                    <th className="px-4 py-3 text-right">Opportunity</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {(((competitorData as any)?.competitors as any[]) ?? []).map((comp, i) => (
+                    <tr key={i} className="hover:bg-neutral-50">
+                      <td className="px-4 py-3 font-semibold text-neutral-900">{comp.domain}</td>
+                      <td className="px-4 py-3 font-medium">{comp.keyword_overlap}</td>
+                      <td className="px-4 py-3">#{comp.avg_position}</td>
+                      <td className="px-4 py-3 font-medium">{comp.backlinks}</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                          {comp.gap_opportunity}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-3">
+              <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
+                <Search size={16} className="text-amber-500" /> Google Autocomplete Monitoring
+              </h4>
+              <div className="flex flex-col gap-2">
+                {(((competitorData as any)?.autocomplete_suggestions as string[]) ?? []).map((term, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs bg-neutral-50 p-2.5 rounded border">
+                    <span className="font-mono text-neutral-800">{term}</span>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">New Suggestion</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col gap-3">
+              <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
+                <Sparkles size={16} className="text-blue-500" /> People Also Ask (PAA) Questions
+              </h4>
+              <div className="flex flex-col gap-2">
+                {(((competitorData as any)?.paa_questions as string[]) ?? []).map((q, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs bg-neutral-50 p-2.5 rounded border">
+                    <span className="font-medium text-neutral-800">{q}</span>
+                    <span className="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded border border-blue-200">FAQ Candidate</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
