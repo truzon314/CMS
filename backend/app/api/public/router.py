@@ -5,7 +5,7 @@ dependency on any route here."""
 import math
 import uuid
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import PlainTextResponse
 
 from app.core.container import get_public_service
@@ -19,13 +19,19 @@ router = APIRouter(prefix="/public", tags=["public"])
 
 
 @router.get("/pages/{page_type}")
-async def get_public_page(page_type: PageType, public_service: PublicService = Depends(get_public_service)):
+async def get_public_page(
+    page_type: PageType,
+    response: Response,
+    public_service: PublicService = Depends(get_public_service),
+):
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
     page = await public_service.get_page(page_type)
     return ok(page.model_dump(mode="json"))
 
 
 @router.get("/blog")
 async def list_public_blog_posts(
+    response: Response,
     page: int = 1,
     per_page: int = 20,
     category: uuid.UUID | None = None,
@@ -33,6 +39,7 @@ async def list_public_blog_posts(
     search: str | None = None,
     public_service: PublicService = Depends(get_public_service),
 ):
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
     posts, total = await public_service.list_blog_posts(
         page=page, per_page=per_page, category=category, tag=tag, search=search
     )
@@ -42,7 +49,12 @@ async def list_public_blog_posts(
 
 
 @router.get("/blog/{slug}")
-async def get_public_blog_post(slug: str, public_service: PublicService = Depends(get_public_service)):
+async def get_public_blog_post(
+    slug: str,
+    response: Response,
+    public_service: PublicService = Depends(get_public_service),
+):
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
     post = await public_service.get_blog_post(slug)
     result = await public_service.to_public_blog_post(post)
     return ok(result.model_dump(mode="json"))
@@ -50,6 +62,7 @@ async def get_public_blog_post(slug: str, public_service: PublicService = Depend
 
 @router.get("/properties")
 async def list_public_properties(
+    response: Response,
     page: int = 1,
     per_page: int = 20,
     city: str | None = None,
@@ -58,6 +71,7 @@ async def list_public_properties(
     signature: bool | None = None,
     public_service: PublicService = Depends(get_public_service),
 ):
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
     properties, total = await public_service.list_properties(
         page=page, per_page=per_page, city=city, category_id=type, budget_bracket=budget, signature=signature
     )
@@ -67,31 +81,53 @@ async def list_public_properties(
 
 
 @router.get("/properties/{slug}")
-async def get_public_property(slug: str, public_service: PublicService = Depends(get_public_service)):
+async def get_public_property(
+    slug: str,
+    response: Response,
+    public_service: PublicService = Depends(get_public_service),
+):
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
     property_ = await public_service.get_property(slug)
     result = await public_service.to_public_property(property_)
     return ok(result.model_dump(mode="json"))
 
 
 @router.get("/menus/{key}")
-async def get_public_menu(key: str, public_service: PublicService = Depends(get_public_service)):
+async def get_public_menu(
+    key: str,
+    response: Response,
+    public_service: PublicService = Depends(get_public_service),
+):
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
     menu = await public_service.get_menu(key)
     return ok(menu.model_dump(mode="json"))
 
 
 @router.get("/settings")
-async def get_public_settings(public_service: PublicService = Depends(get_public_service)):
+async def get_public_settings(
+    response: Response,
+    public_service: PublicService = Depends(get_public_service),
+):
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
     settings = await public_service.get_settings()
     return ok(settings.model_dump(mode="json"))
 
 
 @router.get("/sitemap")
-async def get_sitemap_data(public_service: PublicService = Depends(get_public_service)):
+async def get_sitemap_data(
+    response: Response,
+    public_service: PublicService = Depends(get_public_service),
+):
+    response.headers["Cache-Control"] = "public, max-age=300, s-maxage=600"
     return ok(await public_service.sitemap_entries())
 
 
 @router.get("/robots.txt", response_class=PlainTextResponse)
-async def get_robots_txt(public_service: PublicService = Depends(get_public_service)):
+async def get_robots_txt(
+    response: Response,
+    public_service: PublicService = Depends(get_public_service),
+):
+    response.headers["Cache-Control"] = "public, max-age=300, s-maxage=600"
     return await public_service.robots_txt()
 
 
