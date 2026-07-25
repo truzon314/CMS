@@ -88,3 +88,10 @@ export function useExportReport() {
     enabled: false,
   });
 }
+
+export function useBacklinks() {
+  return useQuery({
+    queryKey: ["backlinks"],
+    queryFn: seoService.getBacklinks,
+  });
+}

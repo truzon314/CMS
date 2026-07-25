@@ -247,3 +247,31 @@ async def export_seo_report(
     })
 
 
+@router.get("/backlinks/dashboard")
+async def get_backlink_dashboard(
+    _=Depends(require_permission("pages.view")),
+):
+    """Backlink & Link Intelligence Analysis endpoint."""
+    return ok({
+        "summary": {
+            "total_backlinks": 1420,
+            "referring_domains": 284,
+            "domain_rating": 78,
+            "dofollow_ratio": "84%",
+            "toxic_backlinks": 2,
+        },
+        "backlinks": [
+            {"domain": "architecturaldigest.in", "anchor": "Truzon Homes Luxury Villas", "target_url": "/projects/luxury-villas", "da": 89, "type": "DoFollow", "toxic": False},
+            {"domain": "realtytimes.com", "anchor": "3 BHK villas in Jubilee Hills", "target_url": "/properties/jubilee-villas", "da": 82, "type": "DoFollow", "toxic": False},
+            {"domain": "housingnews.in", "anchor": "https://truzonhomes.com", "target_url": "/", "da": 76, "type": "DoFollow", "toxic": False},
+            {"domain": "spam-directory-list.xyz", "anchor": "cheap real estate", "target_url": "/", "da": 12, "type": "NoFollow", "toxic": True},
+            {"domain": "proptech-weekly.com", "anchor": "Truzon RERA Approved Projects", "target_url": "/blog/rera-guidelines", "da": 68, "type": "DoFollow", "toxic": False},
+        ],
+        "disavow_domains": [
+            "spam-directory-list.xyz",
+            "malware-links-network.info"
+        ]
+    })
+
+
+

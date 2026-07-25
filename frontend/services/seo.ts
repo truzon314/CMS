@@ -67,4 +67,7 @@ export const seoService = {
 
   exportReport: () =>
     apiFetch<Record<string, unknown>>("/api/v1/seo/export"),
+
+  getBacklinks: () =>
+    apiFetch<Record<string, unknown>>("/api/v1/seo/backlinks/dashboard"),
 };
