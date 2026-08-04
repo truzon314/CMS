@@ -1,12 +1,18 @@
 "use client";
 
+import { DocumentPickerField } from "@/components/forms/DocumentPickerField";
 import { ImagePickerField } from "@/components/forms/ImagePickerField";
 import { SelectField } from "@/components/forms/SelectField";
 import { TextField } from "@/components/forms/TextField";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useCategories } from "@/hooks/useTaxonomy";
-import type { BudgetBracket } from "@/types/property";
+import { useMediaItem } from "@/hooks/useMedia";
+import { mappingService } from "@/services/mapping";
+import { RepeatableItemList } from "@/modules/pages/blocks/RepeatableItemList";
+import type { BudgetBracket, PropertyAmenity } from "@/types/property";
+import { useState, useEffect } from "react";
 
 export interface PropertyDetailsDraft {
   name: string;
@@ -19,12 +25,56 @@ export interface PropertyDetailsDraft {
   specB: string;
   areaSqft: string;
   bedsOptions: string;
+  description: string;
+  amenities: PropertyAmenity[];
   tagText: string;
   statusText: string;
   isSignature: boolean;
   categoryIds: string[];
   featuredImageUrl: string;
   featuredImageMediaId: string | null;
+  brochureMediaId: string | null;
+  mapProjectId: string | null;
+}
+
+const BROCHURE_MIME_TYPES = ["application/pdf"];
+
+function BrochurePicker({
+  mediaId,
+  onChange,
+}: {
+  mediaId: string | null;
+  onChange: (mediaId: string | null) => void;
+}) {
+  const { data: media } = useMediaItem(mediaId);
+  return (
+    <DocumentPickerField
+      label="Brochure PDF (optional)"
+      hint="Uploaded here becomes the public 'Download Brochure' file on this property's page."
+      fileUrl={media?.url ?? null}
+      fileName={media?.file_name ?? null}
+      accept={BROCHURE_MIME_TYPES}
+      onChange={(val) => onChange(val.mediaId)}
+    />
+  );
+}
+
+function AmenityImagePicker({
+  mediaId,
+  onChange,
+}: {
+  mediaId: string | null;
+  onChange: (mediaId: string | null) => void;
+}) {
+  const { data: media } = useMediaItem(mediaId);
+  return (
+    <ImagePickerField
+      label="Photo (optional)"
+      recommendedDimensions="600 × 400 px"
+      imageUrl={media?.url ?? ""}
+      onChange={(val) => onChange(val.mediaId)}
+    />
+  );
 }
 
 interface PropertyDetailsFormProps {
@@ -41,6 +91,13 @@ const BUDGET_OPTIONS = [
 
 export function PropertyDetailsForm({ draft, onChange }: PropertyDetailsFormProps) {
   const { data: categories } = useCategories("property");
+  const [mapProjects, setMapProjects] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    mappingService.listProjects()
+      .then((projects) => setMapProjects(projects))
+      .catch(console.error);
+  }, []);
 
   return (
     <div className="flex flex-col gap-3">
@@ -88,6 +145,43 @@ export function PropertyDetailsForm({ draft, onChange }: PropertyDetailsFormProp
         value={draft.bedsOptions}
         onChange={(e) => onChange({ bedsOptions: e.target.value })}
       />
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="property_description">Description</Label>
+        <Textarea
+          id="property_description"
+          rows={5}
+          placeholder="What makes this property worth a site visit?"
+          value={draft.description}
+          onChange={(e) => onChange({ description: e.target.value })}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label>Amenities</Label>
+        <RepeatableItemList<PropertyAmenity>
+          items={draft.amenities}
+          onChange={(amenities) => onChange({ amenities })}
+          newItem={() => ({ name: "", image_media_id: null })}
+          addLabel="Add Amenity"
+          itemLabel={(i) => draft.amenities[i]?.name || `Amenity ${i + 1}`}
+          renderItem={(item, update) => (
+            <div className="flex flex-col gap-2">
+              <TextField
+                label="Name"
+                value={item.name}
+                onChange={(e) => update({ name: e.target.value })}
+                placeholder="e.g. Rooftop infinity pool"
+              />
+              <AmenityImagePicker
+                mediaId={item.image_media_id}
+                onChange={(image_media_id) => update({ image_media_id })}
+              />
+            </div>
+          )}
+        />
+      </div>
+
       <TextField
         id="property_tag_text"
         label="Tag badge text (e.g. EXCLUSIVE)"
@@ -114,8 +208,22 @@ export function PropertyDetailsForm({ draft, onChange }: PropertyDetailsFormProp
 
       <ImagePickerField
         label="Featured image"
+        recommendedDimensions="1200 × 800 px (16:9)"
         imageUrl={draft.featuredImageUrl}
         onChange={({ url, mediaId }) => onChange({ featuredImageUrl: url, featuredImageMediaId: mediaId })}
+      />
+
+      <BrochurePicker mediaId={draft.brochureMediaId} onChange={(brochureMediaId) => onChange({ brochureMediaId })} />
+
+      <SelectField
+        id="property_map_project"
+        label="Linked Map Layout (Optional)"
+        value={draft.mapProjectId || ""}
+        onChange={(val) => onChange({ mapProjectId: val || null })}
+        options={[
+          { value: "", label: "-- None --" },
+          ...mapProjects.map((p) => ({ value: p.id, label: p.name })),
+        ]}
       />
 
       <div className="flex flex-col gap-1.5">

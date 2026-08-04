@@ -1,0 +1,16 @@
+import uuid
+from typing import Protocol
+
+from app.models.career import Career
+
+
+class CareerRepository(Protocol):
+    async def list(self, *, page: int, per_page: int, is_published: bool | None = None) -> tuple[list[Career], int]: ...
+
+    async def get_by_id(self, career_id: uuid.UUID) -> Career | None: ...
+
+    async def create(self, career: Career) -> Career: ...
+
+    async def update(self, career: Career) -> Career: ...
+
+    async def delete(self, career: Career) -> None: ...

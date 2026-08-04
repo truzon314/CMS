@@ -631,6 +631,7 @@ export default function SeoManagementPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ImagePickerField
               label="Default Open Graph Share Image"
+              recommendedDimensions="1200 × 630 px (Social Share)"
               mediaId={currentSettings.og_default_image_media_id ?? null}
               onChange={(val) => handleSettingChange("og_default_image_media_id", val.mediaId)}
             />

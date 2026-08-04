@@ -1,0 +1,19 @@
+import uuid
+from typing import Protocol
+
+from app.models.chat_conversation import ChatConversation
+from app.models.chat_message import ChatMessage
+
+
+class CrmRepository(Protocol):
+    async def create_conversation(self, conversation: ChatConversation) -> ChatConversation: ...
+
+    async def get_conversation(self, conversation_id: uuid.UUID) -> ChatConversation | None: ...
+
+    async def list_conversations(self, *, page: int, per_page: int) -> tuple[list[ChatConversation], int]: ...
+
+    async def update_conversation(self, conversation: ChatConversation) -> ChatConversation: ...
+
+    async def add_message(self, message: ChatMessage) -> ChatMessage: ...
+
+    async def list_messages(self, conversation_id: uuid.UUID) -> list[ChatMessage]: ...

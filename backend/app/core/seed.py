@@ -50,6 +50,16 @@ PERMISSIONS = [
     ("analytics.view", "analytics"),
     ("audit.view", "audit"),
     ("trash.manage", "trash"),
+    ("mapping.view", "mapping"),
+    ("mapping.edit", "mapping"),
+    ("crm.view", "crm"),
+    ("crm.manage", "crm"),
+    ("careers.view", "careers"),
+    ("careers.manage", "careers"),
+    ("gallery.view", "gallery"),
+    ("gallery.manage", "gallery"),
+    ("testimonials.view", "testimonials"),
+    ("testimonials.manage", "testimonials"),
 ]
 
 ALL_KEYS = [key for key, _ in PERMISSIONS]
@@ -64,6 +74,11 @@ ROLE_PERMISSIONS = {
         "media.view", "media.manage",
         "forms.view",
         "trash.manage",
+        "mapping.view", "mapping.edit",
+        "crm.view", "crm.manage",
+        "careers.view", "careers.manage",
+        "gallery.view", "gallery.manage",
+        "testimonials.view", "testimonials.manage",
     ],
     "Author": ["pages.view", "blog.view", "blog.create", "blog.edit", "media.view"],
     "Viewer": ["pages.view", "blog.view", "properties.view", "media.view", "forms.view", "analytics.view"],

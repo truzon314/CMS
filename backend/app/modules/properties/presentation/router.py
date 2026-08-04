@@ -7,6 +7,7 @@ from app.auth.dependencies import get_current_user
 from app.auth.rbac import require_permission
 from app.models.user import User
 from app.schemas.property import (
+    PropertiesReorderRequest,
     PropertyCreate,
     PropertyGalleryRequest,
     PropertyListItem,
@@ -45,12 +46,24 @@ async def list_properties(
             category_names=[c.name for c in p.categories],
             price_display=p.price_display,
             status=p.status,
+            sort_order=p.sort_order,
             updated_at=p.updated_at,
         ).model_dump(mode="json")
         for p in properties
     ]
     meta = PaginationMeta(page=page, per_page=per_page, total=total, total_pages=max(1, math.ceil(total / per_page)))
     return ok(data, meta)
+
+
+@router.put("/reorder")
+async def reorder_properties(
+    payload: PropertiesReorderRequest,
+    property_service: PropertyService = Depends(get_property_service),
+    user: User = Depends(get_current_user),
+    _=Depends(require_permission("properties.edit")),
+):
+    await property_service.reorder(payload.order, user.id)
+    return ok({"reordered": True})
 
 
 @router.post("")

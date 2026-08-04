@@ -49,6 +49,7 @@ export function HeroBannerBlockEditor({ config, onChange }: Props) {
             />
             <ImagePickerField
               label="Background image"
+              recommendedDimensions="1920 × 1080 px (16:9, full-bleed)"
               imageUrl={item.image_url}
               onChange={({ url, mediaId }) => update({ image_url: url, image_media_id: mediaId })}
             />

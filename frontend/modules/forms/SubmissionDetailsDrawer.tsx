@@ -40,7 +40,7 @@ export function SubmissionDetailsDrawer({ submission, open, onClose }: Submissio
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
           <span className="text-neutral-500">Form</span>
           <span>{submission.form_key}</span>
           <span className="text-neutral-500">Email</span>

@@ -32,17 +32,24 @@ export function PropertyContentEditor({ property, isSaving, onSave }: PropertyCo
     specB: property.spec_b ?? "",
     areaSqft: property.area_sqft ?? "",
     bedsOptions: (property.beds_options ?? []).join(", "),
+    description: property.description ?? "",
+    amenities: property.amenities ?? [],
     tagText: property.tag_text ?? "",
     statusText: property.status_text ?? "",
     isSignature: property.is_signature,
     categoryIds: property.categories.map((c) => c.id),
     featuredImageUrl: "",
     featuredImageMediaId: property.featured_image_media_id,
+    brochureMediaId: property.brochure_media_id,
+    mapProjectId: property.map_project_id,
   }));
   const [galleryMediaIds, setGalleryMediaIds] = useState(
     [...property.gallery].sort((a, b) => a.position - b.position).map((g) => g.media_id)
   );
-  const [seoDraft, setSeoDraft] = useState<Partial<SeoMeta>>(() => property.seo ?? {});
+  const [seoDraft, setSeoDraft] = useState<Partial<SeoMeta>>(() => {
+    const { id: _id, ...rest } = property.seo ?? ({} as SeoMeta);
+    return rest;
+  });
 
   const featuredImageUrl = draft.featuredImageUrl || currentFeaturedImage?.url || "";
 
@@ -61,42 +68,58 @@ export function PropertyContentEditor({ property, isSaving, onSave }: PropertyCo
         .split(",")
         .map((b) => b.trim())
         .filter(Boolean),
+      description: draft.description || undefined,
+      amenities: draft.amenities.filter((a) => a.name.trim()),
       tag_text: draft.tagText || undefined,
       status_text: draft.statusText || undefined,
       is_signature: draft.isSignature,
       featured_image_media_id: draft.featuredImageMediaId,
+      brochure_media_id: draft.brochureMediaId,
       category_ids: draft.categoryIds,
+      map_project_id: draft.mapProjectId,
     });
   }
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row">
-      <div className="min-w-0 flex-1">
-        <PropertyDetailsForm
-          draft={{ ...draft, featuredImageUrl }}
-          onChange={(patch) => setDraft((prev) => ({ ...prev, ...patch }))}
-        />
-        <Button className="mt-3" disabled={isSaving} onClick={handleSave}>
-          {isSaving ? "Saving…" : "Save Details"}
-        </Button>
-      </div>
-
-      <div className="w-full shrink-0 flex flex-col gap-4 lg:w-80">
-        <div className="rounded-lg border bg-white p-3">
-          <GalleryManager
-            mediaIds={galleryMediaIds}
-            onChange={setGalleryMediaIds}
-            isSaving={setGallery.isPending}
-            onSave={() => setGallery.mutate(galleryMediaIds)}
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row">
+        <div className="min-w-0 flex-1">
+          <PropertyDetailsForm
+            draft={{ ...draft, featuredImageUrl }}
+            onChange={(patch) => setDraft((prev) => ({ ...prev, ...patch }))}
           />
+          <Button className="mt-3" disabled={isSaving} onClick={handleSave}>
+            {isSaving ? "Saving…" : "Save Details"}
+          </Button>
         </div>
 
+        <div className="w-full shrink-0 lg:w-80">
+          <div className="rounded-lg border bg-white p-3">
+            <GalleryManager
+              mediaIds={galleryMediaIds}
+              onChange={setGalleryMediaIds}
+              isSaving={setGallery.isPending}
+              onSave={() => setGallery.mutate(galleryMediaIds)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Moved to the bottom of the page, below both columns, rather than
+          living in the right-hand sidebar next to Gallery. */}
+      <div className="flex flex-col gap-3">
         <SeoPanel
           value={seoDraft}
           onChange={(patch) => setSeoDraft((prev) => ({ ...prev, ...patch }))}
           collapsedByDefault
         />
-        <Button variant="outline" size="sm" disabled={isSaving} onClick={() => onSave({ seo: seoDraft })}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="self-start"
+          disabled={isSaving}
+          onClick={() => onSave({ seo: seoDraft })}
+        >
           Save SEO
         </Button>
       </div>

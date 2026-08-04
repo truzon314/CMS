@@ -12,6 +12,7 @@ export function ImageBlockEditor({ config, onChange }: Props) {
     <div className="flex flex-col gap-3">
       <ImagePickerField
         label="Image"
+        recommendedDimensions="1200 × 800 px"
         imageUrl={config.image_url}
         onChange={({ url, mediaId }) => onChange({ ...config, image_url: url, image_media_id: mediaId })}
       />

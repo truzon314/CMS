@@ -10,6 +10,7 @@ from app.schemas.property import PropertyCreate, PropertyGalleryRequest, Propert
 from app.services.audit_service import AuditService
 
 _FEATURED_IMAGE_FIELD = "featured_image"
+_BROCHURE_FIELD = "brochure"
 
 
 class PropertyService:
@@ -41,6 +42,10 @@ class PropertyService:
             budget_bracket=budget_bracket, search=search,
         )
 
+    async def reorder(self, ordered_ids: list[uuid.UUID], actor_id: uuid.UUID | None = None) -> None:
+        await self.properties.reorder(ordered_ids)
+        await self.audit.log(actor_id, "property.reorder", "property", details={"count": len(ordered_ids)})
+
     async def get(self, property_id: uuid.UUID) -> Property:
         property_ = await self.properties.get_by_id(property_id)
         if not property_:
@@ -51,11 +56,17 @@ class PropertyService:
         if await self.properties.get_by_slug(payload.slug):
             raise ConflictError(f"Slug '{payload.slug}' is already in use.")
 
-        data = payload.model_dump(exclude={"category_ids"})
+        # `amenities` nests a UUID (image_media_id) — the JSON column needs it
+        # as a plain string, not a UUID instance, so it's dumped separately in
+        # mode="json" rather than via the outer model_dump() (which would also
+        # stringify price_value/area_sqft, breaking their Numeric columns).
+        data = payload.model_dump(exclude={"category_ids", "amenities"})
+        data["amenities"] = [a.model_dump(mode="json") for a in payload.amenities] if payload.amenities else None
         property_ = Property(**data)
         property_.categories = await self.categories.list_by_ids(payload.category_ids)
         property_ = await self.properties.create(property_)
         await self._sync_featured_image_usage(property_)
+        await self._sync_brochure_usage(property_)
         await self.audit.log(actor_id, "property.create", "property", property_.id, details={"name": property_.name})
         return property_
 
@@ -63,7 +74,9 @@ class PropertyService:
         self, property_id: uuid.UUID, payload: PropertyUpdate, actor_id: uuid.UUID | None = None
     ) -> Property:
         property_ = await self.get(property_id)
-        data = payload.model_dump(exclude_unset=True, exclude={"category_ids", "seo"})
+        data = payload.model_dump(exclude_unset=True, exclude={"category_ids", "seo", "amenities"})
+        if "amenities" in payload.model_fields_set:
+            data["amenities"] = [a.model_dump(mode="json") for a in payload.amenities] if payload.amenities else None
 
         if "slug" in data and data["slug"] != property_.slug:
             existing = await self.properties.get_by_slug(data["slug"])
@@ -78,6 +91,7 @@ class PropertyService:
 
         property_ = await self.properties.update(property_)
         await self._sync_featured_image_usage(property_)
+        await self._sync_brochure_usage(property_)
 
         if payload.seo is not None:
             seo_data = payload.seo.model_dump(exclude_unset=True)
@@ -110,11 +124,14 @@ class PropertyService:
             status_text=original.status_text,
             is_signature=False,
             featured_image_media_id=original.featured_image_media_id,
+            brochure_media_id=original.brochure_media_id,
             status=PropertyStatus.DRAFT,
         )
         copy.categories = list(original.categories)
         copy = await self.properties.create(copy)
         copy = await self.properties.set_gallery(copy.id, [pm.media_id for pm in original.gallery])
+        await self._sync_featured_image_usage(copy)
+        await self._sync_brochure_usage(copy)
         await self.audit.log(actor_id, "property.duplicate", "property", copy.id, details={"name": copy.name})
         return copy
 
@@ -160,3 +177,11 @@ class PropertyService:
             )
         else:
             await self.media_usage.delete_for_field(MediaUsageEntityType.PROPERTY, property_.id, _FEATURED_IMAGE_FIELD)
+
+    async def _sync_brochure_usage(self, property_: Property) -> None:
+        if property_.brochure_media_id:
+            await self.media_usage.upsert(
+                MediaUsageEntityType.PROPERTY, property_.id, _BROCHURE_FIELD, property_.brochure_media_id
+            )
+        else:
+            await self.media_usage.delete_for_field(MediaUsageEntityType.PROPERTY, property_.id, _BROCHURE_FIELD)

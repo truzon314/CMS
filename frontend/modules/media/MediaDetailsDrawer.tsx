@@ -54,7 +54,7 @@ export function MediaDetailsDrawer({ media, open, onClose }: MediaDetailsDrawerP
           <img src={media.url} alt={media.alt_text ?? media.file_name} className="max-h-48 w-full rounded-md object-contain" />
         ) : null}
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-neutral-500">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-1 text-xs text-neutral-500 sm:grid-cols-2">
           <span>Type</span>
           <span className="text-right text-neutral-800">{media.mime_type}</span>
           <span>Size</span>

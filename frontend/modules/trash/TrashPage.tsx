@@ -60,7 +60,14 @@ export function TrashPage() {
       <h1 className="text-lg font-semibold">Trash</h1>
 
       <div className="w-56">
-        <SelectField label="" id="trash_entity_filter" value={entityType} onChange={setEntityType} options={ENTITY_TYPE_OPTIONS} />
+        <SelectField
+          label=""
+          ariaLabel="Filter by entity type"
+          id="trash_entity_filter"
+          value={entityType}
+          onChange={setEntityType}
+          options={ENTITY_TYPE_OPTIONS}
+        />
       </div>
 
       <DataTable

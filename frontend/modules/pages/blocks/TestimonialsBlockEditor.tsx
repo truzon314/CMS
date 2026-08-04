@@ -36,6 +36,7 @@ export function TestimonialsBlockEditor({ config, onChange }: Props) {
             </div>
             <ImagePickerField
               label="Avatar"
+              recommendedDimensions="200 × 200 px (1:1, square)"
               imageUrl={item.avatar_url}
               onChange={({ url, mediaId }) => update({ avatar_url: url, avatar_media_id: mediaId })}
             />

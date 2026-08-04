@@ -43,7 +43,12 @@ export function PostMetaPanel({
         <p className="text-sm text-neutral-700">{authorName}</p>
       </div>
 
-      <ImagePickerField label="Featured image" imageUrl={featuredImageUrl} onChange={onFeaturedImageChange} />
+      <ImagePickerField
+        label="Featured image"
+        recommendedDimensions="1200 × 675 px (16:9)"
+        imageUrl={featuredImageUrl}
+        onChange={onFeaturedImageChange}
+      />
 
       <TextField
         id="reading_time"

@@ -68,7 +68,14 @@ export function BlogPostsListPage() {
           className="max-w-xs"
         />
         <div className="w-44">
-          <SelectField label="" id="status_filter" value={status} onChange={setStatus} options={STATUS_OPTIONS} />
+          <SelectField
+            label=""
+            ariaLabel="Filter by status"
+            id="status_filter"
+            value={status}
+            onChange={setStatus}
+            options={STATUS_OPTIONS}
+          />
         </div>
       </div>
 

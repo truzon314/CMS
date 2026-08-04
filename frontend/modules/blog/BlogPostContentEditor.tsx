@@ -27,7 +27,10 @@ export function BlogPostContentEditor({ post, authorName, isSaving, onSave }: Bl
   const [featuredImageUrlOverride, setFeaturedImageUrlOverride] = useState<string | null>(null);
   const [featuredImageMediaId, setFeaturedImageMediaId] = useState<string | null>(post.featured_image_media_id);
   const [readingTimeMinutes, setReadingTimeMinutes] = useState(post.reading_time_minutes);
-  const [seoDraft, setSeoDraft] = useState<Partial<SeoMeta>>(() => post.seo ?? {});
+  const [seoDraft, setSeoDraft] = useState<Partial<SeoMeta>>(() => {
+    const { id: _id, ...rest } = post.seo ?? ({} as SeoMeta);
+    return rest;
+  });
 
   // The API only stores `featured_image_media_id` (ERD.md) — resolve its URL
   // for display until the user picks a new image (which gives us the URL directly).

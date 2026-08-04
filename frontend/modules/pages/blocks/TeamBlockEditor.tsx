@@ -32,6 +32,7 @@ export function TeamBlockEditor({ config, onChange }: Props) {
             <TextField id={`team_role_${index}`} label="Role" value={item.role} onChange={(e) => update({ role: e.target.value })} />
             <ImagePickerField
               label="Photo"
+              recommendedDimensions="400 × 400 px (1:1, square)"
               imageUrl={item.photo_url}
               onChange={({ url, mediaId }) => update({ photo_url: url, photo_media_id: mediaId })}
             />

@@ -12,15 +12,25 @@ interface ImagePickerFieldProps {
   label: string;
   mediaId?: string | null;
   imageUrl?: string | null;
+  recommendedDimensions?: string;
+  hint?: string;
   onChange: (value: { url: string; mediaId: string | null }) => void;
 }
 
-export function ImagePickerField({ label, imageUrl, onChange }: ImagePickerFieldProps) {
+export function ImagePickerField({ label, imageUrl, recommendedDimensions, hint, onChange }: ImagePickerFieldProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
+      <div className="flex flex-wrap items-center justify-between gap-1">
+        <Label>{label}</Label>
+        {recommendedDimensions ? (
+          <span className="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+            Rec: {recommendedDimensions}
+          </span>
+        ) : null}
+      </div>
+      {hint ? <p className="text-xs text-neutral-500">{hint}</p> : null}
 
       {imageUrl ? (
         <div className="relative">

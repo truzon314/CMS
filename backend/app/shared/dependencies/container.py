@@ -5,12 +5,16 @@ from app.repositories.audit_log_repository import SqlAlchemyAuditLogRepository
 from app.repositories.auth_token_repository import SqlAlchemyAuthTokenRepository
 from app.repositories.block_definition_repository import SqlAlchemyBlockDefinitionRepository
 from app.repositories.blog_post_repository import SqlAlchemyBlogPostRepository
+from app.repositories.career_repository import SqlAlchemyCareerRepository
 from app.repositories.category_repository import SqlAlchemyCategoryRepository
+from app.repositories.crm_repository import SqlAlchemyCrmRepository
 from app.repositories.entity_version_repository import SqlAlchemyEntityVersionRepository
 from app.repositories.form_submission_repository import SqlAlchemyFormSubmissionRepository
+from app.repositories.gallery_repository import SqlAlchemyGalleryRepository
 from app.repositories.media_folder_repository import SqlAlchemyMediaFolderRepository
 from app.repositories.media_repository import SqlAlchemyMediaRepository
 from app.repositories.media_usage_repository import SqlAlchemyMediaUsageRepository
+from app.repositories.mapping_repository import SqlAlchemyMappingRepository
 from app.repositories.menu_repository import SqlAlchemyMenuRepository
 from app.repositories.notification_repository import SqlAlchemyNotificationRepository
 from app.repositories.page_repository import SqlAlchemyPageRepository
@@ -20,14 +24,19 @@ from app.repositories.refresh_token_repository import SqlAlchemyRefreshTokenRepo
 from app.repositories.role_repository import SqlAlchemyRoleRepository
 from app.repositories.settings_repository import SqlAlchemySettingsRepository
 from app.repositories.tag_repository import SqlAlchemyTagRepository
+from app.repositories.testimonial_repository import SqlAlchemyTestimonialRepository
 from app.repositories.user_repository import SqlAlchemyUserRepository
 from app.services.audit_service import AuditService
 from app.services.auth_service import AuthService
 from app.services.blog_service import BlogPostService
+from app.services.career_service import CareerService
 from app.services.category_service import CategoryService
+from app.services.crm_service import CrmService
 from app.services.dashboard_service import DashboardService
 from app.services.form_submission_service import FormSubmissionService
+from app.services.gallery_service import GalleryService
 from app.services.mailer_service import MailerService
+from app.services.mapping_service import MappingService
 from app.services.media_service import MediaService
 from app.services.menu_service import MenuService
 from app.services.notification_service import NotificationService
@@ -40,6 +49,7 @@ from app.services.search_service import SearchService
 from app.services.seo_integrations_service import SeoIntegrationsService
 from app.services.settings_service import SettingsService
 from app.services.tag_service import TagService
+from app.services.testimonial_service import TestimonialService
 from app.services.trash_service import TrashService
 from app.services.user_service import UserService
 from app.shared.config.config import get_settings
@@ -229,6 +239,17 @@ def get_property_service(
     return PropertyService(properties, categories, media_usage, audit)
 
 
+def get_mapping_repository(session: AsyncSession = Depends(get_db)) -> SqlAlchemyMappingRepository:
+    return SqlAlchemyMappingRepository(session)
+
+
+def get_mapping_service(
+    mapping: SqlAlchemyMappingRepository = Depends(get_mapping_repository),
+    audit: AuditService = Depends(get_audit_service),
+) -> MappingService:
+    return MappingService(mapping, audit)
+
+
 def get_menu_repository(session: AsyncSession = Depends(get_db)) -> SqlAlchemyMenuRepository:
     return SqlAlchemyMenuRepository(session)
 
@@ -253,6 +274,53 @@ def get_form_submission_service(
     return FormSubmissionService(submissions, audit)
 
 
+def get_crm_repository(session: AsyncSession = Depends(get_db)) -> SqlAlchemyCrmRepository:
+    return SqlAlchemyCrmRepository(session)
+
+
+def get_crm_service(
+    crm: SqlAlchemyCrmRepository = Depends(get_crm_repository),
+    settings: SqlAlchemySettingsRepository = Depends(get_settings_repository),
+    users: SqlAlchemyUserRepository = Depends(get_user_repository),
+    audit: AuditService = Depends(get_audit_service),
+    notifications: NotificationService = Depends(get_notification_service),
+) -> CrmService:
+    return CrmService(crm, settings, users, audit, notifications)
+
+
+def get_career_repository(session: AsyncSession = Depends(get_db)) -> SqlAlchemyCareerRepository:
+    return SqlAlchemyCareerRepository(session)
+
+
+def get_career_service(
+    careers: SqlAlchemyCareerRepository = Depends(get_career_repository),
+    audit: AuditService = Depends(get_audit_service),
+) -> CareerService:
+    return CareerService(careers, audit)
+
+
+def get_gallery_repository(session: AsyncSession = Depends(get_db)) -> SqlAlchemyGalleryRepository:
+    return SqlAlchemyGalleryRepository(session)
+
+
+def get_gallery_service(
+    items: SqlAlchemyGalleryRepository = Depends(get_gallery_repository),
+    audit: AuditService = Depends(get_audit_service),
+) -> GalleryService:
+    return GalleryService(items, audit)
+
+
+def get_testimonial_repository(session: AsyncSession = Depends(get_db)) -> SqlAlchemyTestimonialRepository:
+    return SqlAlchemyTestimonialRepository(session)
+
+
+def get_testimonial_service(
+    testimonials: SqlAlchemyTestimonialRepository = Depends(get_testimonial_repository),
+    audit: AuditService = Depends(get_audit_service),
+) -> TestimonialService:
+    return TestimonialService(testimonials, audit)
+
+
 def get_settings_service(
     settings: SqlAlchemySettingsRepository = Depends(get_settings_repository),
     versions: SqlAlchemyEntityVersionRepository = Depends(get_entity_version_repository),
@@ -272,9 +340,24 @@ def get_public_service(
     form_submissions: SqlAlchemyFormSubmissionRepository = Depends(get_form_submission_repository),
     users: SqlAlchemyUserRepository = Depends(get_user_repository),
     notifications: NotificationService = Depends(get_notification_service),
+    careers: SqlAlchemyCareerRepository = Depends(get_career_repository),
+    gallery: SqlAlchemyGalleryRepository = Depends(get_gallery_repository),
+    testimonials: SqlAlchemyTestimonialRepository = Depends(get_testimonial_repository),
 ) -> PublicService:
     return PublicService(
-        pages, blog_posts, properties, menus, settings, categories, media, form_submissions, users, notifications
+        pages,
+        blog_posts,
+        properties,
+        menus,
+        settings,
+        categories,
+        media,
+        form_submissions,
+        users,
+        notifications,
+        careers,
+        gallery,
+        testimonials,
     )
 
 

@@ -94,11 +94,20 @@ class PublicPropertyListItem(BaseModel):
     featured_image_url: str | None
 
 
+class PublicPropertyAmenity(BaseModel):
+    name: str
+    image_url: str | None = None
+
+
 class PublicProperty(PublicPropertyListItem):
     area_sqft: str | None
+    description: str | None
+    amenities: list[PublicPropertyAmenity]
     categories: list[PublicCategory]
     gallery: list[str]
     seo: PublicSeo | None
+    map_project_id: str | None = None
+    brochure_url: str | None = None
 
 
 class PublicMenuItem(BaseModel):
@@ -148,6 +157,8 @@ class PublicSettings(BaseModel):
     latitude: float | None = None
     longitude: float | None = None
     service_areas: list[str] | None = None
+    why_choose_image_url: str | None = None
+    contact_map_image_url: str | None = None
 
 
 class PublicFormSubmissionCreate(BaseModel):
@@ -158,3 +169,29 @@ class PublicFormSubmissionCreate(BaseModel):
     email: str | None = None
     property_type_interest: str | None = None
     message: str | None = None
+
+
+class PublicCareer(BaseModel):
+    id: str
+    title: str
+    department: str | None
+    location: str | None
+    employment_type: str | None
+    description: str
+    apply_email: str | None
+
+
+class PublicGalleryItem(BaseModel):
+    id: str
+    image_url: str | None
+    caption: str | None
+    category: str | None
+
+
+class PublicTestimonial(BaseModel):
+    id: str
+    name: str
+    role_or_location: str | None
+    quote: str
+    photo_url: str | None
+    rating: int | None

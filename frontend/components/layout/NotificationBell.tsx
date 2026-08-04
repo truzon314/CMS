@@ -38,7 +38,10 @@ export function NotificationBell() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="relative flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 outline-none hover:bg-neutral-100">
+      <DropdownMenuTrigger
+        aria-label="Notifications"
+        className="relative flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 outline-none hover:bg-neutral-100"
+      >
         <Bell size={17} />
         {count > 0 ? (
           <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">

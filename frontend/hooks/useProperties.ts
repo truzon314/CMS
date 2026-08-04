@@ -55,6 +55,22 @@ export function useDeleteProperty() {
   });
 }
 
+/** Persists a drag-reordered list. The list page applies the new order
+ * optimistically itself (via arrayMove) before calling this, so on success
+ * we only need to reconcile with the server's canonical state, not toast —
+ * a toast on every drag-drop would be noisy compared to the other mutations
+ * here, which are one-off explicit actions. */
+export function useReorderProperties() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderedIds: string[]) => propertyService.reorder(orderedIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PROPERTIES_KEY });
+    },
+    onError: onErrorToast,
+  });
+}
+
 export function usePropertyActions(id: string) {
   const queryClient = useQueryClient();
   const invalidate = () => {

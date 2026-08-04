@@ -68,18 +68,10 @@ async function doFetch<T>(path: string, init: RequestInit): Promise<{ status: nu
   return { status: response.status, envelope };
 }
 
-const TAB_DEBUG_ID = typeof window !== "undefined" ? Math.random().toString(36).slice(2, 8) : "server";
-function dbg(msg: string) {
-  // TEMP DIAGNOSTIC — remove once the reuse-detection issue is root-caused.
-  console.warn(`[auth-debug ${new Date().toISOString().slice(11, 23)}] tab=${TAB_DEBUG_ID} ${msg}`);
-}
-
 async function doRefreshRequest(): Promise<boolean> {
-  dbg("doRefreshRequest() called");
   const { status, envelope } = await doFetch<{ access_token: string }>("/api/v1/auth/refresh", {
     method: "POST",
   });
-  dbg(`doRefreshRequest() result status=${status} ok=${status === 200}`);
   if (status === 200 && envelope.data?.access_token) {
     setAccessToken(envelope.data.access_token);
     return true;
@@ -102,8 +94,6 @@ let refreshInFlight: Promise<boolean> | null = null;
  * token. Falls back to the in-tab-only guard on browsers without Web Locks.
  */
 export async function tryRefresh(): Promise<boolean> {
-  const hasLocks = typeof navigator !== "undefined" && "locks" in navigator;
-  dbg(`tryRefresh() called alreadyInFlight=${refreshInFlight !== null} hasLocks=${hasLocks}`);
   refreshInFlight ??= (async () => {
     try {
       if (typeof navigator !== "undefined" && "locks" in navigator) {
@@ -130,7 +120,6 @@ export async function apiFetch<T>(
   let { status, envelope } = await doFetch<T>(path, init);
 
   if (!opts.skipRefreshRetry && status === 401 && path !== "/api/v1/auth/refresh") {
-    dbg(`401 triggered refresh (apiFetch) path=${path}`);
     const refreshed = await tryRefresh();
     if (refreshed) {
       ({ status, envelope } = await doFetch<T>(path, init));
@@ -165,7 +154,6 @@ export async function apiFetchPage<T>(
   let { status, envelope } = await doFetch<T>(path, init);
 
   if (status === 401 && path !== "/api/v1/auth/refresh") {
-    dbg(`401 triggered refresh (apiFetchPage) path=${path}`);
     const refreshed = await tryRefresh();
     if (refreshed) {
       ({ status, envelope } = await doFetch<T>(path, init));

@@ -13,13 +13,12 @@ import {
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SeoPanel } from "@/components/ui/seo-panel";
 import { usePageActions } from "@/hooks/usePages";
 import { BlockEditorPanel } from "@/modules/pages/blocks/BlockEditorPanel";
 import { BlockListItem } from "@/modules/pages/blocks/BlockListItem";
 import { BlockPalette } from "@/modules/pages/blocks/BlockPalette";
 import { DEFAULT_CONFIGS } from "@/modules/pages/blocks/defaultConfigs";
-import type { BlockDefinition, Page, SeoMeta } from "@/types/page";
+import type { BlockDefinition, Page } from "@/types/page";
 
 interface BlockBuilderCanvasProps {
   page: Page;
@@ -27,10 +26,9 @@ interface BlockBuilderCanvasProps {
 }
 
 export function BlockBuilderCanvas({ page, blockDefinitions }: BlockBuilderCanvasProps) {
-  const { addBlock, updateBlock, deleteBlock, reorderBlocks, updatePage } = usePageActions(page.page_type);
+  const { addBlock, updateBlock, deleteBlock, reorderBlocks } = usePageActions(page.page_type);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(page.blocks[0]?.id ?? null);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [seoDraft, setSeoDraft] = useState<Partial<SeoMeta>>(() => page.seo ?? {});
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -100,23 +98,6 @@ export function BlockBuilderCanvas({ page, blockDefinitions }: BlockBuilderCanva
         ) : (
           <p className="text-sm text-neutral-500">Select a block to edit it, or add one to get started.</p>
         )}
-      </div>
-
-      <div className="w-full shrink-0 lg:w-72">
-        <SeoPanel
-          value={seoDraft}
-          onChange={(patch) => setSeoDraft((prev) => ({ ...prev, ...patch }))}
-          collapsedByDefault
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-2 w-full"
-          disabled={updatePage.isPending}
-          onClick={() => updatePage.mutate({ seo: seoDraft })}
-        >
-          Save SEO
-        </Button>
       </div>
 
       <BlockPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onSelect={handleAddBlock} />

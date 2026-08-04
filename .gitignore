@@ -24,3 +24,6 @@ backend/media_storage/
 # Editors / OS
 .DS_Store
 *.tsbuildinfo
+
+# Dev server logs
+*.log

@@ -28,6 +28,7 @@ export function GalleryBlockEditor({ config, onChange }: Props) {
           <>
             <ImagePickerField
               label="Image"
+              recommendedDimensions="1200 × 900 px (4:3)"
               imageUrl={item.url}
               onChange={({ url, mediaId }) => update({ url, media_id: mediaId })}
             />

@@ -25,6 +25,7 @@ export function VideoBlockEditor({ config, onChange }: Props) {
       />
       <ImagePickerField
         label="Poster image (optional)"
+        recommendedDimensions="1280 × 720 px (16:9)"
         imageUrl={config.poster_image_url}
         onChange={({ url, mediaId }) =>
           onChange({ ...config, poster_image_url: url, poster_image_media_id: mediaId })

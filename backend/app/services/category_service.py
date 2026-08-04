@@ -1,6 +1,6 @@
 import uuid
 
-from app.shared.exceptions.exceptions import ConflictError, NotFoundError
+from app.shared.exceptions.exceptions import NotFoundError
 from app.domain.repositories.category_repository import CategoryRepository
 from app.models.category import Category
 from app.schemas.taxonomy import CategoryCreate, CategoryUpdate
@@ -30,7 +30,9 @@ class CategoryService:
         return await self.categories.update(category)
 
     async def delete(self, category_id: uuid.UUID) -> None:
+        """Force-deletes the category regardless of usage — `property_category` and
+        `blog_post_category`'s FK constraints are `ON DELETE CASCADE` (confirmed
+        against the real DB, not just the SQLAlchemy model), so any posts/properties
+        tagged with this category just lose that tag, nothing else breaks."""
         category = await self.get(category_id)
-        if await self.categories.count_usage(category_id) > 0:
-            raise ConflictError("This category is assigned to posts or properties — reassign them first.")
         await self.categories.delete(category)

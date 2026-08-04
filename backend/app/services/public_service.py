@@ -2,38 +2,63 @@ import uuid
 
 from app.shared.exceptions.exceptions import NotFoundError, ValidationAppError
 from app.domain.repositories.blog_post_repository import BlogPostRepository
+from app.domain.repositories.career_repository import CareerRepository
 from app.domain.repositories.category_repository import CategoryRepository
 from app.domain.repositories.form_submission_repository import FormSubmissionRepository
+from app.domain.repositories.gallery_repository import GalleryRepository
 from app.domain.repositories.media_repository import MediaRepository
 from app.domain.repositories.menu_repository import MenuRepository
 from app.domain.repositories.page_repository import PageRepository
 from app.domain.repositories.property_repository import PropertyRepository
 from app.domain.repositories.settings_repository import SettingsRepository
+from app.domain.repositories.testimonial_repository import TestimonialRepository
 from app.domain.repositories.user_repository import UserRepository
 from app.models.blog_post import BlogPost, BlogPostStatus
+from app.models.career import Career
 from app.models.form_submission import FormSubmission
+from app.models.gallery_item import GalleryItem
 from app.models.page import Page, PageStatus, PageType
 from app.models.property import Property, PropertyStatus
+from app.models.testimonial import Testimonial
 from app.schemas.public import (
     PublicBlock,
     PublicBlogPost,
     PublicBlogPostListItem,
+    PublicCareer,
     PublicCategory,
     PublicFormSubmissionCreate,
+    PublicGalleryItem,
     PublicMenu,
     PublicMenuItem,
     PublicPage,
     PublicProperty,
+    PublicPropertyAmenity,
     PublicPropertyListItem,
     PublicSeo,
     PublicSettings,
+    PublicTestimonial,
 )
 from app.schemas.settings import KNOWN_SETTING_KEYS
 from app.services.notification_service import NotificationService
 
-# `POST /public/forms/{form_key}` only accepts these — matches the two real
-# forms on the site (API.md); anything else is a 404, not a generic form.
-ALLOWED_FORM_KEYS = {"hero_quick_enquiry", "contact_callback"}
+# `POST /public/forms/{form_key}` only accepts these; anything else is a
+# 404, not a generic form. `map_unlock` gates a property's interactive
+# site-layout map behind a one-time contact form (PropertyDetailView.tsx).
+# `sitemap_gate` gates /sitemap the same way, then redirects to /projects
+# (SitemapGate.tsx) — both share the same site-wide visitor_contact store.
+# `career_application` is submitted from the "Apply Now" modal on /careers
+# (CareersPage.tsx) — the job title is folded into `message` since this
+# generic form has no dedicated career/job foreign key.
+# `brochure_download` gates a property's uploaded PDF brochure the same way
+# (PropertyDetailView.tsx) — the real file only reveals after this submits.
+ALLOWED_FORM_KEYS = {
+    "hero_quick_enquiry",
+    "contact_callback",
+    "map_unlock",
+    "sitemap_gate",
+    "career_application",
+    "brochure_download",
+}
 
 
 class PublicService:
@@ -49,6 +74,9 @@ class PublicService:
         form_submissions: FormSubmissionRepository,
         users: UserRepository,
         notifications: NotificationService,
+        careers: CareerRepository,
+        gallery: GalleryRepository,
+        testimonials: TestimonialRepository,
     ):
         self.pages = pages
         self.blog_posts = blog_posts
@@ -60,6 +88,9 @@ class PublicService:
         self.form_submissions = form_submissions
         self.users = users
         self.notifications = notifications
+        self.careers = careers
+        self.gallery = gallery
+        self.testimonials = testimonials
 
     async def _media_url(self, media_id: uuid.UUID | None) -> str | None:
         if not media_id:
@@ -216,12 +247,25 @@ class PublicService:
             ]
             if url
         ]
+        amenities = [
+            PublicPropertyAmenity(
+                name=item.get("name", ""),
+                image_url=(
+                    await self._media_url(uuid.UUID(item["image_media_id"])) if item.get("image_media_id") else None
+                ),
+            )
+            for item in (property_.amenities or [])
+        ]
         return PublicProperty(
             **list_item.model_dump(),
             area_sqft=str(property_.area_sqft) if property_.area_sqft is not None else None,
+            description=property_.description,
+            amenities=amenities,
             categories=[self._public_category(c) for c in property_.categories],
             gallery=gallery_urls,
             seo=await self._public_seo(property_.seo),
+            map_project_id=str(property_.map_project_id) if property_.map_project_id else None,
+            brochure_url=await self._media_url(property_.brochure_media_id),
         )
 
     # --- Menus ---
@@ -287,6 +331,12 @@ class PublicService:
             latitude=values.get("latitude"),
             longitude=values.get("longitude"),
             service_areas=values.get("service_areas"),
+            why_choose_image_url=await self._media_url(
+                uuid.UUID(values["why_choose_image_media_id"]) if values.get("why_choose_image_media_id") else None
+            ),
+            contact_map_image_url=await self._media_url(
+                uuid.UUID(values["contact_map_image_media_id"]) if values.get("contact_map_image_media_id") else None
+            ),
         )
 
     async def sitemap_entries(self) -> list[dict[str, str | None]]:
@@ -353,3 +403,52 @@ class PublicService:
             link="/forms",
         )
         return submission
+
+    # --- Careers ---
+
+    async def list_careers(self) -> list[Career]:
+        careers, _ = await self.careers.list(page=1, per_page=100, is_published=True)
+        return careers
+
+    def to_public_career(self, career: Career) -> PublicCareer:
+        return PublicCareer(
+            id=str(career.id),
+            title=career.title,
+            department=career.department,
+            location=career.location,
+            employment_type=career.employment_type,
+            description=career.description,
+            apply_email=career.apply_email,
+        )
+
+    # --- Gallery ---
+
+    async def list_gallery_items(self, category: str | None) -> list[GalleryItem]:
+        items, _ = await self.gallery.list(page=1, per_page=200, is_published=True, category=category)
+        return items
+
+    async def to_public_gallery_item(self, item: GalleryItem) -> PublicGalleryItem:
+        return PublicGalleryItem(
+            id=str(item.id),
+            image_url=await self._media_url(item.media_id),
+            caption=item.caption,
+            category=item.category,
+        )
+
+    # --- Testimonials ---
+
+    async def list_testimonials(self, featured_only: bool) -> list[Testimonial]:
+        testimonials, _ = await self.testimonials.list(
+            page=1, per_page=100, is_published=True, featured_only=featured_only
+        )
+        return testimonials
+
+    async def to_public_testimonial(self, testimonial: Testimonial) -> PublicTestimonial:
+        return PublicTestimonial(
+            id=str(testimonial.id),
+            name=testimonial.name,
+            role_or_location=testimonial.role_or_location,
+            quote=testimonial.quote,
+            photo_url=await self._media_url(testimonial.photo_media_id),
+            rating=testimonial.rating,
+        )

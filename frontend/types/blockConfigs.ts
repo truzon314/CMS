@@ -14,6 +14,8 @@ export interface HeroBannerConfig {
 export interface TextConfig {
   heading: string;
   body: string;
+  image_url?: string;
+  image_media_id?: string | null;
 }
 
 export interface ImageConfig {

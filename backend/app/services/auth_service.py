@@ -63,21 +63,10 @@ class AuthService:
         self, raw_refresh_token: str, ip_address: str | None, user_agent: str | None
     ) -> tuple[str, int, str]:
         token_hash = hash_opaque_token(raw_refresh_token)
-        # TEMP DIAGNOSTIC — remove once the reuse-detection issue is root-caused.
-        logger.warning(
-            "[auth-debug] refresh() called token_hash=%s..%s ip=%s ua=%s",
-            token_hash[:8], token_hash[-4:], ip_address, (user_agent or "")[:60],
-        )
         token = await self.refresh_tokens.get_by_hash(token_hash)
 
         if not token:
-            logger.warning("[auth-debug] refresh() token not found in DB at all")
             raise UnauthorizedError("Session expired, please log in again.")
-
-        logger.warning(
-            "[auth-debug] refresh() found token id=%s user=%s created_at=%s revoked_at=%s expires_at=%s",
-            token.id, token.user_id, token.created_at, token.revoked_at, token.expires_at,
-        )
 
         if token.revoked_at is not None:
             # Reuse of an already-rotated token — treat as compromised and kill the

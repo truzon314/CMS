@@ -70,9 +70,21 @@ class SqlAlchemyPropertyRepository:
             count_stmt = count_stmt.join(property_category).where(property_category.c.category_id == category_id)
 
         total = (await self.session.execute(count_stmt)).scalar_one()
-        stmt = stmt.order_by(Property.updated_at.desc()).offset((page - 1) * per_page).limit(per_page)
+        stmt = (
+            stmt.order_by(Property.sort_order.asc(), Property.updated_at.desc())
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+        )
         rows = (await self.session.execute(stmt)).unique().scalars().all()
         return list(rows), total
+
+    async def reorder(self, ordered_ids: list[uuid.UUID]) -> None:
+        stmt = select(Property).where(Property.id.in_(ordered_ids))
+        properties = {p.id: p for p in (await self.session.execute(stmt)).scalars().all()}
+        for position, property_id in enumerate(ordered_ids):
+            if property_id in properties:
+                properties[property_id].sort_order = position
+        await self.session.commit()
 
     async def list_trash(self, *, page: int, per_page: int) -> tuple[list[Property], int]:
         stmt = select(Property).where(Property.deleted_at.isnot(None)).options(*_WITH_RELATIONS)

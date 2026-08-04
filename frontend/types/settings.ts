@@ -39,6 +39,8 @@ export interface Settings {
   google_gsc_service_account_json: string | null;
   google_gsc_site_url: string | null;
   ahrefs_api_key: string | null;
+  why_choose_image_media_id: string | null;
+  contact_map_image_media_id: string | null;
 }
 
 export type SettingsUpdatePayload = Partial<Settings>;

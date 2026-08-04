@@ -1,6 +1,6 @@
 import { apiFetch, apiFetchPage } from "@/lib/api-client";
 import type { SeoMeta } from "@/types/page";
-import type { BudgetBracket, Property, PropertyListItem } from "@/types/property";
+import type { BudgetBracket, Property, PropertyAmenity, PropertyListItem } from "@/types/property";
 
 export interface PropertyListParams {
   page?: number;
@@ -24,10 +24,14 @@ export interface PropertyCreatePayload {
   spec_b?: string;
   area_sqft?: number;
   beds_options?: string[];
+  description?: string;
+  amenities?: PropertyAmenity[];
   tag_text?: string;
   status_text?: string;
   is_signature?: boolean;
   featured_image_media_id?: string | null;
+  brochure_media_id?: string | null;
+  map_project_id?: string | null;
   category_ids?: string[];
 }
 
@@ -71,4 +75,13 @@ export const propertyService = {
   publish: (id: string) => apiFetch<Property>(`/api/v1/properties/${id}/publish`, { method: "POST" }),
 
   unpublish: (id: string) => apiFetch<Property>(`/api/v1/properties/${id}/unpublish`, { method: "POST" }),
+
+  // Persists the exact order of `orderedIds` — index 0 shows first on the
+  // public site. Only meaningful against the full, unfiltered list; the
+  // admin UI disables dragging while a search filter is active.
+  reorder: (orderedIds: string[]) =>
+    apiFetch<{ reordered: boolean }>("/api/v1/properties/reorder", {
+      method: "PUT",
+      body: JSON.stringify({ order: orderedIds }),
+    }),
 };

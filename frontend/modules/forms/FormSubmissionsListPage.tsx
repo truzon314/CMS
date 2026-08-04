@@ -14,6 +14,7 @@ const FORM_KEY_OPTIONS = [
   { value: "", label: "All forms" },
   { value: "hero_quick_enquiry", label: "Quick Enquiry" },
   { value: "contact_callback", label: "Request a Callback" },
+  { value: "map_unlock", label: "Map Access Request" },
 ];
 
 const STATUS_OPTIONS = [
@@ -66,10 +67,24 @@ export function FormSubmissionsListPage() {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="w-52">
-          <SelectField label="" id="form_key_filter" value={formKey} onChange={setFormKey} options={FORM_KEY_OPTIONS} />
+          <SelectField
+            label=""
+            ariaLabel="Filter by form"
+            id="form_key_filter"
+            value={formKey}
+            onChange={setFormKey}
+            options={FORM_KEY_OPTIONS}
+          />
         </div>
         <div className="w-44">
-          <SelectField label="" id="status_filter" value={status} onChange={setStatus} options={STATUS_OPTIONS} />
+          <SelectField
+            label=""
+            ariaLabel="Filter by status"
+            id="status_filter"
+            value={status}
+            onChange={setStatus}
+            options={STATUS_OPTIONS}
+          />
         </div>
       </div>
 

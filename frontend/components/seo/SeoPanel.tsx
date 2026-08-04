@@ -42,16 +42,29 @@ export function SeoPanel({ value, onChange, slug = "" }: SeoPanelProps) {
   const current: SeoPanelValue = value ?? {};
 
   const handleFieldChange = (field: keyof SeoPanelValue, val: unknown) => {
+    // `value` may come in as a full `SeoMeta` read model (with a read-only
+    // `id`); the backend's write schema forbids unknown fields, so strip it
+    // before re-emitting the patch.
+    const { id: _id, ...rest } = current as SeoPanelValue & { id?: string };
     onChange({
-      ...current,
+      ...rest,
       [field]: val,
     });
   };
 
-  // Parsing keywords array to comma string for input
-  const keywordsString = Array.isArray(current.keywords) ? current.keywords.join(", ") : "";
+  // Local raw text, not derived from `current.keywords` on every render —
+  // the old version rendered `current.keywords.join(", ")` directly as the
+  // input's value, so typing a comma (producing a trailing empty segment)
+  // got immediately parsed, trimmed, and filtered back out on the very next
+  // render, silently deleting the comma the user just typed. Keeping the
+  // textbox's own state means it echoes exactly what's typed, while the
+  // parsed array still propagates to the parent on every change.
+  const [keywordsInput, setKeywordsInput] = useState(
+    () => (Array.isArray(current.keywords) ? current.keywords.join(", ") : "")
+  );
 
   const handleKeywordsChange = (raw: string) => {
+    setKeywordsInput(raw);
     const arr = raw.split(",").map((k) => k.trim()).filter(Boolean);
     handleFieldChange("keywords", arr.length > 0 ? arr : null);
   };
@@ -171,7 +184,7 @@ export function SeoPanel({ value, onChange, slug = "" }: SeoPanelProps) {
               />
               <TextField
                 label="Additional Keywords (comma separated)"
-                value={keywordsString}
+                value={keywordsInput}
                 onChange={(e) => handleKeywordsChange(e.target.value)}
                 placeholder="real estate, 3bhk villa, luxury homes"
               />
@@ -205,6 +218,7 @@ export function SeoPanel({ value, onChange, slug = "" }: SeoPanelProps) {
             </div>
             <ImagePickerField
               label="Open Graph Share Image"
+              recommendedDimensions="1200 × 630 px (Social Share)"
               mediaId={current.og_image_media_id ?? null}
               onChange={(val) => handleFieldChange("og_image_media_id", val.mediaId)}
             />
@@ -240,6 +254,7 @@ export function SeoPanel({ value, onChange, slug = "" }: SeoPanelProps) {
             </div>
             <ImagePickerField
               label="Twitter Card Image"
+              recommendedDimensions="1200 × 675 px"
               mediaId={current.twitter_image_media_id ?? null}
               onChange={(val) => handleFieldChange("twitter_image_media_id", val.mediaId)}
             />

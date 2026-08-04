@@ -43,6 +43,15 @@ export function MediaPicker({ open, onClose, accept, onSelect }: MediaPickerProp
           <DialogTitle>Select media</DialogTitle>
         </DialogHeader>
 
+        <div className="rounded-md bg-amber-50 border border-amber-200 p-2.5 text-xs text-amber-900 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span className="font-semibold">Recommended Dimensions:</span>
+          <span>Featured: <strong className="font-semibold">1200×800 px</strong></span>
+          <span>Gallery: <strong className="font-semibold">1200×800 px</strong></span>
+          <span>Amenities: <strong className="font-semibold">600×400 px</strong></span>
+          <span>Logo: <strong className="font-semibold">400×120 px</strong></span>
+          <span>Social Share: <strong className="font-semibold">1200×630 px</strong></span>
+        </div>
+
         <div className="flex gap-1 border-b pb-2">
           {(["library", "upload"] as const).map((t) => (
             <button

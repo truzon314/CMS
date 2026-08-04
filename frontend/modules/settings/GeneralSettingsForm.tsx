@@ -24,15 +24,26 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
   const [logoUrlOverride, setLogoUrlOverride] = useState<string | null>(null);
   const [faviconMediaId, setFaviconMediaId] = useState(settings.favicon_media_id);
   const [faviconUrlOverride, setFaviconUrlOverride] = useState<string | null>(null);
+  const [whyChooseImageMediaId, setWhyChooseImageMediaId] = useState(settings.why_choose_image_media_id);
+  const [whyChooseImageUrlOverride, setWhyChooseImageUrlOverride] = useState<string | null>(null);
+  const [contactMapImageMediaId, setContactMapImageMediaId] = useState(settings.contact_map_image_media_id);
+  const [contactMapImageUrlOverride, setContactMapImageUrlOverride] = useState<string | null>(null);
 
   const { data: currentLogo } = useMediaItem(logoUrlOverride === null ? settings.logo_media_id : null);
   const { data: currentFavicon } = useMediaItem(faviconUrlOverride === null ? settings.favicon_media_id : null);
+  const { data: currentWhyChooseImage } = useMediaItem(
+    whyChooseImageUrlOverride === null ? settings.why_choose_image_media_id : null
+  );
+  const { data: currentContactMapImage } = useMediaItem(
+    contactMapImageUrlOverride === null ? settings.contact_map_image_media_id : null
+  );
 
   return (
     <div className="flex flex-col gap-3 max-w-lg">
       <TextField id="site_name" label="Site name" value={siteName} onChange={(e) => setSiteName(e.target.value)} />
       <ImagePickerField
         label="Logo"
+        recommendedDimensions="400 × 120 px (PNG)"
         imageUrl={logoUrlOverride ?? currentLogo?.url ?? ""}
         onChange={({ url, mediaId }) => {
           setLogoUrlOverride(url);
@@ -41,6 +52,7 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
       />
       <ImagePickerField
         label="Favicon"
+        recommendedDimensions="64 × 64 px"
         imageUrl={faviconUrlOverride ?? currentFavicon?.url ?? ""}
         onChange={({ url, mediaId }) => {
           setFaviconUrlOverride(url);
@@ -77,6 +89,24 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
         value={contactAddress}
         onChange={(e) => setContactAddress(e.target.value)}
       />
+      <ImagePickerField
+        label="Home page — “Why Choose Us” photo"
+        recommendedDimensions="900 × 1100 px (portrait)"
+        imageUrl={whyChooseImageUrlOverride ?? currentWhyChooseImage?.url ?? ""}
+        onChange={({ url, mediaId }) => {
+          setWhyChooseImageUrlOverride(url);
+          setWhyChooseImageMediaId(mediaId);
+        }}
+      />
+      <ImagePickerField
+        label="Contact page — office / map photo"
+        recommendedDimensions="900 × 1000 px (portrait)"
+        imageUrl={contactMapImageUrlOverride ?? currentContactMapImage?.url ?? ""}
+        onChange={({ url, mediaId }) => {
+          setContactMapImageUrlOverride(url);
+          setContactMapImageMediaId(mediaId);
+        }}
+      />
       <Button
         className="self-start"
         disabled={isSaving}
@@ -90,6 +120,8 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
             contact_address: contactAddress,
             logo_media_id: logoMediaId,
             favicon_media_id: faviconMediaId,
+            why_choose_image_media_id: whyChooseImageMediaId,
+            contact_map_image_media_id: contactMapImageMediaId,
           })
         }
       >

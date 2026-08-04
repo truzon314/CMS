@@ -44,7 +44,13 @@ export function GalleryManager({ mediaIds, onChange, isSaving, onSave }: Gallery
 
   return (
     <div className="flex flex-col gap-2">
-      <Label>Gallery</Label>
+      <div className="flex flex-wrap items-center justify-between gap-1">
+        <Label>Gallery</Label>
+        <span className="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+          Rec: 1200 × 800 px
+        </span>
+      </div>
+      <p className="text-xs text-neutral-500 font-normal">Photos 1 to 4 appear as the interactive gallery thumbnails on property pages.</p>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={mediaIds} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-1.5">

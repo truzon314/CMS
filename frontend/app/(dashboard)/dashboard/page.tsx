@@ -40,7 +40,7 @@ export default function DashboardPage() {
               <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[11px] font-bold">
                 SYSTEM DASHBOARD
               </span>
-              <span className="text-slate-400 text-xs">• Real Estate CMS</span>
+              <span className="text-slate-500 text-xs">• Real Estate CMS</span>
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight text-white">
               Welcome back{user ? `, ${user.full_name}` : ""}
@@ -75,50 +75,50 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-slate-500">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Users</span>
               <Users size={16} className="text-blue-500" />
             </div>
             <div className="mt-2 text-2xl font-extrabold text-slate-900">{stats.total_users}</div>
-            <span className="text-[10px] text-slate-400 mt-1">Active Accounts</span>
+            <span className="text-[10px] text-slate-500 mt-1">Active Accounts</span>
           </div>
 
           <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-slate-500">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Published</span>
               <FileText size={16} className="text-emerald-500" />
             </div>
             <div className="mt-2 text-2xl font-extrabold text-slate-900">{stats.published_pages}</div>
-            <span className="text-[10px] text-emerald-600 font-semibold mt-1">Live CMS Pages</span>
+            <span className="text-[10px] text-emerald-700 font-semibold mt-1">Live CMS Pages</span>
           </div>
 
           <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-slate-500">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Blog Posts</span>
               <Newspaper size={16} className="text-purple-500" />
             </div>
             <div className="mt-2 text-2xl font-extrabold text-slate-900">
-              {stats.published_blog_posts} <span className="text-xs font-normal text-slate-400">/ {stats.total_blog_posts}</span>
+              {stats.published_blog_posts} <span className="text-xs font-normal text-slate-500">/ {stats.total_blog_posts}</span>
             </div>
-            <span className="text-[10px] text-slate-400 mt-1">Published Articles</span>
+            <span className="text-[10px] text-slate-500 mt-1">Published Articles</span>
           </div>
 
           <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-slate-500">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Storage</span>
               <HardDrive size={16} className="text-amber-500" />
             </div>
             <div className="mt-2 text-2xl font-extrabold text-slate-900">{formatBytes(stats.storage_bytes)}</div>
-            <span className="text-[10px] text-slate-400 mt-1">Media Files Size</span>
+            <span className="text-[10px] text-slate-500 mt-1">Media Files Size</span>
           </div>
 
           <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-slate-500">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Drafts</span>
               <Clock size={16} className="text-orange-500" />
             </div>
             <div className="mt-2 text-2xl font-extrabold text-slate-900">{stats.draft_pages}</div>
-            <span className="text-[10px] text-slate-400 mt-1">Unpublished Pages</span>
+            <span className="text-[10px] text-slate-500 mt-1">Unpublished Pages</span>
           </div>
         </div>
       )}
@@ -139,7 +139,7 @@ export default function DashboardPage() {
             </div>
 
             {stats.recent_activity.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4 text-center">No activity recorded yet.</p>
+              <p className="text-xs text-slate-500 py-4 text-center">No activity recorded yet.</p>
             ) : (
               <ul className="flex flex-col gap-3">
                 {stats.recent_activity.map((a) => (
@@ -150,7 +150,7 @@ export default function DashboardPage() {
                     <div className="flex flex-col leading-tight">
                       <span className="font-bold text-slate-900">{a.user_name}</span>
                       <span className="text-slate-500 mt-0.5">{a.action}</span>
-                      <span className="text-[10px] text-slate-400 mt-1">{new Date(a.created_at).toLocaleString()}</span>
+                      <span className="text-[10px] text-slate-500 mt-1">{new Date(a.created_at).toLocaleString()}</span>
                     </div>
                   </li>
                 ))}
@@ -171,7 +171,7 @@ export default function DashboardPage() {
             </div>
 
             {stats.recent_logins.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4 text-center">No sign-ins logged yet.</p>
+              <p className="text-xs text-slate-500 py-4 text-center">No sign-ins logged yet.</p>
             ) : (
               <ul className="flex flex-col gap-3">
                 {stats.recent_logins.map((u) => (
@@ -182,7 +182,7 @@ export default function DashboardPage() {
                       </div>
                       <span className="font-bold text-slate-900">{u.full_name}</span>
                     </div>
-                    <span className="text-[10px] font-medium text-slate-400">
+                    <span className="text-[10px] font-medium text-slate-500">
                       {new Date(u.last_login_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </li>
@@ -204,13 +204,13 @@ export default function DashboardPage() {
             </div>
 
             {stats.latest_uploads.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4 text-center">No media uploaded yet.</p>
+              <p className="text-xs text-slate-500 py-4 text-center">No media uploaded yet.</p>
             ) : (
               <ul className="flex flex-col gap-3">
                 {stats.latest_uploads.map((m) => (
                   <li key={m.id} className="flex items-center justify-between text-xs border-b border-slate-100 pb-2.5 last:border-none">
                     <span className="truncate font-bold text-slate-900 max-w-[170px]">{m.file_name}</span>
-                    <span className="text-[10px] text-slate-400 font-medium">
+                    <span className="text-[10px] text-slate-500 font-medium">
                       {new Date(m.created_at).toLocaleDateString()}
                     </span>
                   </li>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
           >
             <div className="flex items-center justify-between">
               <FileText size={18} className="text-slate-700 group-hover:text-amber-600 transition-colors" />
-              <ArrowRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight size={14} className="text-slate-500 group-hover:translate-x-0.5 transition-transform" />
             </div>
             <span className="font-bold text-sm text-slate-900">Fixed Pages</span>
             <span className="text-xs text-slate-500">Edit homepage, about, and landing page blocks.</span>
@@ -243,7 +243,7 @@ export default function DashboardPage() {
           >
             <div className="flex items-center justify-between">
               <Building2 size={18} className="text-slate-700 group-hover:text-amber-600 transition-colors" />
-              <ArrowRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight size={14} className="text-slate-500 group-hover:translate-x-0.5 transition-transform" />
             </div>
             <span className="font-bold text-sm text-slate-900">Properties</span>
             <span className="text-xs text-slate-500">Manage real estate listings and luxury villas.</span>
@@ -255,7 +255,7 @@ export default function DashboardPage() {
           >
             <div className="flex items-center justify-between">
               <Newspaper size={18} className="text-slate-700 group-hover:text-amber-600 transition-colors" />
-              <ArrowRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight size={14} className="text-slate-500 group-hover:translate-x-0.5 transition-transform" />
             </div>
             <span className="font-bold text-sm text-slate-900">Blog Posts</span>
             <span className="text-xs text-slate-500">Publish articles, insights, and news posts.</span>
@@ -267,7 +267,7 @@ export default function DashboardPage() {
           >
             <div className="flex items-center justify-between">
               <Globe size={18} className="text-slate-700 group-hover:text-amber-600 transition-colors" />
-              <ArrowRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight size={14} className="text-slate-500 group-hover:translate-x-0.5 transition-transform" />
             </div>
             <span className="font-bold text-sm text-slate-900">SEO Module</span>
             <span className="text-xs text-slate-500">PageSpeed, rankings, schema & technical SEO.</span>

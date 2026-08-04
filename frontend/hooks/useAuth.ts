@@ -73,8 +73,6 @@ export function useBootstrapSession() {
   const finishBootstrap = useSessionStore((s) => s.finishBootstrap);
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.warn(`[auth-debug] useBootstrapSession effect fired, isAuthenticated=${isAuthenticated}, ranOnce=${ranOnce.current}`);
     if (ranOnce.current || isAuthenticated) {
       if (isAuthenticated) finishBootstrap();
       return;

@@ -4,6 +4,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* This admin is light-only — no theme toggle exists, and `dark:` variants
+   only ever activate via an explicit `.dark` ancestor class (never applied
+   anywhere in this app). Without this, native form controls (<select>,
+   scrollbars, etc.) still pick up the browser's own dark-mode rendering
+   under a dark OS/browser color-scheme preference, since that's a
+   UA-stylesheet behavior independent of any Tailwind class — e.g. a
+   <select> with no explicit text color renders near-white text from the
+   browser's native dark form-control theme, invisible against the light
+   background Tailwind gives it. Declaring the page light-only here is what
+   actually stops that, regardless of the visitor's system theme. */
+:root {
+  color-scheme: light;
+}
+
 @theme inline {
   --color-background: #ffffff;
   --color-foreground: #12172b;

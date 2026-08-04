@@ -36,6 +36,8 @@ class TextConfig(BaseModel):
 
     heading: str = ""
     body: str = ""
+    image_url: str = ""
+    image_media_id: uuid.UUID | None = None
 
 
 class ImageConfig(BaseModel):
@@ -265,6 +267,7 @@ BLOCK_CONFIG_SCHEMAS: dict[str, type[BaseModel]] = {
 MEDIA_ID_FIELDS: dict[str, str] = {
     "image": "image_media_id",
     "video": "poster_image_media_id",
+    "text": "image_media_id",
 }
 
 

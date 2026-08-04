@@ -9,6 +9,11 @@ export interface PropertyMediaItem {
   position: number;
 }
 
+export interface PropertyAmenity {
+  name: string;
+  image_media_id: string | null;
+}
+
 export interface PropertyListItem {
   id: string;
   name: string;
@@ -17,6 +22,7 @@ export interface PropertyListItem {
   category_names: string[];
   price_display: string | null;
   status: PropertyStatus;
+  sort_order: number;
   updated_at: string;
 }
 
@@ -33,12 +39,17 @@ export interface Property {
   spec_b: string | null;
   area_sqft: string | null;
   beds_options: string[] | null;
+  description: string | null;
+  amenities: PropertyAmenity[] | null;
   tag_text: string | null;
   status_text: string | null;
   is_signature: boolean;
   featured_image_media_id: string | null;
+  brochure_media_id: string | null;
   seo: SeoMeta | null;
   status: PropertyStatus;
+  sort_order: number;
+  map_project_id: string | null;
   categories: Category[];
   gallery: PropertyMediaItem[];
   created_at: string;

@@ -47,6 +47,8 @@ KNOWN_SETTING_KEYS = [
     "google_gsc_service_account_json",
     "google_gsc_site_url",
     "ahrefs_api_key",
+    "why_choose_image_media_id",
+    "contact_map_image_media_id",
 ]
 
 
@@ -93,6 +95,8 @@ class SettingsRead(BaseModel):
     google_gsc_service_account_json: str | None = None
     google_gsc_site_url: str | None = None
     ahrefs_api_key: str | None = None
+    why_choose_image_media_id: uuid.UUID | None = None
+    contact_map_image_media_id: uuid.UUID | None = None
 
 
 class SettingsUpdate(BaseModel):
@@ -138,3 +142,5 @@ class SettingsUpdate(BaseModel):
     google_gsc_service_account_json: str | None = None
     google_gsc_site_url: str | None = None
     ahrefs_api_key: str | None = None
+    why_choose_image_media_id: uuid.UUID | None = None
+    contact_map_image_media_id: uuid.UUID | None = None
