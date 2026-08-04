@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Standalone output: a minimal, self-contained server bundle instead of
+  // requiring `node_modules` + the full source tree at runtime — the whole
+  // point of a lean production container (GCP_DEPLOYMENT.md §2).
+  output: "standalone",
   // Lets other devices on the same WiFi (phones, tablets) reach this dev
   // server and its RSC endpoints — Next.js blocks cross-origin dev requests
   // from any origin not in this list.

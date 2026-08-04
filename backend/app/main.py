@@ -42,7 +42,19 @@ from app.shared.security.security_headers import SecurityHeadersMiddleware
 configure_logging()
 settings = get_settings()
 
-app = FastAPI(title="Truzon CMS API", version="0.1.0", dependencies=[Depends(global_backstop)])
+# Interactive API docs (Swagger UI, ReDoc, and the raw OpenAPI schema they're
+# built from) are a reconnaissance gift to anyone probing the public
+# internet — no legitimate client needs to browse the schema in production;
+# admin frontend devs use it against a local/staging backend instead.
+_docs_enabled = settings.environment != "production"
+app = FastAPI(
+    title="Truzon CMS API",
+    version="0.1.0",
+    dependencies=[Depends(global_backstop)],
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
+    openapi_url="/openapi.json" if _docs_enabled else None,
+)
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
