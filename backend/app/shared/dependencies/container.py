@@ -122,8 +122,9 @@ def get_user_service(
     roles: SqlAlchemyRoleRepository = Depends(get_role_repository),
     auth_tokens: SqlAlchemyAuthTokenRepository = Depends(get_auth_token_repository),
     audit: AuditService = Depends(get_audit_service),
+    mailer: MailerService = Depends(get_mailer_service),
 ) -> UserService:
-    return UserService(users, roles, auth_tokens, audit)
+    return UserService(users, roles, auth_tokens, audit, mailer)
 
 
 def get_role_service(

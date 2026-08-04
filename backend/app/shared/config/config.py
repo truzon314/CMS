@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 30
     environment: str = "development"
     cors_origins: str = "http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001,http://127.0.0.1:3000"
+    # Base URL of the CMS admin frontend — used to build clickable links in
+    # transactional emails (user invites, password resets), since those are
+    # sent from the backend and have no request-derived Origin to go on.
+    admin_frontend_url: str = "http://localhost:3001"
 
     # Media Library (ARCHITECTURE.md's `StorageAdapter` — local disk for dev/tests,
     # R2 in prod once these are set).

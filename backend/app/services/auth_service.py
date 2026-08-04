@@ -106,8 +106,12 @@ class AuthService:
             expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
         )
         await self.auth_tokens.create(auth_token)
+        reset_url = f"{settings.admin_frontend_url}/reset-password?token={raw_token}"
         await self.mailer.send_email(
-            user.email, "Reset your Truzon CMS password", f"Reset link token: {raw_token}"
+            user.email,
+            "Reset your Truzon CMS password",
+            f"Reset your password here (link expires in 1 hour):\n{reset_url}\n\n"
+            f"If you didn't request this, you can ignore this email.",
         )
 
     async def reset_password(self, raw_token: str, new_password: str) -> None:

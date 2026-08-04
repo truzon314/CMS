@@ -3,6 +3,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
+from app.shared.config.config import get_settings
 from app.shared.exceptions.exceptions import ConflictError, NotFoundError
 from app.shared.security.security import generate_opaque_token, hash_opaque_token, hash_password
 from app.domain.repositories.auth_token_repository import AuthTokenRepository
@@ -12,18 +13,26 @@ from app.models.auth_token import AuthToken, AuthTokenPurpose
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.audit_service import AuditService
+from app.services.mailer_service import MailerService
 
 logger = logging.getLogger("truzon_cms.users")
+settings = get_settings()
 
 
 class UserService:
     def __init__(
-        self, users: UserRepository, roles: RoleRepository, auth_tokens: AuthTokenRepository, audit: AuditService
+        self,
+        users: UserRepository,
+        roles: RoleRepository,
+        auth_tokens: AuthTokenRepository,
+        audit: AuditService,
+        mailer: MailerService,
     ):
         self.users = users
         self.roles = roles
         self.auth_tokens = auth_tokens
         self.audit = audit
+        self.mailer = mailer
 
     async def list(self, *, page: int, per_page: int, search: str | None) -> tuple[list[User], int]:
         return await self.users.list(page=page, per_page=per_page, search=search)
@@ -98,8 +107,12 @@ class UserService:
             expires_at=datetime.now(timezone.utc) + timedelta(days=3),
         )
         await self.auth_tokens.create(auth_token)
-        logger.info(
-            "[dev email] to=%s subject='Set your Truzon CMS password' invite_token=%r",
+        set_password_url = f"{settings.admin_frontend_url}/reset-password?token={raw_token}"
+        await self.mailer.send_email(
             user.email,
-            raw_token,
+            "Set your Truzon CMS password",
+            f"Hi {user.full_name},\n\n"
+            f"An account has been created for you on the Truzon CMS. Set your password here "
+            f"(link expires in 3 days):\n{set_password_url}\n\n"
+            f"If you weren't expecting this, you can ignore this email.",
         )

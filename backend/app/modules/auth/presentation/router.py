@@ -40,8 +40,8 @@ async def login(
     response: Response,
     auth_service: AuthService = Depends(get_auth_service),
 ):
-    rate_limit(request, scope="auth.login.ip", limit=10, window_seconds=60)
-    rate_limit(request, scope="auth.login.account", limit=5, window_seconds=60, extra_key=payload.email.lower())
+    rate_limit(request, scope="auth.login.ip", limit=20, window_seconds=60)
+    rate_limit(request, scope="auth.login.account", limit=20, window_seconds=60, extra_key=payload.email.lower())
 
     access_token, expires_in, refresh_token, user = await auth_service.login(
         payload.email,
