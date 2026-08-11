@@ -25,4 +25,10 @@ export const authService = {
       method: "POST",
       body: JSON.stringify({ token, new_password: newPassword }),
     }),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiFetch<{ changed: boolean }>("/api/v1/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    }),
 };

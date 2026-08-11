@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from app.auth.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.auth import (
+    ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
     ResetPasswordRequest,
@@ -115,6 +116,21 @@ async def verify_email(
 ):
     await auth_service.verify_email(payload.token)
     return ok({"verified": True})
+
+
+@router.post("/change-password")
+async def change_password(
+    payload: ChangePasswordRequest,
+    request: Request,
+    user: User = Depends(get_current_user),
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    # Same account-scoped limiter shape as login — bounds guessing at the
+    # current password even though it requires an already-valid session.
+    rate_limit(request, scope="auth.change_password.account", limit=10, window_seconds=3600, extra_key=str(user.id))
+
+    await auth_service.change_password(user, payload.current_password, payload.new_password)
+    return ok({"changed": True})
 
 
 @router.get("/me")

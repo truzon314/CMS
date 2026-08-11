@@ -14,6 +14,22 @@ from app.shared.utils.common import ok
 router = APIRouter(prefix="/redirects", tags=["redirects"])
 
 
+def _normalize_redirect_path(v: str) -> str:
+    """Both from_path and to_path are meant to be site-relative paths (the
+    existing "/"-prefix behavior below), not external targets — a bare
+    `if not v.startswith("/")` check lets a protocol-relative value like
+    "//evil.com" slip through unchanged, since it already starts with "/"
+    (a browser resolves "//host" as same-scheme, different-host, i.e. an
+    open redirect). Rejecting explicitly instead of silently rewriting it,
+    since a value that specific is a mistake worth surfacing, not guessing at."""
+    v = v.strip()
+    if v.startswith("//") or "://" in v:
+        raise ValueError("Redirect paths must be relative to this site (e.g. /old-page), not an external URL.")
+    if not v.startswith("/"):
+        v = "/" + v
+    return v
+
+
 class RedirectCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -25,10 +41,7 @@ class RedirectCreate(BaseModel):
     @field_validator("from_path", "to_path")
     @classmethod
     def validate_path(cls, v: str) -> str:
-        v = v.strip()
-        if not v.startswith("/"):
-            v = "/" + v
-        return v
+        return _normalize_redirect_path(v)
 
 
 class RedirectUpdate(BaseModel):
@@ -38,6 +51,14 @@ class RedirectUpdate(BaseModel):
     to_path: str | None = None
     status_code: int | None = None
     is_active: bool | None = None
+
+    # RedirectCreate already normalizes/rejects here (see _normalize_redirect_path)
+    # — this was previously missing on Update entirely, so editing an existing
+    # rule bypassed the check Create enforces on the same fields.
+    @field_validator("from_path", "to_path")
+    @classmethod
+    def validate_path(cls, v: str | None) -> str | None:
+        return _normalize_redirect_path(v) if v is not None else v
 
 
 @router.get("")

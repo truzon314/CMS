@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, ChevronDown, Grid, Menu, PanelLeft } from "lucide-react";
+import { useState } from "react";
+import { Search, ChevronDown, Grid, KeyRound, Menu, PanelLeft } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { ChangePasswordDialog } from "@/components/layout/ChangePasswordDialog";
 import { useSessionStore } from "@/store/session";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { useSearchOverlayStore } from "@/store/searchOverlay";
@@ -30,6 +32,7 @@ export function Topbar() {
   const toggleCollapsed = useSidebarStore((s) => s.toggleCollapsed);
   const toggleMobile = useSidebarStore((s) => s.toggleMobile);
   const logout = useLogout();
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3.5 shadow-2xs select-none sm:px-6">
@@ -108,6 +111,10 @@ export function Topbar() {
                 <div className="font-bold text-slate-900">{user.full_name}</div>
                 <div className="text-slate-500 truncate">{user.email}</div>
               </div>
+              <DropdownMenuItem onClick={() => setChangePasswordOpen(true)} className="text-xs cursor-pointer gap-2">
+                <KeyRound size={14} />
+                Change password
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => logout.mutate()} className="text-xs cursor-pointer text-red-600 font-medium">
                 Log out
               </DropdownMenuItem>
@@ -115,6 +122,8 @@ export function Topbar() {
           </DropdownMenu>
         ) : null}
       </div>
+
+      <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
     </header>
   );
 }

@@ -16,6 +16,12 @@ class HeroSlideItem(BaseModel):
     subheading: str = ""
     image_url: str = ""
     image_media_id: uuid.UUID | None = None
+    # Optional — a separate crop/shot for phone & tablet, since a wide
+    # desktop hero photo often composes badly when stretched to a portrait
+    # phone screen. Falls back to image_url/image_media_id above when unset
+    # (my-app's Hero component does the fallback, not this schema).
+    mobile_image_url: str = ""
+    mobile_image_media_id: uuid.UUID | None = None
 
 
 class HeroBannerConfig(BaseModel):

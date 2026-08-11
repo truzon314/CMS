@@ -3,6 +3,10 @@ export interface HeroSlideItem {
   subheading: string;
   image_url: string;
   image_media_id?: string | null;
+  // Optional — a separate crop/shot for phone & tablet. Falls back to
+  // image_url/image_media_id above when unset.
+  mobile_image_url?: string;
+  mobile_image_media_id?: string | null;
 }
 
 export interface HeroBannerConfig {

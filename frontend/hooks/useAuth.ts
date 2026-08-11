@@ -41,6 +41,28 @@ export function useForgotPassword() {
   });
 }
 
+/**
+ * Self-service, while already logged in — distinct from useResetPassword's
+ * unauthenticated, emailed-token flow. The backend revokes every session on
+ * success (same as reset_password), so the in-memory access token this tab
+ * is holding is the last one still live; send it back to login immediately
+ * rather than let it silently fail on the next refresh ~15 minutes later.
+ */
+export function useChangePassword() {
+  const router = useRouter();
+  const clearSession = useSessionStore((s) => s.clearSession);
+
+  return useMutation({
+    mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
+      authService.changePassword(currentPassword, newPassword),
+    onSuccess: () => {
+      toast.success("Password changed — please log in again.");
+      clearSession();
+      router.push("/login");
+    },
+  });
+}
+
 export function useResetPassword() {
   const router = useRouter();
 

@@ -133,6 +133,20 @@ class AuthService:
         await self.refresh_tokens.revoke_all_for_user(user.id)
         await self.audit.log(user.id, "auth.reset_password", "user", user.id)
 
+    async def change_password(self, user: User, current_password: str, new_password: str) -> None:
+        """Self-service — any authenticated user changes their own password by
+        proving they know the current one. Distinct from reset_password
+        (unauthenticated, proves identity via an emailed token instead)."""
+        if not verify_password(current_password, user.password_hash):
+            raise ValidationAppError("Current password is incorrect.")
+
+        user.password_hash = hash_password(new_password)
+        await self.users.update(user)
+        # Same as reset_password — force re-login everywhere so a leaked old
+        # password can't be used to keep an existing session alive.
+        await self.refresh_tokens.revoke_all_for_user(user.id)
+        await self.audit.log(user.id, "auth.change_password", "user", user.id)
+
     async def verify_email(self, raw_token: str) -> None:
         token_hash = hash_opaque_token(raw_token)
         auth_token = await self.auth_tokens.get_valid_by_hash(
