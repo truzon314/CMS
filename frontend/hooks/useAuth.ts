@@ -104,6 +104,20 @@ export function useBootstrapSession() {
     (async () => {
       const refreshed = await tryRefresh();
       if (!refreshed) {
+        // The refresh cookie is present but genuinely dead (expired, or
+        // caught by the backend's rotation-reuse detection racing itself
+        // — e.g. two refresh attempts firing close together on reload,
+        // which trips "already-used token" and revokes both). proxy.ts's
+        // edge check only looks at whether the cookie exists, not whether
+        // it's valid, and redirects /login back to /dashboard whenever it
+        // does — so leaving a dead cookie in place here means the next
+        // redirect to /login just bounces straight back, forever: the
+        // client says "not authenticated, go to /login", the edge says
+        // "you have a cookie, go to /dashboard", neither side ever wins.
+        // Clearing it server-side (logout already does exactly this,
+        // unconditionally, regardless of whether the token it's given is
+        // still valid) breaks that loop before it can start.
+        authService.logout().catch(() => {});
         finishBootstrap();
         return;
       }
@@ -111,6 +125,7 @@ export function useBootstrapSession() {
         const user = await authService.me();
         setSession(user, getAccessToken() ?? "");
       } catch {
+        authService.logout().catch(() => {});
         finishBootstrap();
       }
     })();
