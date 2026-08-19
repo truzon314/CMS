@@ -1,5 +1,6 @@
 import uuid
-
+from urllib.parse import urlparse
+from app.shared.config.config import get_settings
 from app.shared.exceptions.exceptions import NotFoundError, ValidationAppError
 from app.domain.repositories.blog_post_repository import BlogPostRepository
 from app.domain.repositories.career_repository import CareerRepository
@@ -95,8 +96,51 @@ class PublicService:
     async def _media_url(self, media_id: uuid.UUID | None) -> str | None:
         if not media_id:
             return None
+
         media = await self.media.get_by_id(media_id)
-        return media.url if media else None
+        if not media or not media.url:
+            return None
+
+        url = media.url
+
+        # Normalize media URLs saved during local development.
+        try:
+            parsed = urlparse(url)
+
+            if parsed.path.startswith("/media-files/"):
+                settings = get_settings()
+                base_url = settings.public_media_base_url.rstrip("/")
+                filename = parsed.path[len("/media-files/"):]
+                return f"{base_url}/media-files/{filename}"
+
+        except Exception:
+            pass
+
+        return url
+
+    def _normalize_media_config(self, value):
+        if isinstance(value, dict):
+            return {
+                key: self._normalize_media_config(item)
+                for key, item in value.items()
+            }
+
+        if isinstance(value, list):
+            return [self._normalize_media_config(item) for item in value]
+
+        if isinstance(value, str):
+            try:
+                parsed = urlparse(value)
+
+                if parsed.path.startswith("/media-files/"):
+                    settings = get_settings()
+                    base_url = settings.public_media_base_url.rstrip("/")
+                    filename = parsed.path[len("/media-files/"):]
+                    return f"{base_url}/media-files/{filename}"
+            except Exception:
+                pass
+
+        return value
 
     @staticmethod
     def _public_category(c) -> PublicCategory:
@@ -129,7 +173,7 @@ class PublicService:
             raise NotFoundError("Page not found.")
 
         blocks = [
-            PublicBlock(id=str(b.id), type=b.block_definition.key, position=b.position, config=b.config)
+            PublicBlock(id=str(b.id), type=b.block_definition.key, position=b.position, config=self._normalize_media_config(b.config))
             for b in sorted(page.blocks, key=lambda b: b.position)
         ]
         return PublicPage(

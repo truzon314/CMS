@@ -30,9 +30,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
-EXPOSE 3001
+EXPOSE 8080
 # Local `docker run` default — Cloud Run injects its own PORT at deploy
 # time and server.js reads it fresh at startup, so this is overridden
 # automatically in production, not something to keep in sync by hand.
-ENV PORT=3001
 CMD ["node", "server.js"]

@@ -76,6 +76,10 @@ class SqlAlchemyMediaRepository:
         media.deleted_at = datetime.now(timezone.utc)
         await self.session.commit()
 
+    async def hard_delete(self, media: Media) -> None:
+    	await self.session.delete(media)
+    	await self.session.commit()
+
     async def restore(self, media: Media) -> None:
         media.deleted_at = None
         await self.session.commit()

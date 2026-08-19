@@ -1,6 +1,9 @@
-import io
+﻿import io
 import uuid
+from urllib.parse import urlparse
 
+from app.shared.config.config import get_settings
+from app.shared.database.base import utcnow
 from PIL import Image
 
 from app.shared.exceptions.exceptions import ConflictError, NotFoundError, ValidationAppError
@@ -14,6 +17,7 @@ from app.schemas.media import MediaFolderCreate, MediaFolderUpdate, MediaUpdate
 from app.services.audit_service import AuditService
 from app.services.media_validation import is_image, sanitize_svg, validate_upload
 from app.storage.base import StorageAdapter
+
 
 _EXTENSION_BY_MIME = {
     "image/jpeg": ".jpg",
@@ -48,6 +52,34 @@ class MediaService:
         self.storage = storage
         self.audit = audit
 
+    def _normalize_media_url(self, media: Media) -> Media:
+        """
+        Normalize legacy media URLs saved during local development.
+
+        Example:
+        http://localhost:8000/media-files/example.png
+        ->
+        https://truzon-backend-715189721854.asia-south1.run.app/media-files/example.png
+        """
+        if not media.url:
+            return media
+
+        try:
+            parsed = urlparse(media.url)
+
+            if parsed.path.startswith("/media-files/"):
+                settings = get_settings()
+                base_url = settings.public_media_base_url.rstrip("/")
+                filename = parsed.path[len("/media-files/"):]
+
+                media.url = f"{base_url}/media-files/{filename}"
+
+        except Exception:
+            # Never allow URL normalization to break the media API.
+            pass
+
+        return media
+
     async def list_media(
         self,
         *,
@@ -57,28 +89,48 @@ class MediaService:
         mime_type: str | None,
         search: str | None,
     ) -> tuple[list[Media], int]:
-        return await self.media.list(
-            page=page, per_page=per_page, folder_id=folder_id, mime_type=mime_type, search=search
+        rows, total = await self.media.list(
+            page=page,
+            per_page=per_page,
+            folder_id=folder_id,
+            mime_type=mime_type,
+            search=search,
         )
+
+        rows = [self._normalize_media_url(media) for media in rows]
+
+        return rows, total
 
     async def get(self, media_id: uuid.UUID) -> Media:
         media = await self.media.get_by_id(media_id)
+
         if not media:
             raise NotFoundError("Media not found.")
-        return media
+
+        return self._normalize_media_url(media)
 
     async def upload(
-        self, files: list[tuple[str, bytes]], folder_id: uuid.UUID | None, user_id: uuid.UUID
+        self,
+        files: list[tuple[str, bytes]],
+        folder_id: uuid.UUID | None,
+        user_id: uuid.UUID,
     ) -> list[Media]:
         created: list[Media] = []
+
         for file_name, content in files:
             mime_type = validate_upload(file_name, content)
+
             if mime_type == "image/svg+xml":
                 content = sanitize_svg(content)
 
             width, height = self._read_dimensions(content, mime_type)
             key = f"{uuid.uuid4()}{_EXTENSION_BY_MIME[mime_type]}"
-            url = await self.storage.save(key, content, mime_type)
+
+            url = await self.storage.save(
+                key,
+                content,
+                mime_type,
+            )
 
             created.append(
                 Media(
@@ -95,39 +147,112 @@ class MediaService:
             )
 
         rows = await self.media.create_many(created)
+
         for row in rows:
-            await self.audit.log(user_id, "media.upload", "media", row.id, details={"file_name": row.file_name})
+            await self.audit.log(
+                user_id,
+                "media.upload",
+                "media",
+                row.id,
+                details={"file_name": row.file_name},
+            )
+
         return rows
 
-    async def update(self, media_id: uuid.UUID, payload: MediaUpdate, actor_id: uuid.UUID | None = None) -> Media:
+    async def update(
+        self,
+        media_id: uuid.UUID,
+        payload: MediaUpdate,
+        actor_id: uuid.UUID | None = None,
+    ) -> Media:
         media = await self.get(media_id)
+
         for field, value in payload.model_dump(exclude_unset=True).items():
             setattr(media, field, value)
+
         media = await self.media.update(media)
-        await self.audit.log(actor_id, "media.update", "media", media.id)
+
+        await self.audit.log(
+            actor_id,
+            "media.update",
+            "media",
+            media.id,
+        )
+
         return media
 
-    async def delete(self, media_id: uuid.UUID, force: bool, actor_id: uuid.UUID | None = None) -> None:
+    async def delete(
+        self,
+        media_id: uuid.UUID,
+        force: bool,
+        actor_id: uuid.UUID | None = None,
+    ) -> None:
         media = await self.get(media_id)
+
         usages = await self.usage.list_for_media(media_id)
+
         if usages and not force:
             raise ConflictError(
                 f"This file is used in {len(usages)} place(s). Delete anyway with ?force=true.",
                 details={"usage_count": len(usages)},
             )
-        await self.media.soft_delete(media)
-        await self.audit.log(actor_id, "media.delete", "media", media.id, details={"file_name": media.file_name})
 
-    async def restore(self, media_id: uuid.UUID, actor_id: uuid.UUID | None = None) -> Media:
-        media = await self.media.get_by_id(media_id, include_deleted=True)
+        if force:
+            # Permanently delete the physical file first.
+            await self.storage.delete(media.file_key)
+
+            # Then permanently delete the database row.
+            await self.media.hard_delete(media)
+
+            await self.audit.log(
+                actor_id,
+                "media.permanent_delete",
+                "media",
+                media.id,
+            )
+
+            return
+
+        # Normal delete = soft delete.
+        media.deleted_at = utcnow()
+
+        await self.media.update(media)
+
+        await self.audit.log(
+            actor_id,
+            "media.delete",
+            "media",
+            media.id,
+        )
+
+    async def restore(
+        self,
+        media_id: uuid.UUID,
+        actor_id: uuid.UUID | None = None,
+    ) -> Media:
+        media = await self.media.get_by_id(
+            media_id,
+            include_deleted=True,
+        )
+
         if not media:
             raise NotFoundError("Media not found.")
+
         await self.media.restore(media)
-        await self.audit.log(actor_id, "media.restore", "media", media.id, details={"file_name": media.file_name})
+
+        await self.audit.log(
+            actor_id,
+            "media.restore",
+            "media",
+            media.id,
+            details={"file_name": media.file_name},
+        )
+
         return await self.get(media_id)
 
     async def get_usage(self, media_id: uuid.UUID):
         await self.get(media_id)
+
         return await self.usage.list_for_media(media_id)
 
     async def sync_field_usage(
@@ -141,48 +266,112 @@ class MediaService:
         saved (e.g. a Hero Banner block's background image) — keeps
         `MediaUsage` in sync so the delete-with-usage-warning check is real."""
         if media_id is None:
-            await self.usage.delete_for_field(entity_type, entity_id, field_name)
+            await self.usage.delete_for_field(
+                entity_type,
+                entity_id,
+                field_name,
+            )
         else:
-            await self.usage.upsert(entity_type, entity_id, field_name, media_id)
+            await self.usage.upsert(
+                entity_type,
+                entity_id,
+                field_name,
+                media_id,
+            )
 
     async def list_folders(self) -> list[MediaFolder]:
         return await self.folders.list_all()
 
-    async def create_folder(self, payload: MediaFolderCreate, actor_id: uuid.UUID | None = None) -> MediaFolder:
-        folder = MediaFolder(name=payload.name, parent_folder_id=payload.parent_folder_id)
+    async def create_folder(
+        self,
+        payload: MediaFolderCreate,
+        actor_id: uuid.UUID | None = None,
+    ) -> MediaFolder:
+        folder = MediaFolder(
+            name=payload.name,
+            parent_folder_id=payload.parent_folder_id,
+        )
+
         folder = await self.folders.create(folder)
-        await self.audit.log(actor_id, "media.create_folder", "media_folder", folder.id, details={"name": folder.name})
+
+        await self.audit.log(
+            actor_id,
+            "media.create_folder",
+            "media_folder",
+            folder.id,
+            details={"name": folder.name},
+        )
+
         return folder
 
     async def update_folder(
-        self, folder_id: uuid.UUID, payload: MediaFolderUpdate, actor_id: uuid.UUID | None = None
+        self,
+        folder_id: uuid.UUID,
+        payload: MediaFolderUpdate,
+        actor_id: uuid.UUID | None = None,
     ) -> MediaFolder:
         folder = await self.folders.get_by_id(folder_id)
+
         if not folder:
             raise NotFoundError("Folder not found.")
+
         for field, value in payload.model_dump(exclude_unset=True).items():
             setattr(folder, field, value)
+
         folder = await self.folders.update(folder)
-        await self.audit.log(actor_id, "media.update_folder", "media_folder", folder.id)
+
+        await self.audit.log(
+            actor_id,
+            "media.update_folder",
+            "media_folder",
+            folder.id,
+        )
+
         return folder
 
-    async def delete_folder(self, folder_id: uuid.UUID, actor_id: uuid.UUID | None = None) -> None:
+    async def delete_folder(
+        self,
+        folder_id: uuid.UUID,
+        actor_id: uuid.UUID | None = None,
+    ) -> None:
         folder = await self.folders.get_by_id(folder_id)
+
         if not folder:
             raise NotFoundError("Folder not found.")
+
         if await self.folders.count_children(folder_id) > 0:
-            raise ConflictError("This folder has subfolders — move or delete them first.")
+            raise ConflictError(
+                "This folder has subfolders — move or delete them first."
+            )
+
         if await self.media.count_in_folder(folder_id) > 0:
-            raise ConflictError("This folder has files in it — move or delete them first.")
+            raise ConflictError(
+                "This folder has files in it — move or delete them first."
+            )
+
         await self.folders.delete(folder)
-        await self.audit.log(actor_id, "media.delete_folder", "media_folder", folder_id, details={"name": folder.name})
+
+        await self.audit.log(
+            actor_id,
+            "media.delete_folder",
+            "media_folder",
+            folder_id,
+            details={"name": folder.name},
+        )
 
     @staticmethod
-    def _read_dimensions(content: bytes, mime_type: str) -> tuple[int | None, int | None]:
+    def _read_dimensions(
+        content: bytes,
+        mime_type: str,
+    ) -> tuple[int | None, int | None]:
         if not is_image(mime_type) or mime_type == "image/svg+xml":
             return None, None
+
         try:
             with Image.open(io.BytesIO(content)) as img:
                 return img.width, img.height
+
         except Exception as exc:
-            raise ValidationAppError("Uploaded image data is corrupt or unreadable.") from exc
+            raise ValidationAppError(
+                "Uploaded image data is corrupt or unreadable."
+            ) from exc

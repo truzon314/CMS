@@ -1,7 +1,9 @@
 import { processGeoJsonUpload, processZipUpload } from "@/lib/gisProcessor";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-
+const API_BASE_URL =
+  process.env.INTERNAL_API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://localhost:8000";
 // Thin proxy: file-format parsing (.shp/.zip/.geojson) stays here since it's
 // genuinely easier in Node (shapefile/adm-zip/proj4 have no equivalent
 // already in the Python backend) — but persistence is real, in the FastAPI

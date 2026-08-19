@@ -55,6 +55,7 @@ from app.services.user_service import UserService
 from app.shared.config.config import get_settings
 from app.shared.database.session import get_db
 from app.storage.base import StorageAdapter
+from app.storage.gcs_storage import GCSStorageAdapter
 from app.storage.local_storage import LocalStorageAdapter
 from app.storage.r2_storage import R2StorageAdapter
 
@@ -178,10 +179,17 @@ def get_page_service(
     audit: AuditService = Depends(get_audit_service),
 ) -> PageService:
     return PageService(pages, block_definitions, versions, media_usage, audit)
-
-
+    
 def get_storage_adapter() -> StorageAdapter:
-    return R2StorageAdapter() if get_settings().r2_configured else LocalStorageAdapter()
+    settings = get_settings()
+    
+    if settings.storage_backend == "gcs":
+        return GCSStorageAdapter()
+
+    if settings.storage_backend == "r2" and settings.r2_configured:
+        return R2StorageAdapter()
+
+    return LocalStorageAdapter()
 
 
 def get_media_service(

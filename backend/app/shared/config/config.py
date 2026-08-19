@@ -20,8 +20,14 @@ class Settings(BaseSettings):
 
     # Media Library (ARCHITECTURE.md's `StorageAdapter` — local disk for dev/tests,
     # R2 in prod once these are set).
+    # Media Library
     media_storage_dir: str = "./media_storage"
     public_media_base_url: str = "http://localhost:8000"
+
+    # Storage backend: "local" for development, "gcs" for Google Cloud Storage
+    storage_backend: str = "local"
+    gcs_bucket: str | None = None
+    gcp_project_id: str | None = None
     max_image_upload_mb: int = 25
     max_video_upload_mb: int = 200
     r2_account_id: str | None = None

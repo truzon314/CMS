@@ -5,8 +5,15 @@ import { ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { MediaPicker } from "@/components/ui/media-picker";
+import { useMediaItem } from "@/hooks/useMedia";
 
-const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
+const IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
+];
 
 interface ImagePickerFieldProps {
   label: string;
@@ -17,25 +24,50 @@ interface ImagePickerFieldProps {
   onChange: (value: { url: string; mediaId: string | null }) => void;
 }
 
-export function ImagePickerField({ label, imageUrl, recommendedDimensions, hint, onChange }: ImagePickerFieldProps) {
+export function ImagePickerField({
+  label,
+  mediaId,
+  imageUrl,
+  recommendedDimensions,
+  hint,
+  onChange,
+}: ImagePickerFieldProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Resolve the image from the media record when a media ID exists.
+  // This fixes legacy image_url values such as localhost URLs while
+  // preserving the existing imageUrl as a fallback.
+  const { data: media } = useMediaItem(mediaId ?? null);
+
+  const resolvedImageUrl = media?.url ?? imageUrl ?? "";
 
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex flex-wrap items-center justify-between gap-1">
         <Label>{label}</Label>
+
         {recommendedDimensions ? (
           <span className="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
             Rec: {recommendedDimensions}
           </span>
         ) : null}
       </div>
-      {hint ? <p className="text-xs text-neutral-500">{hint}</p> : null}
 
-      {imageUrl ? (
+      {hint ? (
+        <p className="text-xs text-neutral-500">
+          {hint}
+        </p>
+      ) : null}
+
+      {resolvedImageUrl ? (
         <div className="relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt="" className="max-h-40 w-full rounded-md border object-cover" />
+          <img
+            src={resolvedImageUrl}
+            alt=""
+            className="max-h-40 w-full rounded-md border object-cover"
+          />
+
           <button
             type="button"
             onClick={() => onChange({ url: "", mediaId: null })}
@@ -47,16 +79,27 @@ export function ImagePickerField({ label, imageUrl, recommendedDimensions, hint,
         </div>
       ) : null}
 
-      <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => setPickerOpen(true)}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="self-start"
+        onClick={() => setPickerOpen(true)}
+      >
         <ImagePlus size={14} />
-        {imageUrl ? "Change image" : "Choose image"}
+        {resolvedImageUrl ? "Change image" : "Choose image"}
       </Button>
 
       <MediaPicker
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         accept={IMAGE_MIME_TYPES}
-        onSelect={(media) => onChange({ url: media.url, mediaId: media.id })}
+        onSelect={(selectedMedia) =>
+          onChange({
+            url: selectedMedia.url,
+            mediaId: selectedMedia.id,
+          })
+        }
       />
     </div>
   );
