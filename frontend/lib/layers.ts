@@ -30,6 +30,11 @@ export type LayerConfig = {
   // feature on the map itself (e.g. plot numbers) — not the popup. Unset
   // means no on-map labels for this layer.
   labelProperty?: string;
+  // How on-map labels are positioned. "center" (default, and the behavior for
+  // layers that predate this field) places each label at its own geometry
+  // centroid. "aligned" snaps nearby plots in the same row/column to a shared
+  // center line so they appear visually aligned.
+  labelAlignment?: "center" | "aligned";
   // Whether clicking a feature on this layer opens the properties popup.
   // Unset is treated as enabled (existing layers predate this field).
   popupEnabled?: boolean;

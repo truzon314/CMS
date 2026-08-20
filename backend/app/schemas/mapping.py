@@ -51,6 +51,7 @@ class MapLayerStyleUpdate(BaseModel):
     default_visible: bool | None = None
     color_rules: list[StyleRuleInput] | None = None
     label_property: str | None = None
+    label_alignment: str | None = None  # "center" | "aligned"
     popup_enabled: bool | None = None
     popup_properties: list[str] | None = None
     stroke_style: str | None = None  # "solid" | "dashed" | "dotted"
@@ -69,6 +70,7 @@ class MapLayerRead(BaseModel):
     default_visible: bool
     color_rules: list[dict] | None
     label_property: str | None
+    label_alignment: str | None
     popup_enabled: bool
     popup_properties: list[str] | None
     stroke_style: str

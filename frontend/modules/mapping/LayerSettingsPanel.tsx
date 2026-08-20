@@ -109,6 +109,7 @@ function featureLabel(
 
 export type LayerPatch = {
   labelProperty?: string;
+  labelAlignment?: "center" | "aligned";
   colorRules?: StyleRule[];
   fillColor?: string;
   fillOpacity?: number;
@@ -145,6 +146,9 @@ export default function LayerSettingsPanel({
   const [isLineLayer, setIsLineLayer] = useState(false);
 
   const [labelProperty, setLabelProperty] = useState(layer.labelProperty ?? "");
+  const [labelAlignment, setLabelAlignment] = useState<"center" | "aligned">(
+    layer.labelAlignment ?? "center",
+  );
   const [rules, setRules] = useState<StyleRule[]>(layer.colorRules ?? []);
   const [categoryProperty, setCategoryProperty] = useState("");
   const [categoryError, setCategoryError] = useState<string | null>(null);
@@ -609,6 +613,7 @@ export default function LayerSettingsPanel({
     try {
       await onSave({
         labelProperty,
+        labelAlignment,
         colorRules: rules,
         fillColor,
         fillOpacity,
@@ -769,6 +774,28 @@ export default function LayerSettingsPanel({
                     </option>
                   ))}
                 </select>
+
+                {labelProperty && (
+                  <div className="mt-3">
+                    <label className="mb-1.5 block text-xs font-medium text-zinc-600">
+                      Label Alignment
+                    </label>
+                    <select
+                      value={labelAlignment}
+                      onChange={(e) => setLabelAlignment(e.target.value as "center" | "aligned")}
+                      className="w-full h-9 rounded-lg border border-zinc-300 px-3 text-xs font-medium text-zinc-900"
+                      style={{ colorScheme: "light" }}
+                    >
+                      <option value="center">Center of Box</option>
+                      <option value="aligned">Aligned Center</option>
+                    </select>
+                    <p className="mt-1.5 text-[11px] text-zinc-400">
+                      {labelAlignment === "aligned"
+                        ? "Snaps labels of nearby plots in the same row or column to a shared center line."
+                        : "Places each label at the individual centroid of its own plot (default)."}
+                    </p>
+                  </div>
+                )}
               </section>
 
               {/* Popup on click */}

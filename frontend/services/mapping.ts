@@ -25,6 +25,7 @@ interface WireLayer {
   default_visible: boolean;
   color_rules: StyleRule[] | null;
   label_property: string | null;
+  label_alignment: string | null;
   popup_enabled: boolean;
   popup_properties: string[] | null;
   stroke_style: "solid" | "dashed" | "dotted";
@@ -65,6 +66,7 @@ function toLayerConfig(l: WireLayer): LayerConfig {
     defaultVisible: l.default_visible,
     colorRules: l.color_rules ?? undefined,
     labelProperty: l.label_property ?? undefined,
+    labelAlignment: (l.label_alignment as "center" | "aligned" | undefined) ?? undefined,
     popupEnabled: l.popup_enabled,
     popupProperties: l.popup_properties ?? undefined,
     strokeStyle: l.stroke_style,
@@ -155,6 +157,7 @@ export const mappingService = {
       defaultVisible?: boolean;
       colorRules?: StyleRule[];
       labelProperty?: string;
+      labelAlignment?: "center" | "aligned";
       popupEnabled?: boolean;
       popupProperties?: string[];
       strokeStyle?: "solid" | "dashed" | "dotted";
@@ -171,6 +174,7 @@ export const mappingService = {
           default_visible: patch.defaultVisible,
           color_rules: patch.colorRules,
           label_property: patch.labelProperty,
+          label_alignment: patch.labelAlignment,
           popup_enabled: patch.popupEnabled,
           popup_properties: patch.popupProperties,
           stroke_style: patch.strokeStyle,

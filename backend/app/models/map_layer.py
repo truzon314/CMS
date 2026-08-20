@@ -22,6 +22,10 @@ class MapLayer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Each item: {id, property, value, action: "color"|"hide", color?, opacity?}
     color_rules: Mapped[list | None] = mapped_column(JSON, default=None)
     label_property: Mapped[str | None] = mapped_column(String(255), default=None)
+    # How labels are positioned: "center" (default) = individual centroid,
+    # "aligned" = snap nearby plots to a shared row/column center line.
+    # Null is treated as "center" everywhere so existing records are unaffected.
+    label_alignment: Mapped[str | None] = mapped_column(String(10), default=None)
     popup_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     popup_properties: Mapped[list | None] = mapped_column(JSON, default=None)
     stroke_style: Mapped[str] = mapped_column(String(10), default="solid", nullable=False)
