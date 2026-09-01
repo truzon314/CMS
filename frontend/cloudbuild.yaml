@@ -1,0 +1,12 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/truzonhomescom/cloud-run-source-deploy/truzon-cms-frontend:latest'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_BASE_URL=https://truzon-backend-715189721854.asia-south1.run.app'
+      - '.'
+
+images:
+  - 'asia-south1-docker.pkg.dev/truzonhomescom/cloud-run-source-deploy/truzon-cms-frontend:latest'

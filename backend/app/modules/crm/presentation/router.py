@@ -71,6 +71,17 @@ async def update_conversation(
     return ok(ChatConversationRead.model_validate(conversation).model_dump(mode="json"))
 
 
+@router.delete("/conversations/{conversation_id}")
+async def delete_conversation(
+    conversation_id: uuid.UUID,
+    crm: CrmService = Depends(get_crm_service),
+    user: User = Depends(get_current_user),
+    _=Depends(require_permission("crm.manage")),
+):
+    await crm.delete_conversation(conversation_id, user.id)
+    return ok({"deleted": True})
+
+
 @router.get("/auto-reply")
 async def get_auto_reply(
     crm: CrmService = Depends(get_crm_service),

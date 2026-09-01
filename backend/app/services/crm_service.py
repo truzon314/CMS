@@ -147,3 +147,12 @@ class CrmService:
         conversation = await self.crm.update_conversation(conversation)
         await self.audit.log(actor_id, "crm.update_conversation", "chat_conversation", conversation.id, details=data)
         return conversation
+
+    async def delete_conversation(self, conversation_id: uuid.UUID, actor_id: uuid.UUID) -> None:
+        conversation = await self.crm.get_conversation(conversation_id)
+        if conversation is None:
+            raise NotFoundError("Conversation not found.")
+        await self.crm.delete_conversation(conversation_id)
+        await self.audit.log(actor_id, "crm.delete_conversation", "chat_conversation", conversation_id, details={
+            "visitor_name": conversation.visitor_name,
+        })

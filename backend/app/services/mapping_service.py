@@ -310,9 +310,14 @@ class MappingService:
     async def upsert_provider(
         self, payload: MapProviderConfigUpsert, actor_id: uuid.UUID | None = None
     ) -> MapProviderConfig:
-        config = await self.repo.get_provider(payload.provider_type)
+        provider_type = payload.provider_type
+        if provider_type == "google_satellite":
+            provider_type = "google"
+
+        config = await self.repo.get_provider(provider_type)
+
         if config is None:
-            config = MapProviderConfig(provider_type=payload.provider_type)
+            config = MapProviderConfig(provider_type=provider_type)
             config.api_key = payload.api_key
             config.tile_url = payload.tile_url
             config.style_url = payload.style_url
@@ -325,7 +330,13 @@ class MappingService:
             config.attribution = payload.attribution
             config = await self.repo.update_provider(config)
 
-        await self.audit.log(actor_id, "mapping.update_provider", "map_provider_config", config.id, details={"provider_type": payload.provider_type})
+        await self.audit.log(
+            actor_id,
+            "mapping.update_provider",
+            "map_provider_config",
+            config.id,
+            details={"provider_type": provider_type},
+        )
         return config
 
     async def delete_provider(self, provider_type: str, actor_id: uuid.UUID | None = None) -> None:

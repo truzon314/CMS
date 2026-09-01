@@ -43,6 +43,20 @@ function HeroSlideFields({
       />
 
       <SelectField
+        id={`hero_slide_alignment_${index}`}
+        label="Text alignment"
+        value={item.alignment ?? "left"}
+        onChange={(value) =>
+          update({ alignment: value as "left" | "center" | "right" })
+        }
+        options={[
+          { value: "left", label: "Left" },
+          { value: "center", label: "Center" },
+          { value: "right", label: "Right" },
+        ]}
+      />
+
+      <SelectField
         id={`hero_slide_image_target_${index}`}
         label="Image for"
         value={target}
@@ -101,6 +115,7 @@ export function HeroBannerBlockEditor({ config, onChange }: Props) {
           image_media_id: null,
           mobile_image_url: "",
           mobile_image_media_id: null,
+          alignment: "left" as const,
         })}
         addLabel="Add slide"
         itemLabel={(i) => `Slide ${i + 1}`}

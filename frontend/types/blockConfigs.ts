@@ -7,6 +7,8 @@ export interface HeroSlideItem {
   // image_url/image_media_id above when unset.
   mobile_image_url?: string;
   mobile_image_media_id?: string | null;
+  /** Text alignment for the heading & subheading. Defaults to "left". */
+  alignment?: "left" | "center" | "right";
 }
 
 export interface HeroBannerConfig {

@@ -1,6 +1,13 @@
 import type { FeatureCollection } from "geojson";
 import { apiFetch, getAccessToken } from "@/lib/api-client";
-import type { LayerConfig, MapProviderConfig, MapProviderType, ProjectConfig, ShareLinkConfig, StyleRule } from "@/lib/layers";
+import type {
+  LayerConfig,
+  MapProviderConfig,
+  MapProviderType,
+  ProjectConfig,
+  ShareLinkConfig,
+  StyleRule,
+} from "@/lib/layers";
 
 // Wire shapes exactly as the FastAPI backend returns them (snake_case) —
 // kept private to this file; every exported function below adapts to/from
@@ -14,6 +21,7 @@ interface WireProject {
   map_provider_type: string;
   share_token: string | null;
 }
+
 interface WireLayer {
   id: string;
   project_id: string;
@@ -31,6 +39,7 @@ interface WireLayer {
   stroke_style: "solid" | "dashed" | "dotted";
   geojson: FeatureCollection | null;
 }
+
 interface WireShareLink {
   id: string;
   project_id: string;
@@ -42,6 +51,7 @@ interface WireShareLink {
   view_count: number;
   created_at: string;
 }
+
 interface WireProviderConfig {
   provider_type: string;
   api_key: string | null;
@@ -51,7 +61,13 @@ interface WireProviderConfig {
 }
 
 function toProjectConfig(p: WireProject): ProjectConfig {
-  return { id: p.id, name: p.name, ownerId: null, shareToken: p.share_token ?? "", mapProviderType: p.map_provider_type };
+  return {
+    id: p.id,
+    name: p.name,
+    ownerId: null,
+    shareToken: p.share_token ?? "",
+    mapProviderType: p.map_provider_type,
+  };
 }
 
 function toLayerConfig(l: WireLayer): LayerConfig {
@@ -66,7 +82,8 @@ function toLayerConfig(l: WireLayer): LayerConfig {
     defaultVisible: l.default_visible,
     colorRules: l.color_rules ?? undefined,
     labelProperty: l.label_property ?? undefined,
-    labelAlignment: (l.label_alignment as "center" | "aligned" | undefined) ?? undefined,
+    labelAlignment:
+      (l.label_alignment as "center" | "aligned" | undefined) ?? undefined,
     popupEnabled: l.popup_enabled,
     popupProperties: l.popup_properties ?? undefined,
     strokeStyle: l.stroke_style,
@@ -98,52 +115,102 @@ function toMapProviderConfig(p: WireProviderConfig): MapProviderConfig {
 }
 
 export const mappingService = {
-  listProjects: async (): Promise<ProjectConfig[]> => (await apiFetch<WireProject[]>("/api/v1/mapping/projects")).map(toProjectConfig),
+  listProjects: async (): Promise<ProjectConfig[]> =>
+    (
+      await apiFetch<WireProject[]>("/api/v1/mapping/projects")
+    ).map(toProjectConfig),
 
-  createProject: async (name: string, mapProviderType = "google"): Promise<ProjectConfig> =>
+  createProject: async (
+    name: string,
+    mapProviderType = "google"
+  ): Promise<ProjectConfig> =>
     toProjectConfig(
       await apiFetch<WireProject>("/api/v1/mapping/projects", {
         method: "POST",
-        body: JSON.stringify({ name, map_provider_type: mapProviderType }),
+        body: JSON.stringify({
+          name,
+          map_provider_type: mapProviderType,
+        }),
       })
     ),
 
   updateProject: async (
     id: string,
-    patch: { name?: string; mapProviderType?: string; rotateToken?: boolean }
+    patch: {
+      name?: string;
+      mapProviderType?: string;
+      rotateToken?: boolean;
+    }
   ): Promise<ProjectConfig> =>
     toProjectConfig(
       await apiFetch<WireProject>(`/api/v1/mapping/projects/${id}`, {
         method: "PATCH",
-        body: JSON.stringify({ name: patch.name, map_provider_type: patch.mapProviderType, rotate_token: patch.rotateToken }),
+        body: JSON.stringify({
+          name: patch.name,
+          map_provider_type: patch.mapProviderType,
+          rotate_token: patch.rotateToken,
+        }),
       })
     ),
 
-  deleteProject: (id: string) => apiFetch<{ deleted: boolean }>(`/api/v1/mapping/projects/${id}`, { method: "DELETE" }),
+  deleteProject: (id: string) =>
+    apiFetch<{ deleted: boolean }>(
+      `/api/v1/mapping/projects/${id}`,
+      { method: "DELETE" }
+    ),
 
-  listLayers: async (): Promise<LayerConfig[]> => (await apiFetch<WireLayer[]>("/api/v1/mapping/layers")).map(toLayerConfig),
+  listLayers: async (): Promise<LayerConfig[]> =>
+    (await apiFetch<WireLayer[]>("/api/v1/mapping/layers")).map(
+      toLayerConfig
+    ),
 
   // Just the FeatureCollection — matches the old GET /api/layers/[id]
   // contract (raw geojson body), since every caller (useGeoJsonLayer,
   // OpenStreetMapCanvas, LayerSettingsPanel) only ever wants the features.
-  getLayerGeoJson: async (id: string, shareToken?: string, sharePassword?: string | null): Promise<FeatureCollection> => {
+  getLayerGeoJson: async (
+    id: string,
+    shareToken?: string,
+    sharePassword?: string | null
+  ): Promise<FeatureCollection> => {
     if (shareToken) {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"}/public/mapping/${shareToken}/layers/${id}`,
-        { headers: sharePassword ? { "x-share-password": sharePassword } : {} }
+        {
+          headers: sharePassword
+            ? { "x-share-password": sharePassword }
+            : {},
+        }
       );
+
       const envelope = await res.json();
       return envelope.data as FeatureCollection;
     }
-    const layer = await apiFetch<WireLayer>(`/api/v1/mapping/layers/${id}`);
-    return layer.geojson ?? { type: "FeatureCollection", features: [] };
+
+    const layer = await apiFetch<WireLayer>(
+      `/api/v1/mapping/layers/${id}`
+    );
+
+    return (
+      layer.geojson ?? {
+        type: "FeatureCollection",
+        features: [],
+      }
+    );
   },
 
-  uploadLayerGeoJson: async (projectId: string, label: string, geojson: FeatureCollection): Promise<LayerConfig> =>
+  uploadLayerGeoJson: async (
+    projectId: string,
+    label: string,
+    geojson: FeatureCollection
+  ): Promise<LayerConfig> =>
     toLayerConfig(
       await apiFetch<WireLayer>("/api/v1/mapping/layers/upload", {
         method: "POST",
-        body: JSON.stringify({ project_id: projectId, label, geojson }),
+        body: JSON.stringify({
+          project_id: projectId,
+          label,
+          geojson,
+        }),
       })
     ),
 
@@ -182,17 +249,34 @@ export const mappingService = {
       })
     ),
 
-  deleteLayer: (id: string) => apiFetch<{ deleted: boolean }>(`/api/v1/mapping/layers/${id}`, { method: "DELETE" }),
+  deleteLayer: (id: string) =>
+    apiFetch<{ deleted: boolean }>(
+      `/api/v1/mapping/layers/${id}`,
+      { method: "DELETE" }
+    ),
 
   updateLayerFeatures: async (
     id: string,
     payload: {
       featureIndex?: number;
       properties?: Record<string, unknown>;
-      batchUpdate?: { property: string; oldValue: string; newValue: string };
-      addProperty?: { key: string; defaultValue?: string };
-      removeProperty?: { key: string };
-      bulkSetValue?: { property: string; value: string; featureIndices: number[] };
+      batchUpdate?: {
+        property: string;
+        oldValue: string;
+        newValue: string;
+      };
+      addProperty?: {
+        key: string;
+        defaultValue?: string;
+      };
+      removeProperty?: {
+        key: string;
+      };
+      bulkSetValue?: {
+        property: string;
+        value: string;
+        featureIndices: number[];
+      };
       removeFeatureIndices?: number[];
     }
   ): Promise<{
@@ -217,13 +301,28 @@ export const mappingService = {
       body: JSON.stringify({
         feature_index: payload.featureIndex,
         properties: payload.properties,
+
         batch_update: payload.batchUpdate
-          ? { property: payload.batchUpdate.property, old_value: payload.batchUpdate.oldValue, new_value: payload.batchUpdate.newValue }
+          ? {
+              property: payload.batchUpdate.property,
+              old_value: payload.batchUpdate.oldValue,
+              new_value: payload.batchUpdate.newValue,
+            }
           : undefined,
+
         add_property: payload.addProperty
-          ? { key: payload.addProperty.key, default_value: payload.addProperty.defaultValue ?? "" }
+          ? {
+              key: payload.addProperty.key,
+              default_value: payload.addProperty.defaultValue ?? "",
+            }
           : undefined,
-        remove_property: payload.removeProperty ? { key: payload.removeProperty.key } : undefined,
+
+        remove_property: payload.removeProperty
+          ? {
+              key: payload.removeProperty.key,
+            }
+          : undefined,
+
         bulk_set_value: payload.bulkSetValue
           ? {
               property: payload.bulkSetValue.property,
@@ -231,9 +330,11 @@ export const mappingService = {
               feature_indices: payload.bulkSetValue.featureIndices,
             }
           : undefined,
+
         remove_feature_indices: payload.removeFeatureIndices,
       }),
     });
+
     return {
       ok: result.ok,
       featureIndex: result.feature_index,
@@ -245,8 +346,13 @@ export const mappingService = {
     };
   },
 
-  getShareLink: async (projectId: string): Promise<ShareLinkConfig | null> => {
-    const link = await apiFetch<WireShareLink | null>(`/api/v1/mapping/share-links?project_id=${projectId}`);
+  getShareLink: async (
+    projectId: string
+  ): Promise<ShareLinkConfig | null> => {
+    const link = await apiFetch<WireShareLink | null>(
+      `/api/v1/mapping/share-links?project_id=${projectId}`
+    );
+
     return link ? toShareLinkConfig(link) : null;
   },
 
@@ -259,26 +365,44 @@ export const mappingService = {
     rotateToken?: boolean;
   }): Promise<ShareLinkConfig> =>
     toShareLinkConfig(
-      await apiFetch<WireShareLink>("/api/v1/mapping/share-links", {
-        method: "POST",
-        body: JSON.stringify({
-          project_id: payload.projectId,
-          is_active: payload.isActive,
-          password: payload.password,
-          expires_at: payload.expiresAt,
-          max_views: payload.maxViews,
-          rotate_token: payload.rotateToken,
-        }),
-      })
+      await apiFetch<WireShareLink>(
+        "/api/v1/mapping/share-links",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            project_id: payload.projectId,
+            is_active: payload.isActive,
+            password: payload.password,
+            expires_at: payload.expiresAt,
+            max_views: payload.maxViews,
+            rotate_token: payload.rotateToken,
+          }),
+        }
+      )
     ),
 
   listProviders: async (): Promise<MapProviderConfig[]> =>
-    (await apiFetch<WireProviderConfig[]>("/api/v1/mapping/providers")).map(toMapProviderConfig),
+    (
+      await apiFetch<WireProviderConfig[]>(
+        "/api/v1/mapping/providers"
+      )
+    ).map(toMapProviderConfig),
 
   // Consumed by MapView on load — the equivalent of the old /api/config.
   getGoogleMapsApiKey: async (): Promise<string | null> => {
-    const providers = await apiFetch<WireProviderConfig[]>("/api/v1/mapping/providers");
-    return providers.find((p) => p.provider_type === "google")?.api_key ?? null;
+    const providers = await apiFetch<WireProviderConfig[]>(
+      "/api/v1/mapping/providers"
+    );
+
+    /*
+     * google_satellite is a Google Maps basemap mode, not a separate
+     * Google Maps credential. The API key always comes from "google".
+     */
+    return (
+      providers.find(
+        (p) => p.provider_type === "google"
+      )?.api_key ?? null
+    );
   },
 
   upsertProvider: async (payload: {
@@ -287,31 +411,67 @@ export const mappingService = {
     tileUrl?: string;
     styleUrl?: string;
     attribution?: string;
-  }): Promise<MapProviderConfig> =>
-    toMapProviderConfig(
-      await apiFetch<WireProviderConfig>("/api/v1/mapping/providers", {
-        method: "POST",
-        body: JSON.stringify({
-          provider_type: payload.providerType,
-          api_key: payload.apiKey,
-          tile_url: payload.tileUrl,
-          style_url: payload.styleUrl,
-          attribution: payload.attribution,
-        }),
-      })
-    ),
+  }): Promise<MapProviderConfig> => {
+    /*
+     * google_satellite is a project/basemap mode, not a credential
+     * provider. Keep Google credentials under the canonical "google"
+     * provider record.
+     */
+    const providerType =
+      payload.providerType === "google_satellite"
+        ? "google"
+        : payload.providerType;
+
+    return toMapProviderConfig(
+      await apiFetch<WireProviderConfig>(
+        "/api/v1/mapping/providers",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            provider_type: providerType,
+            api_key: payload.apiKey,
+            tile_url: payload.tileUrl,
+            style_url: payload.styleUrl,
+            attribution: payload.attribution,
+          }),
+        }
+      )
+    );
+  },
 
   getSharedProject: async (
     token: string,
     sharePassword?: string | null
-  ): Promise<{ project: ProjectConfig; layers: LayerConfig[] }> => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"}/public/mapping/${token}`, {
-      headers: sharePassword ? { "x-share-password": sharePassword } : {},
-    });
+  ): Promise<{
+    project: ProjectConfig;
+    layers: LayerConfig[];
+  }> => {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"}/public/mapping/${token}`,
+      {
+        headers: sharePassword
+          ? { "x-share-password": sharePassword }
+          : {},
+      }
+    );
+
     const envelope = await res.json();
-    if (!envelope.success) throw new Error(envelope.error?.message ?? "Failed to load shared project.");
-    const data = envelope.data as { project: WireProject; layers: WireLayer[] };
-    return { project: toProjectConfig(data.project), layers: data.layers.map(toLayerConfig) };
+
+    if (!envelope.success) {
+      throw new Error(
+        envelope.error?.message ?? "Failed to load shared project."
+      );
+    }
+
+    const data = envelope.data as {
+      project: WireProject;
+      layers: WireLayer[];
+    };
+
+    return {
+      project: toProjectConfig(data.project),
+      layers: data.layers.map(toLayerConfig),
+    };
   },
 
   // Bearer token to attach when POSTing a file to the local /api/gis/upload
@@ -319,6 +479,8 @@ export const mappingService = {
   // doesn't apply — that helper is for direct backend calls only).
   getAuthHeader: (): Record<string, string> => {
     const token = getAccessToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    return token
+      ? { Authorization: `Bearer ${token}` }
+      : {};
   },
 };

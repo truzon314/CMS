@@ -69,6 +69,18 @@ export function useUpdateConversation() {
   });
 }
 
+export function useDeleteConversation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (conversationId: string) => crmService.remove(conversationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY });
+      toast.success("Conversation deleted.");
+    },
+    onError: onErrorToast,
+  });
+}
+
 export function useAutoReplyConfig() {
   return useQuery({
     queryKey: AUTO_REPLY_KEY,

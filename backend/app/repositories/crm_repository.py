@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -56,3 +56,12 @@ class SqlAlchemyCrmRepository:
             .order_by(ChatMessage.created_at.asc())
         )
         return list((await self.session.execute(stmt)).scalars().all())
+
+    async def delete_conversation(self, conversation_id: uuid.UUID) -> None:
+        await self.session.execute(
+            delete(ChatMessage).where(ChatMessage.conversation_id == conversation_id)
+        )
+        await self.session.execute(
+            delete(ChatConversation).where(ChatConversation.id == conversation_id)
+        )
+        await self.session.commit()

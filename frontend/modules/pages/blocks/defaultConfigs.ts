@@ -7,6 +7,7 @@ import type {
   FeaturesConfig,
   GalleryConfig,
   HeroBannerConfig,
+  HeroSlideItem,
   ImageConfig,
   MapConfig,
   PricingConfig,
@@ -23,7 +24,7 @@ export const DEFAULT_CONFIGS: Record<string, Record<string, unknown>> = {
   hero_banner: {
     button_label: "",
     button_href: "",
-    slides: [],
+    slides: [] as HeroSlideItem[],
   } satisfies HeroBannerConfig,
   text: { heading: "", body: "" } satisfies TextConfig,
   image: { image_url: "", alt_text: "", caption: "" } satisfies ImageConfig,

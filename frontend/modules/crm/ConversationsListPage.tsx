@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable, type ColumnDef } from "@/components/data-table/DataTable";
-import { useConversationsList } from "@/hooks/useCrm";
+import { useConversationsList, useDeleteConversation } from "@/hooks/useCrm";
 import { ConversationThreadDrawer } from "@/modules/crm/ConversationThreadDrawer";
 import { AutoReplyPanel } from "@/modules/crm/AutoReplyPanel";
 import type { ChatConversation } from "@/types/crm";
@@ -18,7 +18,15 @@ export function ConversationsListPage() {
   const [showAutoReply, setShowAutoReply] = useState(false);
 
   const { data, isLoading } = useConversationsList();
+  const deleteConversation = useDeleteConversation();
   const conversations = data?.data ?? [];
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Delete this conversation and all its messages? This cannot be undone.")) return;
+    deleteConversation.mutate(id);
+    if (selectedId === id) setSelectedId(null);
+  };
 
   const columns: ColumnDef<ChatConversation>[] = [
     {
@@ -52,6 +60,23 @@ export function ConversationsListPage() {
       header: "Last message",
       cell: (c) => new Date(c.last_message_at).toLocaleString(),
     },
+    {
+      id: "actions",
+      header: "",
+      cell: (c) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-neutral-400 hover:text-red-600"
+          onClick={(e) => handleDelete(e, c.id)}
+          disabled={deleteConversation.isPending}
+          title="Delete conversation"
+        >
+          <Trash2 size={15} />
+        </Button>
+      ),
+      className: "w-10",
+    },
   ];
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
@@ -62,7 +87,7 @@ export function ConversationsListPage() {
         <div>
           <h1 className="flex items-center gap-2 text-lg font-semibold">
             <MessageCircle size={18} />
-            CRM
+            Live Chat
           </h1>
           <p className="text-sm text-neutral-500">Live-chat conversations from the public site.</p>
         </div>

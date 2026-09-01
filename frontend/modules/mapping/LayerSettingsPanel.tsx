@@ -775,27 +775,33 @@ export default function LayerSettingsPanel({
                   ))}
                 </select>
 
-                {labelProperty && (
-                  <div className="mt-3">
-                    <label className="mb-1.5 block text-xs font-medium text-zinc-600">
-                      Label Alignment
-                    </label>
-                    <select
-                      value={labelAlignment}
-                      onChange={(e) => setLabelAlignment(e.target.value as "center" | "aligned")}
-                      className="w-full h-9 rounded-lg border border-zinc-300 px-3 text-xs font-medium text-zinc-900"
-                      style={{ colorScheme: "light" }}
-                    >
-                      <option value="center">Center of Box</option>
-                      <option value="aligned">Aligned Center</option>
-                    </select>
-                    <p className="mt-1.5 text-[11px] text-zinc-400">
-                      {labelAlignment === "aligned"
-                        ? "Snaps labels of nearby plots in the same row or column to a shared center line."
-                        : "Places each label at the individual centroid of its own plot (default)."}
-                    </p>
-                  </div>
-                )}
+
+                <div className="mt-3">
+                  <label className={`mb-1.5 block text-xs font-medium ${labelProperty ? "text-zinc-600" : "text-zinc-400"}`}>
+                    Label Alignment
+                  </label>
+                  <select
+                    value={labelAlignment}
+                    onChange={(e) => setLabelAlignment(e.target.value as "center" | "aligned")}
+                    disabled={!labelProperty}
+                    className={`w-full h-9 rounded-lg border px-3 text-xs font-medium transition-colors ${
+                      labelProperty
+                        ? "border-zinc-300 text-zinc-900 bg-white cursor-pointer"
+                        : "border-zinc-200 text-zinc-400 bg-zinc-100 cursor-not-allowed"
+                    }`}
+                    style={{ colorScheme: "light" }}
+                  >
+                    <option value="center">Center of Box</option>
+                    <option value="aligned">Aligned Center</option>
+                  </select>
+                  <p className="mt-1.5 text-[11px] text-zinc-400">
+                    {!labelProperty
+                      ? "Select a label property above to enable alignment."
+                      : labelAlignment === "aligned"
+                      ? "Snaps labels of nearby plots in the same row or column to a shared center line."
+                      : "Places each label at the individual centroid of its own plot (default)."}
+                  </p>
+                </div>
               </section>
 
               {/* Popup on click */}

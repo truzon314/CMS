@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable, type ColumnDef } from "@/components/data-table/DataTable";
 import { SelectField } from "@/components/forms/SelectField";
 import { StatusPill } from "@/components/ui/status-pill";
-import { useExportFormSubmissions, useFormSubmissionsList } from "@/hooks/useFormSubmissions";
+import { useDeleteFormSubmission, useExportFormSubmissions, useFormSubmissionsList } from "@/hooks/useFormSubmissions";
 import { SubmissionDetailsDrawer } from "@/modules/forms/SubmissionDetailsDrawer";
 import type { FormSubmission } from "@/types/formSubmission";
 
@@ -34,9 +34,17 @@ export function FormSubmissionsListPage() {
     status: status || undefined,
   });
   const exportCsv = useExportFormSubmissions();
+  const deleteSubmission = useDeleteFormSubmission();
 
   const submissions = data?.data ?? [];
   const selected = submissions.find((s) => s.id === selectedId) ?? null;
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Delete this submission? This cannot be undone.")) return;
+    deleteSubmission.mutate(id);
+    if (selectedId === id) setSelectedId(null);
+  };
 
   const columns: ColumnDef<FormSubmission>[] = [
     { id: "name", header: "Name", cell: (s) => s.name },
@@ -48,6 +56,23 @@ export function FormSubmissionsListPage() {
       id: "submitted_at",
       header: "Submitted",
       cell: (s) => new Date(s.submitted_at).toLocaleDateString(),
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: (s) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-neutral-400 hover:text-red-600"
+          onClick={(e) => handleDelete(e, s.id)}
+          disabled={deleteSubmission.isPending}
+          title="Delete submission"
+        >
+          <Trash2 size={15} />
+        </Button>
+      ),
+      className: "w-10",
     },
   ];
 

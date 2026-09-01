@@ -40,52 +40,56 @@ export function BlogPostContentEditor({ post, authorName, isSaving, onSave }: Bl
   const featuredImageUrl = featuredImageUrlOverride ?? currentFeaturedImage?.url ?? "";
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row">
-      <div className="min-w-0 flex-1 flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="post_excerpt">Excerpt</Label>
-          <Textarea id="post_excerpt" rows={2} value={excerpt} onChange={(e) => setExcerpt(e.target.value)} />
+    <>
+      <div className="flex flex-col gap-4 lg:flex-row">
+        <div className="min-w-0 flex-1 flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="post_excerpt">Excerpt</Label>
+            <Textarea id="post_excerpt" rows={2} value={excerpt} onChange={(e) => setExcerpt(e.target.value)} />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Body</Label>
+            <RichTextEditor value={body} onChange={setBody} />
+          </div>
+
+          <Button
+            disabled={isSaving}
+            className="self-start"
+            onClick={() =>
+              onSave({
+                excerpt,
+                body,
+                category_ids: categoryIds,
+                tag_ids: tagIds,
+                featured_image_media_id: featuredImageMediaId,
+                reading_time_minutes: readingTimeMinutes,
+              })
+            }
+          >
+            {isSaving ? "Saving…" : "Save"}
+          </Button>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label>Body</Label>
-          <RichTextEditor value={body} onChange={setBody} />
+        <div className="w-full shrink-0 flex flex-col gap-4 lg:w-72">
+          <PostMetaPanel
+            authorName={authorName}
+            categoryIds={categoryIds}
+            tagIds={tagIds}
+            featuredImageUrl={featuredImageUrl}
+            readingTimeMinutes={readingTimeMinutes}
+            onCategoryIdsChange={setCategoryIds}
+            onTagIdsChange={setTagIds}
+            onFeaturedImageChange={({ url, mediaId }) => {
+              setFeaturedImageUrlOverride(url);
+              setFeaturedImageMediaId(mediaId);
+            }}
+            onReadingTimeChange={setReadingTimeMinutes}
+          />
         </div>
-
-        <Button
-          disabled={isSaving}
-          className="self-start"
-          onClick={() =>
-            onSave({
-              excerpt,
-              body,
-              category_ids: categoryIds,
-              tag_ids: tagIds,
-              featured_image_media_id: featuredImageMediaId,
-              reading_time_minutes: readingTimeMinutes,
-            })
-          }
-        >
-          {isSaving ? "Saving…" : "Save"}
-        </Button>
       </div>
 
-      <div className="w-full shrink-0 flex flex-col gap-4 lg:w-72">
-        <PostMetaPanel
-          authorName={authorName}
-          categoryIds={categoryIds}
-          tagIds={tagIds}
-          featuredImageUrl={featuredImageUrl}
-          readingTimeMinutes={readingTimeMinutes}
-          onCategoryIdsChange={setCategoryIds}
-          onTagIdsChange={setTagIds}
-          onFeaturedImageChange={({ url, mediaId }) => {
-            setFeaturedImageUrlOverride(url);
-            setFeaturedImageMediaId(mediaId);
-          }}
-          onReadingTimeChange={setReadingTimeMinutes}
-        />
-
+      <div className="flex flex-col gap-4">
         <SeoPanel
           value={seoDraft}
           onChange={(patch) => setSeoDraft((prev) => ({ ...prev, ...patch }))}
@@ -95,11 +99,12 @@ export function BlogPostContentEditor({ post, authorName, isSaving, onSave }: Bl
           variant="outline"
           size="sm"
           disabled={isSaving}
+          className="self-start"
           onClick={() => onSave({ seo: seoDraft })}
         >
           Save SEO
         </Button>
       </div>
-    </div>
+    </>
   );
 }

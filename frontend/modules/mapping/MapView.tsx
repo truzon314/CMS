@@ -346,16 +346,126 @@ export default function MapView(props: MapViewProps) {
   return <MapCanvas apiKey={apiKey || ""} {...props} />;
 }
 
+interface GoogleMapCanvasContentProps {
+  apiKey: string;
+  mapTypeId: MapTypeId;
+  map: google.maps.Map | null;
+  onMapLoaded: (m: google.maps.Map | null) => void;
+  projectLayers: LayerConfig[];
+  visibility: Record<string, boolean>;
+  onFeatureClick: FeatureClickHandler;
+  projectBoundsRef: React.MutableRefObject<google.maps.LatLngBounds | null>;
+  selectedProjectId: string | null;
+  shareToken?: string;
+  sharePassword?: string | null;
+  selected: {
+    layer: LayerConfig;
+    props: Record<string, unknown>;
+    position: google.maps.LatLngLiteral;
+  } | null;
+  onCloseSelected: () => void;
+  mode: "admin" | "shared";
+  onEditFeature: (layer: LayerConfig, props: Record<string, unknown>) => void;
+  onError: () => void;
+}
+
+function GoogleMapCanvasContent({
+  apiKey,
+  mapTypeId,
+  map,
+  onMapLoaded,
+  projectLayers,
+  visibility,
+  onFeatureClick,
+  projectBoundsRef,
+  selectedProjectId,
+  shareToken,
+  sharePassword,
+  selected,
+  onCloseSelected,
+  mode,
+  onEditFeature,
+  onError,
+}: GoogleMapCanvasContentProps) {
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: "google-map-script",
+    googleMapsApiKey: apiKey,
+  });
+
+  useEffect(() => {
+    if (loadError) {
+      onError();
+    }
+  }, [loadError, onError]);
+
+  if (loadError) {
+    return null;
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-zinc-100">
+        <p className="text-zinc-500">Loading map canvas...</p>
+      </div>
+    );
+  }
+
+  return (
+    <GoogleMap
+      mapContainerStyle={MAP_CONTAINER_STYLE}
+      center={PROJECT_CENTER}
+      zoom={PROJECT_DEFAULT_ZOOM}
+      mapTypeId={mapTypeId}
+      onLoad={(m) => onMapLoaded(m)}
+      onUnmount={() => onMapLoaded(null)}
+      options={{
+        zoomControl: true,
+        fullscreenControl: true,
+        streetViewControl: false,
+        mapTypeControl: false,
+        tilt: 0,
+      }}
+    >
+      {projectLayers.map((layer) => (
+        <LayerLoader
+          key={layer.id}
+          map={map}
+          layer={layer}
+          visible={visibility[layer.id] ?? layer.defaultVisible}
+          onFeatureClick={onFeatureClick}
+          projectBoundsRef={projectBoundsRef}
+          selectedProjectId={selectedProjectId}
+          shareToken={shareToken}
+          sharePassword={sharePassword}
+        />
+      ))}
+
+      {selected && (
+        <InfoWindow
+          position={selected.position}
+          onCloseClick={onCloseSelected}
+        >
+          <FeaturePopup
+            layer={selected.layer}
+            props={selected.props}
+            position={selected.position}
+            onEdit={
+              mode === "admin"
+                ? () => onEditFeature(selected.layer, selected.props)
+                : undefined
+            }
+          />
+        </InfoWindow>
+      )}
+    </GoogleMap>
+  );
+}
+
 function MapCanvas({ apiKey, ...props }: { apiKey: string } & MapViewProps) {
   const { mode } = props;
   const shareToken = props.mode === "shared" ? props.shareToken : undefined;
   const sharePassword =
     props.mode === "shared" ? props.sharePassword : undefined;
-
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: apiKey || "dummy-key",
-  });
 
   const [authFailed, setAuthFailed] = useState(false);
   useEffect(() => {
@@ -604,9 +714,6 @@ function MapCanvas({ apiKey, ...props }: { apiKey: string } & MapViewProps) {
     activeProject?.mapProviderType === "custom" ||
     !apiKey;
 
-  const onLoad = useCallback((m: google.maps.Map) => setMap(m), []);
-  const onUnmount = useCallback(() => setMap(null), []);
-
   const handleZoomToFit = useCallback(() => {
     if (map && projectBoundsRef.current && !projectBoundsRef.current.isEmpty()) {
       map.fitBounds(projectBoundsRef.current, {
@@ -700,65 +807,28 @@ function MapCanvas({ apiKey, ...props }: { apiKey: string } & MapViewProps) {
           shareToken={shareToken}
           sharePassword={sharePassword}
         />
-      ) : isLoaded ? (
-        <GoogleMap
-          mapContainerStyle={MAP_CONTAINER_STYLE}
-          center={PROJECT_CENTER}
-          zoom={PROJECT_DEFAULT_ZOOM}
-          mapTypeId={mapTypeId}
-          onLoad={onLoad}
-          onUnmount={onUnmount}
-          options={{
-            zoomControl: true,
-            fullscreenControl: true,
-            streetViewControl: false,
-            mapTypeControl: false,
-            tilt: 0,
-          }}
-        >
-          {projectLayers.map((layer) => (
-            <LayerLoader
-              key={layer.id}
-              map={map}
-              layer={layer}
-              visible={visibility[layer.id] ?? layer.defaultVisible}
-              onFeatureClick={handleFeatureClick}
-              projectBoundsRef={projectBoundsRef}
-              selectedProjectId={selectedProjectId}
-              shareToken={shareToken}
-              sharePassword={sharePassword}
-            />
-          ))}
-
-          {selected && (
-            <InfoWindow
-              position={selected.position}
-              onCloseClick={() => setSelected(null)}
-            >
-              <FeaturePopup
-                layer={selected.layer}
-                props={selected.props}
-                position={selected.position}
-                onEdit={
-                  mode === "admin"
-                    ? () =>
-                        setEditingFeature({
-                          layer: selected.layer,
-                          props: selected.props,
-                        })
-                    : undefined
-                }
-              />
-            </InfoWindow>
-          )}
-        </GoogleMap>
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-zinc-100">
-          <p className="text-zinc-500">Loading map canvas...</p>
-        </div>
+        <GoogleMapCanvasContent
+          apiKey={apiKey}
+          mapTypeId={mapTypeId}
+          map={map}
+          onMapLoaded={setMap}
+          projectLayers={projectLayers}
+          visibility={visibility}
+          onFeatureClick={handleFeatureClick}
+          projectBoundsRef={projectBoundsRef}
+          selectedProjectId={selectedProjectId}
+          shareToken={shareToken}
+          sharePassword={sharePassword}
+          selected={selected}
+          onCloseSelected={() => setSelected(null)}
+          mode={mode}
+          onEditFeature={(layer, props) => setEditingFeature({ layer, props })}
+          onError={() => setAuthFailed(true)}
+        />
       )}
 
-      {!useOpenStreetMap && isLoaded && (
+      {!useOpenStreetMap && map && (
         <button
           onClick={handleZoomToFit}
           title="Zoom to fit all features"

@@ -29,6 +29,9 @@ export const crmService = {
       body: JSON.stringify(payload),
     }),
 
+  remove: (conversationId: string) =>
+    apiFetch<{ deleted: boolean }>(`/api/v1/crm/conversations/${conversationId}`, { method: "DELETE" }),
+
   getAutoReply: () => apiFetch<AutoReplyConfig>("/api/v1/crm/auto-reply"),
 
   updateAutoReply: (payload: AutoReplyConfig) =>

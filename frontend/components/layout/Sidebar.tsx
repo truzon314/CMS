@@ -55,7 +55,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "SEO Module", href: "/seo", icon: Globe, section: "CMS", permission: "pages.view" },
   { label: "Menus", href: "/menus", icon: MenuIcon, section: "CMS", permission: "settings.manage" },
   { label: "Form Submissions", href: "/forms", icon: Inbox, section: "OPERATIONS", permission: "forms.view" },
-  { label: "CRM", href: "/crm", icon: MessageSquare, section: "OPERATIONS", permission: "crm.view" },
+  { label: "Live Chat", href: "/crm", icon: MessageSquare, section: "OPERATIONS", permission: "crm.view" },
   { label: "Users", href: "/users", icon: Users, section: "OPERATIONS", permission: "users.view" },
   { label: "Roles", href: "/roles", icon: Shield, section: "OPERATIONS", permission: "users.manage" },
   { label: "Trash", href: "/trash", icon: Trash2, section: "SYSTEM", permission: "trash.manage" },

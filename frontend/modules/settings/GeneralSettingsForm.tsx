@@ -26,16 +26,11 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
   const [faviconUrlOverride, setFaviconUrlOverride] = useState<string | null>(null);
   const [whyChooseImageMediaId, setWhyChooseImageMediaId] = useState(settings.why_choose_image_media_id);
   const [whyChooseImageUrlOverride, setWhyChooseImageUrlOverride] = useState<string | null>(null);
-  const [contactMapImageMediaId, setContactMapImageMediaId] = useState(settings.contact_map_image_media_id);
-  const [contactMapImageUrlOverride, setContactMapImageUrlOverride] = useState<string | null>(null);
 
   const { data: currentLogo } = useMediaItem(logoUrlOverride === null ? settings.logo_media_id : null);
   const { data: currentFavicon } = useMediaItem(faviconUrlOverride === null ? settings.favicon_media_id : null);
   const { data: currentWhyChooseImage } = useMediaItem(
     whyChooseImageUrlOverride === null ? settings.why_choose_image_media_id : null
-  );
-  const { data: currentContactMapImage } = useMediaItem(
-    contactMapImageUrlOverride === null ? settings.contact_map_image_media_id : null
   );
 
   return (
@@ -98,15 +93,6 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
           setWhyChooseImageMediaId(mediaId);
         }}
       />
-      <ImagePickerField
-        label="Contact page — office / map photo"
-        recommendedDimensions="900 × 1000 px (portrait)"
-        imageUrl={contactMapImageUrlOverride ?? currentContactMapImage?.url ?? ""}
-        onChange={({ url, mediaId }) => {
-          setContactMapImageUrlOverride(url);
-          setContactMapImageMediaId(mediaId);
-        }}
-      />
       <Button
         className="self-start"
         disabled={isSaving}
@@ -121,7 +107,6 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
             logo_media_id: logoMediaId,
             favicon_media_id: faviconMediaId,
             why_choose_image_media_id: whyChooseImageMediaId,
-            contact_map_image_media_id: contactMapImageMediaId,
           })
         }
       >
