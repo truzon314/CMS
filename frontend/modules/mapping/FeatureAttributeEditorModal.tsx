@@ -27,7 +27,7 @@ function newPairId(): string {
 export default function FeatureAttributeEditorModal({
   layer,
   featureIndex,
-  fid,
+  fid: _fid,
   initialProperties,
   isOpen,
   onClose,

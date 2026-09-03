@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { ProjectConfig, ShareLinkConfig } from "@/lib/layers";
 import { mappingService } from "@/services/mapping";
 
@@ -21,13 +21,8 @@ export default function ShareLinkModal({ project, isOpen, onClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && project) {
-      fetchShareConfig();
-    }
-  }, [isOpen, project]);
-
-  const fetchShareConfig = async () => {
+  const fetchShareConfig = useCallback(async () => {
+    if (!project) return;
     try {
       const link = await mappingService.getShareLink(project.id);
       if (link) {
@@ -39,7 +34,13 @@ export default function ShareLinkModal({ project, isOpen, onClose }: Props) {
     } catch {
       // ignore
     }
-  };
+  }, [project]);
+
+  useEffect(() => {
+    if (isOpen && project) {
+      fetchShareConfig();
+    }
+  }, [isOpen, project, fetchShareConfig]);
 
   if (!isOpen || !project) return null;
 

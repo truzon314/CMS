@@ -43,9 +43,11 @@ export default function CommandPaletteModal({ isOpen, onClose, items }: Props) {
     );
   }, [items, query]);
 
-  useEffect(() => {
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (prevQuery !== query) {
+    setPrevQuery(query);
     setSelectedIndex(0);
-  }, [query]);
+  }
 
   if (!isOpen) return null;
 

@@ -22,6 +22,7 @@ class HeroSlideItem(BaseModel):
     # (my-app's Hero component does the fallback, not this schema).
     mobile_image_url: str = ""
     mobile_image_media_id: uuid.UUID | None = None
+    alignment: str | None = "left"
 
 
 class HeroBannerConfig(BaseModel):
@@ -58,8 +59,8 @@ class ImageConfig(BaseModel):
 class FaqItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    q: str
-    a: str
+    q: str = ""
+    a: str = ""
 
 
 class FaqConfig(BaseModel):

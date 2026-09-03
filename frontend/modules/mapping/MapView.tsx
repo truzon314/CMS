@@ -132,7 +132,9 @@ function useGeoJsonLayer(
   // existing markers via setMap(). Assigned during render, not in an
   // effect, so it's always current by the time any effect below runs.
   const visibleRef = useRef(visible);
-  visibleRef.current = visible;
+  useEffect(() => {
+    visibleRef.current = visible;
+  }, [visible]);
   const [features, setFeatures] = useState<Feature[]>([]);
 
   useEffect(() => {
@@ -289,7 +291,6 @@ function useGeoJsonLayer(
     };
     // visible intentionally omitted — read via visibleRef instead, so
     // toggling it doesn't rebuild every label marker (see visibleRef above).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [features, layer.labelProperty, map]);
 }
 
@@ -631,18 +632,16 @@ function MapCanvas({ apiKey, ...props }: { apiKey: string } & MapViewProps) {
   const activeProject =
     projects.find((p) => p.id === selectedProjectId) ?? null;
 
-  // "Google Satellite" starts each project on pure satellite imagery
-  // instead of the usual hybrid (satellite + road labels) view — same
-  // underlying Google Maps JS API and key as the default provider, just a
-  // different starting basemap. The Map/Satellite/Hybrid/Terrain toggle
-  // still lets admins switch freely afterward either way.
-  useEffect(() => {
+  const [prevActiveProjectKey, setPrevActiveProjectKey] = useState<string | null>(null);
+  const activeProjectKey = `${selectedProjectId}-${activeProject?.mapProviderType}`;
+  if (activeProjectKey !== prevActiveProjectKey) {
+    setPrevActiveProjectKey(activeProjectKey);
     setMapTypeId(
       activeProject?.mapProviderType === "google_satellite"
         ? "satellite"
         : "hybrid",
     );
-  }, [activeProject?.mapProviderType, selectedProjectId]);
+  }
 
   const toggleLayer = useCallback(
     (id: string) =>
@@ -1132,13 +1131,13 @@ function MapCanvas({ apiKey, ...props }: { apiKey: string } & MapViewProps) {
           {activeProject && (
             <>
               <ShareLinkModal
-                project={activeProject as any}
+                project={activeProject as unknown as ProjectConfig}
                 isOpen={showShareModal}
                 onClose={() => setShowShareModal(false)}
               />
 
               <ApiEmbedModal
-                project={activeProject as any}
+                project={activeProject as unknown as ProjectConfig}
                 layers={projectLayers}
                 isOpen={showApiEmbedModal}
                 onClose={() => setShowApiEmbedModal(false)}

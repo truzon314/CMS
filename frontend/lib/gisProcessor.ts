@@ -35,13 +35,14 @@ export function reprojectFeatureCollection(fc: FeatureCollection, prjText?: stri
       return fc;
     }
 
-    const reprojectCoords = (coords: any): any => {
+    type CoordArray = number[] | CoordArray[];
+    const reprojectCoords = (coords: CoordArray): CoordArray => {
       if (typeof coords[0] === "number") {
-        const [x, y] = coords;
+        const [x, y] = coords as [number, number];
         const [lng, lat] = proj4(prjText, WGS84, [x, y]);
         return [lng, lat];
       }
-      return coords.map(reprojectCoords);
+      return (coords as CoordArray[]).map(reprojectCoords);
     };
 
     const reprojectGeom = (geom: Geometry | null): Geometry | null => {
@@ -54,8 +55,8 @@ export function reprojectFeatureCollection(fc: FeatureCollection, prjText?: stri
       }
       return {
         ...geom,
-        coordinates: reprojectCoords(geom.coordinates),
-      };
+        coordinates: reprojectCoords(geom.coordinates as CoordArray),
+      } as Geometry;
     };
 
     const features = fc.features.map((f) => ({
@@ -72,7 +73,7 @@ export function reprojectFeatureCollection(fc: FeatureCollection, prjText?: stri
 
 export async function processGeoJsonUpload(buffer: Buffer, fileName: string): Promise<UploadValidationResult> {
   const contentHash = computeContentHash(buffer);
-  let parsed: any;
+  let parsed: { type?: unknown; features?: unknown };
   try {
     parsed = JSON.parse(buffer.toString("utf-8"));
   } catch {
@@ -99,7 +100,7 @@ export async function processGeoJsonUpload(buffer: Buffer, fileName: string): Pr
   };
 }
 
-export async function processZipUpload(buffer: Buffer, fileName: string): Promise<UploadValidationResult> {
+export async function processZipUpload(buffer: Buffer, _fileName: string): Promise<UploadValidationResult> {
   const contentHash = computeContentHash(buffer);
   let zip: AdmZip;
   try {
@@ -127,7 +128,7 @@ export async function processZipUpload(buffer: Buffer, fileName: string): Promis
     const features: Feature[] = [];
     let result = await source.read();
     while (!result.done) {
-      if (result.value && isValidGeometry(result.value.geometry)) {
+      if (result.value && isValidGeometry((result.value as Feature).geometry)) {
         features.push(result.value as Feature);
       }
       result = await source.read();
@@ -149,7 +150,8 @@ export async function processZipUpload(buffer: Buffer, fileName: string): Promis
       crs: prjText ? "Custom / Reprojected" : "EPSG:4326",
       contentHash,
     };
-  } catch (err: any) {
-    return { ok: false, error: `Shapefile parsing failed: ${err?.message || "Invalid shapefile structure"}` };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Invalid shapefile structure";
+    return { ok: false, error: `Shapefile parsing failed: ${message}` };
   }
 }

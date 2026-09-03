@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -41,10 +41,12 @@ export function PropertiesListPage() {
 
   // Local copy so a drag can reorder instantly (optimistic) instead of
   // waiting on the reorder request + refetch round trip.
-  const [properties, setProperties] = useState<PropertyListItem[]>([]);
-  useEffect(() => {
-    if (data?.data) setProperties(data.data);
-  }, [data?.data]);
+  const [prevData, setPrevData] = useState(data?.data);
+  const [properties, setProperties] = useState<PropertyListItem[]>(data?.data ?? []);
+  if (data?.data && data.data !== prevData) {
+    setPrevData(data.data);
+    setProperties(data.data);
+  }
 
   const dragDisabled = search.trim().length > 0;
 

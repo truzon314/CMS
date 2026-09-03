@@ -121,7 +121,7 @@ export function fontSizeForZoom(zoom: number): number {
 // accepts GeometryCollection (which has `geometries` instead) without the
 // caller having to narrow the union first; centroidOf just returns null
 // for any shape it doesn't recognize below.
-type SimpleGeometry = { type: string; coordinates?: any };
+type SimpleGeometry = { type: string; coordinates?: unknown };
 
 // Centroid of a feature's geometry, for placing an on-map text label.
 // Points return their own coordinate; polygons average their outer ring
@@ -131,12 +131,13 @@ type SimpleGeometry = { type: string; coordinates?: any };
 export function centroidOf(geometry: SimpleGeometry | null | undefined): { lat: number; lng: number } | null {
   if (!geometry) return null;
   if (geometry.type === "Point") {
-    const [lng, lat] = geometry.coordinates;
+    const coords = geometry.coordinates as [number, number];
+    const [lng, lat] = coords;
     return { lat, lng };
   }
   let ring: number[][] | undefined;
-  if (geometry.type === "Polygon") ring = geometry.coordinates[0];
-  else if (geometry.type === "MultiPolygon") ring = geometry.coordinates[0]?.[0];
+  if (geometry.type === "Polygon") ring = (geometry.coordinates as number[][][])?.[0];
+  else if (geometry.type === "MultiPolygon") ring = (geometry.coordinates as number[][][][])?.[0]?.[0];
   if (!ring || ring.length === 0) return null;
   let sumLat = 0;
   let sumLng = 0;

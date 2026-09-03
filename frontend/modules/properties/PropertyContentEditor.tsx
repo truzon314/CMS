@@ -47,7 +47,9 @@ export function PropertyContentEditor({ property, isSaving, onSave }: PropertyCo
     [...property.gallery].sort((a, b) => a.position - b.position).map((g) => g.media_id)
   );
   const [seoDraft, setSeoDraft] = useState<Partial<SeoMeta>>(() => {
-    const { id: _id, ...rest } = property.seo ?? ({} as SeoMeta);
+    if (!property.seo) return {};
+    const { id: _, ...rest } = property.seo;
+    void _;
     return rest;
   });
 

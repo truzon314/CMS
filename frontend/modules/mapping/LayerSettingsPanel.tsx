@@ -208,7 +208,7 @@ export default function LayerSettingsPanel({
         },
       )
       .catch(() => setPropertiesLoaded(true));
-  }, [layer.id]);
+  }, [layer.id, layer.labelProperty]);
 
   const generateCategoryRules = () => {
     setCategoryError(null);
@@ -415,14 +415,16 @@ export default function LayerSettingsPanel({
   // clear singleFeatureMsg here — it also re-runs right after a successful
   // save (which refreshes featureCache), and clearing it there would wipe
   // out the "✓ Updated" message before anyone saw it. Selection-change
-  // handlers below clear it themselves instead.
-  useEffect(() => {
+  const [prevSelectionKey, setPrevSelectionKey] = useState<string>("");
+  const currentSelectionKey = `${editSelectedIndices.join(",")}-${editSelectedIndices.length === 1 && featureCache[editSelectedIndices[0]] ? JSON.stringify(featureCache[editSelectedIndices[0]].properties) : ""}`;
+  if (currentSelectionKey !== prevSelectionKey) {
+    setPrevSelectionKey(currentSelectionKey);
     if (editSelectedIndices.length === 1 && featureCache[editSelectedIndices[0]]) {
       setSingleFeatureProps({ ...(featureCache[editSelectedIndices[0]].properties ?? {}) });
     } else {
       setSingleFeatureProps(null);
     }
-  }, [editSelectedIndices, featureCache]);
+  }
 
   const [bulkEditProperty, setBulkEditProperty] = useState("");
   const [bulkEditValue, setBulkEditValue] = useState("");
@@ -600,7 +602,7 @@ export default function LayerSettingsPanel({
       );
       setBatchOldValue("");
       setBatchNewValue("");
-    } catch (err) {
+    } catch {
       setBatchMsg("❌ Error updating feature values");
     } finally {
       setBatchSaving(false);

@@ -1,25 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 const PINNED_STORAGE_KEY = "map_system_pinned_projects";
 const RECENT_STORAGE_KEY = "map_system_recent_projects";
 
 export function useWorkspaceState() {
-  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
-  const [recentIds, setRecentIds] = useState<string[]>([]);
-
-  useEffect(() => {
+  const [pinnedIds, setPinnedIds] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
     try {
       const savedPinned = localStorage.getItem(PINNED_STORAGE_KEY);
-      if (savedPinned) setPinnedIds(JSON.parse(savedPinned));
-
-      const savedRecent = localStorage.getItem(RECENT_STORAGE_KEY);
-      if (savedRecent) setRecentIds(JSON.parse(savedRecent));
+      return savedPinned ? JSON.parse(savedPinned) : [];
     } catch {
-      // fallback
+      return [];
     }
-  }, []);
+  });
+  const [recentIds, setRecentIds] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const savedRecent = localStorage.getItem(RECENT_STORAGE_KEY);
+      return savedRecent ? JSON.parse(savedRecent) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // useCallback with empty deps: both only use their own setState updater
   // (already stable), so they can stay referentially stable across

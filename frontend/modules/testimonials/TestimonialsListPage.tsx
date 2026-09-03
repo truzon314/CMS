@@ -71,7 +71,7 @@ export function TestimonialsListPage() {
             Testimonials
           </h1>
           <p className="text-sm text-neutral-500">
-            Resident quotes shown on the public Testimonials page — mark one "Featured" to show it in the Home page carousel.
+            Resident quotes shown on the public Testimonials page — mark one &quot;Featured&quot; to show it in the Home page carousel.
           </p>
         </div>
         <Button

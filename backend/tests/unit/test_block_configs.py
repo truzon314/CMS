@@ -11,10 +11,19 @@ from app.schemas.block_configs import validate_block_config
 def test_valid_hero_banner_config_passes():
     config = validate_block_config(
         "hero_banner",
-        {"button_label": "Explore", "button_href": "/projects", "slides": [{"heading": "Hi", "subheading": "There"}]},
+        {"button_label": "Explore", "button_href": "/projects", "slides": [{"heading": "Hi", "subheading": "There", "alignment": "center"}]},
     )
     assert config["button_label"] == "Explore"
     assert config["slides"][0]["heading"] == "Hi"
+    assert config["slides"][0]["alignment"] == "center"
+
+
+def test_hero_banner_alignment_default():
+    config = validate_block_config(
+        "hero_banner",
+        {"button_label": "Explore", "button_href": "/projects", "slides": [{"heading": "Hi", "subheading": "There"}]},
+    )
+    assert config["slides"][0]["alignment"] == "left"
 
 
 def test_unknown_field_is_rejected():
@@ -26,6 +35,11 @@ def test_unknown_block_key_passes_through_unvalidated():
     # Block types without a schema yet (Phase 4 note) pass through as-is.
     config = validate_block_config("some_future_block_type", {"anything": "goes"})
     assert config == {"anything": "goes"}
+
+
+def test_faq_config_accepts_empty_items():
+    config = validate_block_config("faq", {"heading": "FAQ", "items": [{"q": "", "a": ""}]})
+    assert config["items"][0]["q"] == ""
 
 
 def test_faq_config_rejects_malformed_items():

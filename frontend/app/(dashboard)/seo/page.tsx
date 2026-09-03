@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import {
@@ -875,7 +875,7 @@ export default function SeoManagementPage() {
               <SelectField
                 label="Generation Task"
                 value={aiTask}
-                onChange={(val) => setAiTask(val as any)}
+                onChange={(val) => setAiTask(val as typeof aiTask)}
                 options={[
                   { value: "title", label: "Optimized SEO Meta Title" },
                   { value: "description", label: "Meta Description Snippet" },

@@ -134,7 +134,7 @@ export function Sidebar() {
           <div className="flex items-center justify-between px-1 py-1">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-black text-sm">
-                ///
+                {"///"}
               </div>
               <span className="font-extrabold text-base tracking-wider text-white">
                 TRUZON

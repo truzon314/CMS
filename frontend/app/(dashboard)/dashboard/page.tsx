@@ -10,7 +10,6 @@ import {
   ArrowRight,
   Building2,
   Globe,
-  PlusCircle,
   ShieldCheck,
   Activity,
   FileCode,

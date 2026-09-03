@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { ProjectConfig, LayerConfig } from "@/lib/layers";
 import { mappingService } from "@/services/mapping";
 
@@ -20,20 +20,21 @@ export default function ApiEmbedModal({
   const [shareToken, setShareToken] = useState<string>("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && project) {
-      fetchToken();
-    }
-  }, [isOpen, project]);
-
-  const fetchToken = async () => {
+  const fetchToken = useCallback(async () => {
+    if (!project) return;
     try {
       const link = await mappingService.getShareLink(project.id);
       setShareToken(link ? link.token : project.shareToken);
     } catch {
       setShareToken(project.shareToken);
     }
-  };
+  }, [project]);
+
+  useEffect(() => {
+    if (isOpen && project) {
+      fetchToken();
+    }
+  }, [isOpen, project, fetchToken]);
 
   if (!isOpen || !project) return null;
 

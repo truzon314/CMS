@@ -2,8 +2,8 @@ declare module "shapefile" {
   export function open(
     shp: string | Buffer | ArrayBuffer,
     dbf?: string | Buffer | ArrayBuffer,
-    options?: any
+    options?: Record<string, unknown>
   ): Promise<{
-    read(): Promise<{ done: boolean; value?: any }>;
+    read(): Promise<{ done: boolean; value?: unknown }>;
   }>;
 }

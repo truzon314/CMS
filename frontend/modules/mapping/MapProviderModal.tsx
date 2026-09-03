@@ -96,13 +96,21 @@ export default function MapProviderModal({
    * The old implementation only initialized useState once, so if the
    * selected project/provider changed, selectedType could remain stale.
    */
+  const [prevOpen, setPrevOpen] = useState(isOpen);
+  const [prevCurrentProvider, setPrevCurrentProvider] = useState(currentProvider);
+  if (prevOpen !== isOpen || prevCurrentProvider !== currentProvider) {
+    setPrevOpen(isOpen);
+    setPrevCurrentProvider(currentProvider);
+    if (isOpen) {
+      setSelectedType(currentProvider as MapProviderType);
+      setStatus(null);
+    }
+  }
+
   useEffect(() => {
     if (!isOpen) return;
 
     const provider = currentProvider as MapProviderType;
-
-    setSelectedType(provider);
-    setStatus(null);
     fetchProvider(provider);
   }, [isOpen, currentProvider, fetchProvider]);
 

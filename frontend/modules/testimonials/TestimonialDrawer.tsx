@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AppDrawer } from "@/components/ui/app-drawer";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,31 +29,36 @@ const EMPTY_FORM = {
 };
 
 export function TestimonialDrawer({ testimonial, open, onClose }: TestimonialDrawerProps) {
-  const [form, setForm] = useState(EMPTY_FORM);
+  const targetForm = testimonial
+    ? {
+        name: testimonial.name,
+        roleOrLocation: testimonial.role_or_location ?? "",
+        quote: testimonial.quote,
+        photoMediaId: testimonial.photo_media_id,
+        rating: testimonial.rating ? String(testimonial.rating) : "",
+        isFeatured: testimonial.is_featured,
+        isPublished: testimonial.is_published,
+      }
+    : EMPTY_FORM;
+
+  const [prevTestimonialId, setPrevTestimonialId] = useState(testimonial?.id ?? null);
+  const [prevOpen, setPrevOpen] = useState(open);
+  const [form, setForm] = useState(targetForm);
   const [photoUrlOverride, setPhotoUrlOverride] = useState<string | null>(null);
+
+  if (prevOpen !== open || prevTestimonialId !== (testimonial?.id ?? null)) {
+    setPrevOpen(open);
+    setPrevTestimonialId(testimonial?.id ?? null);
+    setPhotoUrlOverride(null);
+    setForm(targetForm);
+  }
+
   const create = useCreateTestimonial();
   const update = useUpdateTestimonial();
   const remove = useDeleteTestimonial();
 
   const { data: currentPhoto } = useMediaItem(photoUrlOverride === null ? testimonial?.photo_media_id ?? null : null);
   const photoUrl = photoUrlOverride ?? currentPhoto?.url ?? null;
-
-  useEffect(() => {
-    setPhotoUrlOverride(null);
-    setForm(
-      testimonial
-        ? {
-            name: testimonial.name,
-            roleOrLocation: testimonial.role_or_location ?? "",
-            quote: testimonial.quote,
-            photoMediaId: testimonial.photo_media_id,
-            rating: testimonial.rating ? String(testimonial.rating) : "",
-            isFeatured: testimonial.is_featured,
-            isPublished: testimonial.is_published,
-          }
-        : EMPTY_FORM
-    );
-  }, [testimonial, open]);
 
   function handleSave() {
     const payload = {

@@ -154,7 +154,7 @@ function popupHtml(
 export default function OpenStreetMapCanvas({
   layers,
   selectedProjectId,
-  mode,
+  mode: _mode,
   visibility,
   shareToken,
   sharePassword,

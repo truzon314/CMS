@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 /**
  * Authentication is enforced by the backend API.
@@ -11,7 +11,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * /api/v1/auth/refresh, and protected API requests are authenticated by the
  * backend.
  */
-export function proxy(_request: NextRequest) {
+export function proxy() {
   return NextResponse.next();
 }
 
