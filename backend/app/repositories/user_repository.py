@@ -18,8 +18,8 @@ class SqlAlchemyUserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, user_id: uuid.UUID) -> User | None:
-        stmt = select(User).where(User.id == user_id).options(_WITH_ROLE_AND_PERMISSIONS)
+    async def get_by_id(self, user_id: str | uuid.UUID) -> User | None:
+        stmt = select(User).where(User.id == str(user_id)).options(_WITH_ROLE_AND_PERMISSIONS)
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def get_by_email(self, email: str) -> User | None:

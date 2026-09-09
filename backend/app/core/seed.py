@@ -15,7 +15,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.shared.security.security import hash_password
-from app.shared.database.session import AsyncSessionLocal
+from app.shared.database.session import AsyncSessionLocal, engine
+from app.models import Base
 from app.models.block_definition import BlockDefinition
 from app.models.entity_version import EntityType, EntityVersion
 from app.models.form_submission import FormSubmission, FormSubmissionStatus
@@ -187,7 +188,11 @@ HOME_FAQS = [
 ]
 
 
+
 async def seed() -> None:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
     async with AsyncSessionLocal() as session:
         permissions_by_key: dict[str, Permission] = {}
         for key, module in PERMISSIONS:

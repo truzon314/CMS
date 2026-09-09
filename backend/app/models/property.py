@@ -9,10 +9,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.shared.database.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
 
 property_category = Table(
-    "property_category",
+    "property_categories",
     Base.metadata,
-    Column("property_id", UUID(as_uuid=True), ForeignKey("property.id", ondelete="CASCADE"), primary_key=True),
-    Column("category_id", UUID(as_uuid=True), ForeignKey("category.id", ondelete="CASCADE"), primary_key=True),
+    Column("propertyId", String, ForeignKey("properties.id", ondelete="CASCADE"), primary_key=True),
+    Column("categoryId", String, ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True),
 )
 
 
@@ -29,44 +29,38 @@ class PropertyStatus(str, enum.Enum):
 
 
 class Property(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
-    __tablename__ = "property"
+    __tablename__ = "properties"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     city: Mapped[str | None] = mapped_column(String(150), default=None)
-    location_text: Mapped[str | None] = mapped_column(String(255), default=None)
-    price_display: Mapped[str | None] = mapped_column(String(100), default=None)
-    price_value: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), default=None)
+    location_text: Mapped[str | None] = mapped_column("locationText", String(255), default=None)
+    price_display: Mapped[str | None] = mapped_column("priceDisplay", String(100), default=None)
+    price_value: Mapped[Decimal | None] = mapped_column("priceValue", Numeric(14, 2), default=None)
     budget_bracket: Mapped[BudgetBracket | None] = mapped_column(
-        Enum(BudgetBracket, name="budget_bracket"), default=None
+        "budgetBracket", Enum(BudgetBracket, name="BudgetBracket", create_type=False), default=None
     )
-    spec_a: Mapped[str | None] = mapped_column(String(100), default=None)
-    spec_b: Mapped[str | None] = mapped_column(String(100), default=None)
-    area_sqft: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), default=None)
-    beds_options: Mapped[list | None] = mapped_column(JSON, default=None)
+    spec_a: Mapped[str | None] = mapped_column("specA", String(100), default=None)
+    spec_b: Mapped[str | None] = mapped_column("specB", String(100), default=None)
+    area_sqft: Mapped[Decimal | None] = mapped_column("areaSqft", Numeric(12, 2), default=None)
+    beds_options: Mapped[list | None] = mapped_column("bedsOptions", JSON, default=None)
     description: Mapped[str | None] = mapped_column(Text, default=None)
-    # Each item: {"name": str, "image_media_id": str | None} — matches the
-    # public site's PropertyAmenity shape (REUSABLE_COMPONENTS.md-style repeatable
-    # list, same pattern as the page-builder's Gallery/Team/Features blocks).
     amenities: Mapped[list | None] = mapped_column(JSON, default=None)
-    tag_text: Mapped[str | None] = mapped_column(String(50), default=None)
-    status_text: Mapped[str | None] = mapped_column(String(50), default=None)
-    is_signature: Mapped[bool] = mapped_column(Boolean, default=False)
-    featured_image_media_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), default=None)
-    brochure_media_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), default=None)
-    seo_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("seo_meta.id"), default=None)
+    tag_text: Mapped[str | None] = mapped_column("tagText", String(50), default=None)
+    status_text: Mapped[str | None] = mapped_column("statusText", String(50), default=None)
+    is_signature: Mapped[bool] = mapped_column("isSignature", Boolean, default=False)
+    featured_image_media_id: Mapped[str | None] = mapped_column("featuredImageMediaId", String, default=None)
+    brochure_media_id: Mapped[str | None] = mapped_column("brochureMediaId", String, default=None)
+    seo_id: Mapped[str | None] = mapped_column("seoId", String, ForeignKey("seo_metas.id"), default=None)
     status: Mapped[PropertyStatus] = mapped_column(
-        Enum(PropertyStatus, name="property_status"), default=PropertyStatus.DRAFT, nullable=False
+        Enum(PropertyStatus, name="PropertyStatus", create_type=False), default=PropertyStatus.DRAFT, nullable=False
     )
-    map_project_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("map_project.id", ondelete="SET NULL"), default=None)
-    # Admin-controlled display order for the public listing — lower sorts
-    # first. Defaults to 0 for every property until explicitly reordered via
-    # the drag-and-drop list, at which point ties break by updated_at desc
-    # (see PropertyRepository.list's order_by), same as before this field existed.
-    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    map_project_id: Mapped[str | None] = mapped_column("mapProjectId", String, ForeignKey("map_projects.id", ondelete="SET NULL"), default=None)
+    sort_order: Mapped[int] = mapped_column("sortOrder", Integer, default=0, nullable=False)
 
     seo: Mapped["SeoMeta | None"] = relationship()  # noqa: F821
     categories: Mapped[list["Category"]] = relationship(secondary=property_category)  # noqa: F821
     gallery: Mapped[list["PropertyMedia"]] = relationship(  # noqa: F821
         back_populates="property", order_by="PropertyMedia.position", cascade="all, delete-orphan"
     )
+

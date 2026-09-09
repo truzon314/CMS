@@ -11,8 +11,8 @@ class SqlAlchemyRoleRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, role_id: uuid.UUID) -> Role | None:
-        stmt = select(Role).where(Role.id == role_id).options(selectinload(Role.permissions))
+    async def get_by_id(self, role_id: str | uuid.UUID) -> Role | None:
+        stmt = select(Role).where(Role.id == str(role_id)).options(selectinload(Role.permissions))
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def get_by_name(self, name: str) -> Role | None:

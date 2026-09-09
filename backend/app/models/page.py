@@ -25,30 +25,29 @@ class PageStatus(str, enum.Enum):
 
 
 class Page(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    """Fixed to exactly 5 rows — `page_type` is a unique enum, not a free slug,
-    so the "5 fixed pages" scope decision is enforced at the DB level, not just
-    in application code (ERD.md).
-    """
+    """Fixed to exactly 5 rows — `page_type` is a unique enum, not a free slug."""
 
-    __tablename__ = "page"
+    __tablename__ = "pages"
 
-    page_type: Mapped[PageType] = mapped_column(Enum(PageType, name="page_type"), unique=True, nullable=False)
+    page_type: Mapped[PageType] = mapped_column(
+        "pageType", Enum(PageType, name="PageType", create_type=False), unique=True, nullable=False
+    )
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[PageStatus] = mapped_column(
-        Enum(PageStatus, name="page_status"), default=PageStatus.DRAFT, nullable=False
+        Enum(PageStatus, name="PageStatus", create_type=False), default=PageStatus.DRAFT, nullable=False
     )
-    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
-    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    published_at: Mapped[datetime | None] = mapped_column("publishedAt", DateTime(timezone=True), default=None)
+    scheduled_at: Mapped[datetime | None] = mapped_column("scheduledAt", DateTime(timezone=True), default=None)
 
-    # No FK constraint yet — `media` doesn't exist until Phase 3.
-    featured_image_media_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), default=None)
+    featured_image_media_id: Mapped[str | None] = mapped_column("featuredImageMediaId", String, default=None)
 
-    seo_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("seo_meta.id"), default=None)
-    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
-    updated_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+    seo_id: Mapped[str | None] = mapped_column("seoId", String, ForeignKey("seo_metas.id"), default=None)
+    created_by: Mapped[str] = mapped_column("createdById", String, ForeignKey("users.id"), nullable=False)
+    updated_by: Mapped[str] = mapped_column("updatedById", String, ForeignKey("users.id"), nullable=False)
 
     seo: Mapped["SeoMeta | None"] = relationship()  # noqa: F821
     blocks: Mapped[list["PageBlock"]] = relationship(  # noqa: F821
         back_populates="page", order_by="PageBlock.position", cascade="all, delete-orphan"
     )
+

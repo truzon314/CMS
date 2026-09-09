@@ -20,8 +20,8 @@ class SqlAlchemyBlogPostRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, post_id: uuid.UUID, include_deleted: bool = False) -> BlogPost | None:
-        stmt = select(BlogPost).where(BlogPost.id == post_id).options(*_WITH_RELATIONS)
+    async def get_by_id(self, post_id: str | uuid.UUID, include_deleted: bool = False) -> BlogPost | None:
+        stmt = select(BlogPost).where(BlogPost.id == str(post_id)).options(*_WITH_RELATIONS)
         if not include_deleted:
             stmt = stmt.where(BlogPost.deleted_at.is_(None))
         return (await self.session.execute(stmt)).scalar_one_or_none()
@@ -40,9 +40,9 @@ class SqlAlchemyBlogPostRepository:
         page: int,
         per_page: int,
         status: str | None = None,
-        category_id: uuid.UUID | None = None,
-        tag_id: uuid.UUID | None = None,
-        author_id: uuid.UUID | None = None,
+        category_id: str | uuid.UUID | None = None,
+        tag_id: str | uuid.UUID | None = None,
+        author_id: str | uuid.UUID | None = None,
         search: str | None = None,
     ) -> tuple[list[BlogPost], int]:
         stmt = select(BlogPost).where(BlogPost.deleted_at.is_(None)).options(*_WITH_RELATIONS)
@@ -52,18 +52,18 @@ class SqlAlchemyBlogPostRepository:
             stmt = stmt.where(BlogPost.status == status)
             count_stmt = count_stmt.where(BlogPost.status == status)
         if author_id:
-            stmt = stmt.where(BlogPost.author_id == author_id)
-            count_stmt = count_stmt.where(BlogPost.author_id == author_id)
+            stmt = stmt.where(BlogPost.author_id == str(author_id))
+            count_stmt = count_stmt.where(BlogPost.author_id == str(author_id))
         if search:
             like = f"%{search}%"
             stmt = stmt.where(or_(BlogPost.title.ilike(like), BlogPost.slug.ilike(like)))
             count_stmt = count_stmt.where(or_(BlogPost.title.ilike(like), BlogPost.slug.ilike(like)))
         if category_id:
-            stmt = stmt.join(blog_post_category).where(blog_post_category.c.category_id == category_id)
-            count_stmt = count_stmt.join(blog_post_category).where(blog_post_category.c.category_id == category_id)
+            stmt = stmt.join(blog_post_category).where(blog_post_category.c.category_id == str(category_id))
+            count_stmt = count_stmt.join(blog_post_category).where(blog_post_category.c.category_id == str(category_id))
         if tag_id:
-            stmt = stmt.join(blog_post_tag).where(blog_post_tag.c.tag_id == tag_id)
-            count_stmt = count_stmt.join(blog_post_tag).where(blog_post_tag.c.tag_id == tag_id)
+            stmt = stmt.join(blog_post_tag).where(blog_post_tag.c.tag_id == str(tag_id))
+            count_stmt = count_stmt.join(blog_post_tag).where(blog_post_tag.c.tag_id == str(tag_id))
 
         total = (await self.session.execute(count_stmt)).scalar_one()
         stmt = stmt.order_by(BlogPost.updated_at.desc()).offset((page - 1) * per_page).limit(per_page)

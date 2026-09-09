@@ -1,38 +1,28 @@
-import uuid
-
 from sqlalchemy import JSON, Boolean, Float, ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.shared.database.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 
 class MapLayer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    __tablename__ = "map_layer"
+    __tablename__ = "map_layers"
 
-    project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("map_project.id", ondelete="CASCADE"), nullable=False
+    project_id: Mapped[str] = mapped_column(
+        "projectId", String, ForeignKey("map_projects.id", ondelete="CASCADE"), nullable=False
     )
     label: Mapped[str] = mapped_column(String(255), nullable=False)
-    stroke_color: Mapped[str] = mapped_column(String(20), default="#2563eb", nullable=False)
-    fill_color: Mapped[str] = mapped_column(String(20), default="#2563eb", nullable=False)
-    fill_opacity: Mapped[float] = mapped_column(Float, default=0.4, nullable=False)
-    stroke_weight: Mapped[int] = mapped_column(Integer, default=2, nullable=False)
-    default_visible: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    # Each item: {id, property, value, action: "color"|"hide", color?, opacity?}
-    color_rules: Mapped[list | None] = mapped_column(JSON, default=None)
-    label_property: Mapped[str | None] = mapped_column(String(255), default=None)
-    # How labels are positioned: "center" (default) = individual centroid,
-    # "aligned" = snap nearby plots to a shared row/column center line.
-    # Null is treated as "center" everywhere so existing records are unaffected.
-    label_alignment: Mapped[str | None] = mapped_column(String(10), default=None)
-    popup_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    popup_properties: Mapped[list | None] = mapped_column(JSON, default=None)
-    stroke_style: Mapped[str] = mapped_column(String(10), default="solid", nullable=False)
-    # The whole GeoJSON FeatureCollection for this layer — one JSON blob, not
-    # a per-feature table, so there is exactly one place a feature edit can
-    # land (no admin-canvas-vs-public-read drift like the old flat-file +
-    # geojson_features-table split this replaces).
+    stroke_color: Mapped[str] = mapped_column("strokeColor", String(20), default="#2563eb", nullable=False)
+    fill_color: Mapped[str] = mapped_column("fillColor", String(20), default="#2563eb", nullable=False)
+    fill_opacity: Mapped[float] = mapped_column("fillOpacity", Float, default=0.4, nullable=False)
+    stroke_weight: Mapped[int] = mapped_column("strokeWeight", Integer, default=2, nullable=False)
+    default_visible: Mapped[bool] = mapped_column("defaultVisible", Boolean, default=True, nullable=False)
+    color_rules: Mapped[list | None] = mapped_column("colorRules", JSON, default=None)
+    label_property: Mapped[str | None] = mapped_column("labelProperty", String(255), default=None)
+    label_alignment: Mapped[str | None] = mapped_column("labelAlignment", String(10), default=None)
+    popup_enabled: Mapped[bool] = mapped_column("popupEnabled", Boolean, default=True, nullable=False)
+    popup_properties: Mapped[list | None] = mapped_column("popupProperties", JSON, default=None)
+    stroke_style: Mapped[str] = mapped_column("strokeStyle", String(10), default="solid", nullable=False)
     geojson: Mapped[dict | None] = mapped_column(JSON, default=None)
 
     project: Mapped["MapProject"] = relationship(back_populates="layers")  # noqa: F821
+

@@ -6,7 +6,7 @@ from app.models.role import role_permission
 
 
 class Permission(UUIDPrimaryKeyMixin, Base):
-    __tablename__ = "permission"
+    __tablename__ = "permissions"
 
     key: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     module: Mapped[str] = mapped_column(String(50), nullable=False)

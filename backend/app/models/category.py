@@ -13,13 +13,13 @@ class CategoryAppliesTo(str, enum.Enum):
 
 
 class Category(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    """Shared taxonomy for Blog posts and Properties (ERD.md) — one table, two
-    join tables (`blog_post_category`, `property_category`)."""
+    """Shared taxonomy for Blog posts and Properties."""
 
-    __tablename__ = "category"
+    __tablename__ = "categories"
 
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     slug: Mapped[str] = mapped_column(String(150), unique=True, nullable=False)
     applies_to: Mapped[CategoryAppliesTo] = mapped_column(
-        Enum(CategoryAppliesTo, name="category_applies_to"), nullable=False
+        "appliesTo", Enum(CategoryAppliesTo, name="CategoryAppliesTo", create_type=False), nullable=False
     )
+

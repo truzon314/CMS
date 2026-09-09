@@ -27,10 +27,10 @@ class AuditService:
         try:
             await self.audit_logs.create(
                 AuditLog(
-                    user_id=user_id,
+                    user_id=str(user_id) if user_id is not None else None,
                     action=action,
                     entity_type=entity_type,
-                    entity_id=entity_id,
+                    entity_id=str(entity_id) if entity_id is not None else None,
                     ip_address=current_ip(),
                     user_agent=current_user_agent(),
                     details=details,

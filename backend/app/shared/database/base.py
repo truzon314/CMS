@@ -1,8 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -15,23 +14,23 @@ class Base(DeclarativeBase):
 
 
 class UUIDPrimaryKeyMixin:
-    """Every table uses a UUID primary key, per ERD.md."""
+    """Maps `id` to the production `text` primary key column."""
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    id: Mapped[str] = mapped_column(
+        "id", String, primary_key=True, default=lambda: str(uuid.uuid4())
     )
 
 
 class TimestampMixin:
-    """created_at / updated_at on every table, per ERD.md."""
+    """Maps `created_at` and `updated_at` to production `createdAt` and `updatedAt` columns."""
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        "updatedAt", DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
 
 
 class SoftDeleteMixin:
-    """Soft-delete for User/BlogPost/Property/Media/MenuItem — Trash is a query, not a table."""
+    """Maps `deleted_at` to production `deletedAt` column."""
 
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    deleted_at: Mapped[datetime | None] = mapped_column("deletedAt", DateTime(timezone=True), default=None)

@@ -1,22 +1,19 @@
 import uuid
 
-from sqlalchemy import ForeignKey, Integer
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.shared.database.base import Base, UUIDPrimaryKeyMixin
 
 
 class PropertyMedia(UUIDPrimaryKeyMixin, Base):
-    """Ordered gallery join (ERD.md's `PROPERTY_MEDIA`) — an association *object*,
-    not a plain association table, since `position` is real data, not just a key."""
+    __tablename__ = "property_medias"
 
-    __tablename__ = "property_media"
-
-    property_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("property.id", ondelete="CASCADE"), nullable=False
+    property_id: Mapped[str] = mapped_column(
+        "propertyId", String, ForeignKey("properties.id", ondelete="CASCADE"), nullable=False
     )
-    media_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("media.id"), nullable=False)
-    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    media_id: Mapped[str] = mapped_column("mediaId", String, nullable=False)
+    type: Mapped[str] = mapped_column(String(50), default="gallery")
+    position: Mapped[int] = mapped_column(Integer, default=0)
 
     property: Mapped["Property"] = relationship(back_populates="gallery")  # noqa: F821

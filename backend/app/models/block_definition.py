@@ -10,8 +10,8 @@ class BlockDefinition(UUIDPrimaryKeyMixin, Base):
     migration touching every existing page.
     """
 
-    __tablename__ = "block_definition"
+    __tablename__ = "block_definitions"
 
     key: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     label: Mapped[str] = mapped_column(String(100), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_active: Mapped[bool] = mapped_column("isActive", Boolean, default=True)

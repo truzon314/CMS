@@ -15,20 +15,18 @@ class AuthTokenPurpose(str, enum.Enum):
 
 
 class AuthToken(UUIDPrimaryKeyMixin, Base):
-    """Single-use, short-lived tokens for forgot-password and email-verification
-    flows — a generic table for both rather than two near-duplicate ones (same
-    reuse principle as ERD.md's entity_version). Only a hash is stored.
-    """
+    __tablename__ = "auth_tokens"
 
-    __tablename__ = "auth_token"
-
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+    user_id: Mapped[str] = mapped_column(
+        "userId", String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    purpose: Mapped[AuthTokenPurpose] = mapped_column(Enum(AuthTokenPurpose, name="auth_token_purpose"), nullable=False)
-    token_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    purpose: Mapped[AuthTokenPurpose] = mapped_column(
+        Enum(AuthTokenPurpose, name="AuthTokenPurpose", create_type=False), nullable=False
+    )
+    token_hash: Mapped[str] = mapped_column("tokenHash", String(255), nullable=False, unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column("expiresAt", DateTime(timezone=True), nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column("usedAt", DateTime(timezone=True), default=None)
+    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=True), default=utcnow)
 
     user: Mapped["User"] = relationship()  # noqa: F821
+

@@ -58,7 +58,7 @@ class UserService:
         user = User(
             email=payload.email,
             full_name=payload.full_name,
-            role_id=payload.role_id,
+            role_id=str(payload.role_id),
             password_hash=password_hash,
         )
         user = await self.users.create(user)
@@ -76,7 +76,7 @@ class UserService:
             role = await self.roles.get_by_id(payload.role_id)
             if not role:
                 raise NotFoundError("Role not found.")
-            user.role_id = payload.role_id
+            user.role_id = str(payload.role_id)
 
         if payload.full_name is not None:
             user.full_name = payload.full_name

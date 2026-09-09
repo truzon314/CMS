@@ -9,17 +9,17 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.shared.database.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
 
 blog_post_category = Table(
-    "blog_post_category",
+    "blog_post_categories",
     Base.metadata,
-    Column("blog_post_id", UUID(as_uuid=True), ForeignKey("blog_post.id", ondelete="CASCADE"), primary_key=True),
-    Column("category_id", UUID(as_uuid=True), ForeignKey("category.id", ondelete="CASCADE"), primary_key=True),
+    Column("blogPostId", String, ForeignKey("blog_posts.id", ondelete="CASCADE"), primary_key=True),
+    Column("categoryId", String, ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True),
 )
 
 blog_post_tag = Table(
-    "blog_post_tag",
+    "blog_post_tags",
     Base.metadata,
-    Column("blog_post_id", UUID(as_uuid=True), ForeignKey("blog_post.id", ondelete="CASCADE"), primary_key=True),
-    Column("tag_id", UUID(as_uuid=True), ForeignKey("tag.id", ondelete="CASCADE"), primary_key=True),
+    Column("blogPostId", String, ForeignKey("blog_posts.id", ondelete="CASCADE"), primary_key=True),
+    Column("tagId", String, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True),
 )
 
 
@@ -30,22 +30,22 @@ class BlogPostStatus(str, enum.Enum):
 
 
 class BlogPost(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
-    __tablename__ = "blog_post"
+    __tablename__ = "blog_posts"
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     excerpt: Mapped[str | None] = mapped_column(Text, default=None)
     body: Mapped[str | None] = mapped_column(Text, default=None)
-    featured_image_media_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), default=None)
-    author_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+    featured_image_media_id: Mapped[str | None] = mapped_column("featuredImageMediaId", String, default=None)
+    author_id: Mapped[str] = mapped_column("authorId", String, ForeignKey("users.id"), nullable=False)
     status: Mapped[BlogPostStatus] = mapped_column(
-        Enum(BlogPostStatus, name="blog_post_status"), default=BlogPostStatus.DRAFT, nullable=False
+        Enum(BlogPostStatus, name="BlogPostStatus", create_type=False), default=BlogPostStatus.DRAFT, nullable=False
     )
-    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
-    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
-    reading_time_minutes: Mapped[int | None] = mapped_column(Integer, default=None)
-    is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
-    seo_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("seo_meta.id"), default=None)
+    published_at: Mapped[datetime | None] = mapped_column("publishedAt", DateTime(timezone=True), default=None)
+    scheduled_at: Mapped[datetime | None] = mapped_column("scheduledAt", DateTime(timezone=True), default=None)
+    reading_time_minutes: Mapped[int | None] = mapped_column("readingTimeMinutes", Integer, default=None)
+    is_featured: Mapped[bool] = mapped_column("isFeatured", Boolean, default=False)
+    seo_id: Mapped[str | None] = mapped_column("seoId", String, ForeignKey("seo_metas.id"), default=None)
 
     seo: Mapped["SeoMeta | None"] = relationship()  # noqa: F821
     author: Mapped["User"] = relationship()  # noqa: F821
@@ -54,7 +54,5 @@ class BlogPost(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     @property
     def author_name(self) -> str:
-        """Lets `BlogPostRead.model_validate(post)` (from_attributes) pick this
-        up via plain getattr, without every read schema needing a manual
-        author-join construction — `author` is always selectinloaded."""
-        return self.author.full_name
+        return self.author.full_name if self.author else ""
+

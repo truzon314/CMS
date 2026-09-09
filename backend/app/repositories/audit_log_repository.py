@@ -30,7 +30,7 @@ class SqlAlchemyAuditLogRepository:
         date_to: datetime | None,
     ):
         if user_id:
-            stmt = stmt.where(AuditLog.user_id == user_id)
+            stmt = stmt.where(AuditLog.user_id == str(user_id))
         if action:
             stmt = stmt.where(AuditLog.action.ilike(f"%{action}%"))
         if entity_type:

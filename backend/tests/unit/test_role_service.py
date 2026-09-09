@@ -110,5 +110,5 @@ async def test_create_role_writes_audit_log():
 
     assert len(audit_repo.entries) == 1
     assert audit_repo.entries[0].action == "role.create"
-    assert audit_repo.entries[0].entity_id == role.id
-    assert audit_repo.entries[0].user_id == actor_id
+    assert audit_repo.entries[0].entity_id == str(role.id)
+    assert audit_repo.entries[0].user_id == str(actor_id)

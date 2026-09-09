@@ -16,17 +16,19 @@ class EntityType(str, enum.Enum):
 
 
 class EntityVersion(UUIDPrimaryKeyMixin, Base):
-    """One generic, polymorphic version-history table for Pages/Blog/Settings
-    (ERD.md) instead of three near-duplicate tables."""
+    """One generic, polymorphic version-history table for Pages/Blog/Settings."""
 
-    __tablename__ = "entity_version"
+    __tablename__ = "entity_versions"
 
-    entity_type: Mapped[EntityType] = mapped_column(Enum(EntityType, name="entity_type"), nullable=False)
-    entity_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
-    version_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    entity_type: Mapped[EntityType] = mapped_column(
+        "entityType", Enum(EntityType, name="EntityType", create_type=False), nullable=False
+    )
+    entity_id: Mapped[str] = mapped_column("entityId", String, nullable=False, index=True)
+    version_number: Mapped[int] = mapped_column("versionNumber", Integer, nullable=False)
     snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
-    change_note: Mapped[str | None] = mapped_column(String(255), default=None)
-    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    change_note: Mapped[str | None] = mapped_column("changeNote", String(255), default=None)
+    created_by: Mapped[str] = mapped_column("createdById", String, ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=True), default=utcnow)
 
     author: Mapped["User"] = relationship()  # noqa: F821
+

@@ -17,18 +17,14 @@ class MediaUsageEntityType(str, enum.Enum):
 
 
 class MediaUsage(UUIDPrimaryKeyMixin, Base):
-    """Polymorphic usage tracking (ERD.md) — no DB-level FK to the referencing
-    entity, since it spans Pages/Blog/Properties/Menus/Settings. Powers the
-    safe-delete check: a `Media` row can't be deleted while any row here
-    references it, unless `?force=true`."""
+    __tablename__ = "media_usages"
 
-    __tablename__ = "media_usage"
-
-    media_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("media.id"), nullable=False, index=True
+    media_id: Mapped[str] = mapped_column(
+        "mediaId", String, ForeignKey("media.id"), nullable=False, index=True
     )
     entity_type: Mapped[MediaUsageEntityType] = mapped_column(
-        Enum(MediaUsageEntityType, name="media_usage_entity_type"), nullable=False
+        "entityType", Enum(MediaUsageEntityType, name="MediaUsageEntityType", create_type=False), nullable=False
     )
-    entity_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
-    field_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    entity_id: Mapped[str] = mapped_column("entityId", String, nullable=False, index=True)
+    field_name: Mapped[str] = mapped_column("fieldName", String(255), nullable=False)
+
