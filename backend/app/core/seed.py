@@ -24,8 +24,8 @@ from app.models.menu import Menu, MenuItem
 from app.models.page import Page, PageType
 from app.models.page_block import PageBlock
 from app.models.permission import Permission
-from app.models.role import Role
-from app.models.user import User
+from app.models.role import Role, RoleType
+from app.models.user import User, UserStatus
 
 PERMISSIONS = [
     ("pages.view", "pages"),
@@ -83,6 +83,14 @@ ROLE_PERMISSIONS = {
     ],
     "Author": ["pages.view", "blog.view", "blog.create", "blog.edit", "media.view"],
     "Viewer": ["pages.view", "blog.view", "properties.view", "media.view", "forms.view", "analytics.view"],
+}
+
+ROLE_ENUM_MAP = {
+    "Super Admin": RoleType.SUPER_ADMIN,
+    "Admin": RoleType.ADMIN,
+    "Editor": RoleType.CONTENT_MANAGER,
+    "Author": RoleType.MANAGER,
+    "Viewer": RoleType.CLIENT,
 }
 
 ROLE_IS_SYSTEM = {"Super Admin": True}
@@ -206,15 +214,21 @@ async def seed() -> None:
             permissions_by_key[key] = existing
 
         roles_by_name: dict[str, Role] = {}
-        for name, perm_keys in ROLE_PERMISSIONS.items():
-            stmt = select(Role).where(Role.name == name).options(selectinload(Role.permissions))
+        for display_name, perm_keys in ROLE_PERMISSIONS.items():
+            role_type = ROLE_ENUM_MAP[display_name]
+            stmt = select(Role).where(Role.name == role_type).options(selectinload(Role.permissions))
             role = (await session.execute(stmt)).scalar_one_or_none()
             if role is None:
-                role = Role(name=name, is_system=ROLE_IS_SYSTEM.get(name, False), permissions=[])
+                role = Role(
+                    name=role_type,
+                    display_name=display_name,
+                    is_system=ROLE_IS_SYSTEM.get(display_name, False),
+                    permissions=[],
+                )
                 session.add(role)
                 await session.flush()
             role.permissions = [permissions_by_key[k] for k in perm_keys]
-            roles_by_name[name] = role
+            roles_by_name[display_name] = role
 
         await session.commit()
 
@@ -231,8 +245,8 @@ async def seed() -> None:
                 full_name="Super Admin",
                 role_id=super_admin_role.id,
                 password_hash=hash_password(admin_password),
-                is_active=True,
-                is_email_verified=True,
+                status=UserStatus.ACTIVE,
+                email_verified=True,
             )
             session.add(admin_user)
             await session.commit()

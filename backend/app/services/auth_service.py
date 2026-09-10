@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from app.shared.config.config import get_settings
+from app.shared.database.base import utcnow
 from app.shared.exceptions.exceptions import UnauthorizedError, ValidationAppError
 from app.shared.security.security import (
     create_access_token,
@@ -53,7 +54,7 @@ class AuthService:
         access_token, expires_in = create_access_token(user.id)
         refresh_token_raw = await self._issue_refresh_token(user.id, ip_address, user_agent)
 
-        user.last_login_at = datetime.now(timezone.utc)
+        user.last_login_at = utcnow()
         await self.users.update(user)
         await self.audit.log(user.id, "auth.login", "user", user.id)
 
@@ -75,7 +76,7 @@ class AuthService:
             await self.refresh_tokens.revoke_all_for_user(token.user_id)
             raise UnauthorizedError("Session expired, please log in again.")
 
-        if token.expires_at < datetime.now(timezone.utc):
+        if token.expires_at < utcnow():
             raise UnauthorizedError("Session expired, please log in again.")
 
         await self.refresh_tokens.revoke(token)
@@ -103,7 +104,7 @@ class AuthService:
             user_id=user.id,
             purpose=AuthTokenPurpose.PASSWORD_RESET,
             token_hash=hash_opaque_token(raw_token),
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+            expires_at=utcnow() + timedelta(hours=1),
         )
         await self.auth_tokens.create(auth_token)
         reset_url = f"{settings.admin_frontend_url}/reset-password?token={raw_token}"
@@ -164,13 +165,13 @@ class AuthService:
         await self.auth_tokens.mark_used(auth_token)
 
     async def _issue_refresh_token(
-        self, user_id: uuid.UUID, ip_address: str | None, user_agent: str | None
+        self, user_id: str, ip_address: str | None, user_agent: str | None
     ) -> str:
         raw_token = generate_opaque_token()
         token = RefreshToken(
-            user_id=user_id,
+            user_id=str(user_id),
             token_hash=hash_opaque_token(raw_token),
-            expires_at=datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days),
+            expires_at=utcnow() + timedelta(days=settings.refresh_token_expire_days),
             ip_address=ip_address,
             user_agent=user_agent,
         )

@@ -20,8 +20,8 @@ class SqlAlchemyPropertyRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, property_id: uuid.UUID, include_deleted: bool = False) -> Property | None:
-        stmt = select(Property).where(Property.id == property_id).options(*_WITH_RELATIONS)
+    async def get_by_id(self, property_id: str | uuid.UUID, include_deleted: bool = False) -> Property | None:
+        stmt = select(Property).where(Property.id == str(property_id)).options(*_WITH_RELATIONS)
         if not include_deleted:
             stmt = stmt.where(Property.deleted_at.is_(None))
         return (await self.session.execute(stmt)).scalar_one_or_none()
@@ -41,7 +41,7 @@ class SqlAlchemyPropertyRepository:
         per_page: int,
         status: str | None = None,
         city: str | None = None,
-        category_id: uuid.UUID | None = None,
+        category_id: str | uuid.UUID | None = None,
         budget_bracket: str | None = None,
         search: str | None = None,
         is_signature: bool | None = None,
@@ -50,24 +50,20 @@ class SqlAlchemyPropertyRepository:
         count_stmt = select(func.count()).select_from(Property).where(Property.deleted_at.is_(None))
 
         if status:
-            stmt = stmt.where(Property.status == status)
-            count_stmt = count_stmt.where(Property.status == status)
+            is_pub = str(status).upper() == "PUBLISHED"
+            stmt = stmt.where(Property.is_active == is_pub)
+            count_stmt = count_stmt.where(Property.is_active == is_pub)
         if is_signature is not None:
             stmt = stmt.where(Property.is_signature == is_signature)
             count_stmt = count_stmt.where(Property.is_signature == is_signature)
-        if city:
-            stmt = stmt.where(Property.city == city)
-            count_stmt = count_stmt.where(Property.city == city)
-        if budget_bracket:
-            stmt = stmt.where(Property.budget_bracket == budget_bracket)
-            count_stmt = count_stmt.where(Property.budget_bracket == budget_bracket)
         if search:
             like = f"%{search}%"
             stmt = stmt.where(or_(Property.name.ilike(like), Property.slug.ilike(like)))
             count_stmt = count_stmt.where(or_(Property.name.ilike(like), Property.slug.ilike(like)))
         if category_id:
-            stmt = stmt.join(property_category).where(property_category.c.category_id == category_id)
-            count_stmt = count_stmt.join(property_category).where(property_category.c.category_id == category_id)
+            stmt = stmt.join(property_category).where(property_category.c.B == str(category_id))
+            count_stmt = count_stmt.join(property_category).where(property_category.c.B == str(category_id))
+
 
         total = (await self.session.execute(count_stmt)).scalar_one()
         stmt = (
@@ -119,12 +115,14 @@ class SqlAlchemyPropertyRepository:
         await self.session.refresh(property_, attribute_names=["categories", "gallery", "seo"])
         return property_
 
-    async def set_gallery(self, property_id: uuid.UUID, media_ids: list[uuid.UUID]) -> Property:
-        await self.session.execute(delete(PropertyMedia).where(PropertyMedia.property_id == property_id))
+    async def set_gallery(self, property_id: str | uuid.UUID, media_ids: list[str | uuid.UUID]) -> Property | None:
+        property_id_str = str(property_id)
+        await self.session.execute(delete(PropertyMedia).where(PropertyMedia.property_id == property_id_str))
         for position, media_id in enumerate(media_ids):
-            self.session.add(PropertyMedia(property_id=property_id, media_id=media_id, position=position))
+            self.session.add(PropertyMedia(property_id=property_id_str, media_id=str(media_id), position=position))
         await self.session.commit()
-        return await self.get_by_id(property_id)
+        return await self.get_by_id(property_id_str)
+
 
     async def soft_delete(self, property_: Property) -> None:
         property_.deleted_at = datetime.now(timezone.utc)

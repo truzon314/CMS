@@ -1,9 +1,8 @@
-from datetime import datetime, timezone
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.auth_token import AuthToken, AuthTokenPurpose
+from app.shared.database.base import utcnow
 
 
 class SqlAlchemyAuthTokenRepository:
@@ -21,10 +20,10 @@ class SqlAlchemyAuthTokenRepository:
             AuthToken.token_hash == token_hash,
             AuthToken.purpose == purpose,
             AuthToken.used_at.is_(None),
-            AuthToken.expires_at > datetime.now(timezone.utc),
+            AuthToken.expires_at > utcnow(),
         )
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def mark_used(self, token: AuthToken) -> None:
-        token.used_at = datetime.now(timezone.utc)
+        token.used_at = utcnow()
         await self.session.commit()

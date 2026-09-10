@@ -10,7 +10,7 @@ from app.domain.repositories.auth_token_repository import AuthTokenRepository
 from app.domain.repositories.role_repository import RoleRepository
 from app.domain.repositories.user_repository import UserRepository
 from app.models.auth_token import AuthToken, AuthTokenPurpose
-from app.models.user import User
+from app.models.user import User, UserStatus
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.audit_service import AuditService
 from app.services.mailer_service import MailerService
@@ -60,6 +60,7 @@ class UserService:
             full_name=payload.full_name,
             role_id=str(payload.role_id),
             password_hash=password_hash,
+            status=UserStatus.ACTIVE if payload.password else UserStatus.PENDING_VERIFICATION,
         )
         user = await self.users.create(user)
         await self.audit.log(actor_id, "user.create", "user", user.id, details={"email": user.email})

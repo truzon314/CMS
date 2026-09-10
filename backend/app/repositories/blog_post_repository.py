@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.blog_post import BlogPost, blog_post_category, blog_post_tag
 from app.models.seo_meta import SeoMeta
+from app.shared.database.base import utcnow
 
 _WITH_RELATIONS = (
     selectinload(BlogPost.author),
@@ -59,11 +60,12 @@ class SqlAlchemyBlogPostRepository:
             stmt = stmt.where(or_(BlogPost.title.ilike(like), BlogPost.slug.ilike(like)))
             count_stmt = count_stmt.where(or_(BlogPost.title.ilike(like), BlogPost.slug.ilike(like)))
         if category_id:
-            stmt = stmt.join(blog_post_category).where(blog_post_category.c.category_id == str(category_id))
-            count_stmt = count_stmt.join(blog_post_category).where(blog_post_category.c.category_id == str(category_id))
+            stmt = stmt.join(blog_post_category).where(blog_post_category.c.B == str(category_id))
+            count_stmt = count_stmt.join(blog_post_category).where(blog_post_category.c.B == str(category_id))
         if tag_id:
-            stmt = stmt.join(blog_post_tag).where(blog_post_tag.c.tag_id == str(tag_id))
-            count_stmt = count_stmt.join(blog_post_tag).where(blog_post_tag.c.tag_id == str(tag_id))
+            stmt = stmt.join(blog_post_tag).where(blog_post_tag.c.B == str(tag_id))
+            count_stmt = count_stmt.join(blog_post_tag).where(blog_post_tag.c.B == str(tag_id))
+
 
         total = (await self.session.execute(count_stmt)).scalar_one()
         stmt = stmt.order_by(BlogPost.updated_at.desc()).offset((page - 1) * per_page).limit(per_page)
@@ -104,7 +106,7 @@ class SqlAlchemyBlogPostRepository:
         return list(rows), total
 
     async def soft_delete(self, post: BlogPost) -> None:
-        post.deleted_at = datetime.now(timezone.utc)
+        post.deleted_at = utcnow()
         await self.session.commit()
 
     async def restore(self, post: BlogPost) -> None:

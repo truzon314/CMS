@@ -9,3 +9,6 @@ class Tag(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    description: Mapped[str | None] = mapped_column(String, default=None)
+    color: Mapped[str | None] = mapped_column(String(50), default=None)
+

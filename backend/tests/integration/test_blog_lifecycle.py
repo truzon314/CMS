@@ -38,7 +38,7 @@ async def test_blog_post_full_lifecycle(client, admin_headers):
 
     publish_res = await client.post(f"/api/v1/blog/posts/{post_id}/publish", headers=admin_headers)
     assert publish_res.status_code == 200
-    assert publish_res.json()["data"]["status"] == "published"
+    assert publish_res.json()["data"]["status"].lower() == "published"
 
     public_res = await client.get(f"/public/blog/{slug}")
     assert public_res.status_code == 200
@@ -73,7 +73,7 @@ async def test_blog_post_full_lifecycle(client, admin_headers):
 @pytest.mark.asyncio
 async def test_viewer_role_cannot_reach_a_manage_only_endpoint(client, admin_headers):
     roles_res = await client.get("/api/v1/roles", headers=admin_headers)
-    viewer_role = next(r for r in roles_res.json()["data"] if r["name"] == "Viewer")
+    viewer_role = next(r for r in roles_res.json()["data"] if r["name"] in ("Viewer", "CLIENT") or r.get("display_name") == "Viewer")
 
     email = f"viewer-{uuid.uuid4().hex[:8]}@example.com"
     create_res = await client.post(

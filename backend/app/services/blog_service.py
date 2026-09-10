@@ -1,7 +1,6 @@
 import math
 import uuid
-from datetime import datetime, timezone
-
+from app.shared.database.base import utcnow
 from app.shared.exceptions.exceptions import ConflictError, NotFoundError
 from app.domain.repositories.blog_post_repository import BlogPostRepository
 from app.domain.repositories.category_repository import CategoryRepository
@@ -156,7 +155,7 @@ class BlogPostService:
     async def publish(self, post_id: uuid.UUID, user_id: uuid.UUID) -> BlogPost:
         post = await self.get(post_id)
         post.status = BlogPostStatus.PUBLISHED
-        post.published_at = datetime.now(timezone.utc)
+        post.published_at = utcnow()
         post.scheduled_at = None
         post = await self.posts.update(post)
         await self._snapshot(post, user_id, "Published")

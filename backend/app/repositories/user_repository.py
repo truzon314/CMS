@@ -7,7 +7,8 @@ from sqlalchemy.orm import selectinload
 
 from app.models.permission import Permission
 from app.models.role import Role, role_permission
-from app.models.user import User
+from app.models.user import User, UserStatus
+
 
 # Every read needs role.permissions available synchronously for RBAC checks
 # (app/auth/rbac.py) without triggering an async lazy-load.
@@ -48,15 +49,17 @@ class SqlAlchemyUserRepository:
         return list(rows), total
 
     async def list_by_permission(self, permission_key: str) -> list[User]:
+
         stmt = (
             select(User)
             .join(Role, User.role_id == Role.id)
-            .join(role_permission, Role.id == role_permission.c.role_id)
-            .join(Permission, role_permission.c.permission_id == Permission.id)
-            .where(Permission.key == permission_key, User.deleted_at.is_(None), User.is_active.is_(True))
+            .join(role_permission, Role.id == role_permission.c.B)
+            .join(Permission, role_permission.c.A == Permission.id)
+            .where(Permission.key == permission_key, User.deleted_at.is_(None), User.status == UserStatus.ACTIVE)
             .options(_WITH_ROLE_AND_PERMISSIONS)
         )
         return list((await self.session.execute(stmt)).unique().scalars().all())
+
 
     async def create(self, user: User) -> User:
         self.session.add(user)

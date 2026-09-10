@@ -1,7 +1,17 @@
-from sqlalchemy import BigInteger, ForeignKey, Integer, String
+import enum
+
+from sqlalchemy import BigInteger, Enum, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.shared.database.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
+
+
+class MediaType(str, enum.Enum):
+    IMAGE = "IMAGE"
+    VIDEO = "VIDEO"
+    DOCUMENT = "DOCUMENT"
+    OTHER = "OTHER"
 
 
 class Media(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
@@ -14,9 +24,15 @@ class Media(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     size_bytes: Mapped[int] = mapped_column("sizeBytes", BigInteger, nullable=False)
     width: Mapped[int | None] = mapped_column(Integer, default=None)
     height: Mapped[int | None] = mapped_column(Integer, default=None)
+    duration: Mapped[int | None] = mapped_column(Integer, default=None)
     alt_text: Mapped[str | None] = mapped_column("altText", String(500), default=None)
-    folder_id: Mapped[str | None] = mapped_column(
-        "folderId", String, ForeignKey("media_folders.id"), default=None
+    caption: Mapped[str | None] = mapped_column(String(500), default=None)
+    type: Mapped[MediaType] = mapped_column(
+        "type", Enum(MediaType, name="MediaType", create_type=False), default=MediaType.IMAGE, nullable=False
     )
+    folder_id: Mapped[str | None] = mapped_column("folderId", String, ForeignKey("media_folders.id"), default=None)
     uploaded_by: Mapped[str] = mapped_column("uploadedById", String, ForeignKey("users.id"), nullable=False)
+    storage_provider: Mapped[str] = mapped_column("storageProvider", String(50), default="GCS")
+    metadata_json: Mapped[dict | None] = mapped_column("metadata", JSONB, default=None)
+
 

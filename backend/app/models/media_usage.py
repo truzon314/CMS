@@ -1,30 +1,29 @@
+from datetime import datetime
 import enum
-import uuid
 
-from sqlalchemy import Enum, ForeignKey, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.shared.database.base import Base, UUIDPrimaryKeyMixin
+from app.shared.database.base import Base, UUIDPrimaryKeyMixin, utcnow
 
 
 class MediaUsageEntityType(str, enum.Enum):
-    PAGE = "page"
-    BLOG_POST = "blog_post"
-    PROPERTY = "property"
-    MENU = "menu"
-    SETTINGS = "settings"
+    PAGE = "PAGE"
+    BLOG_POST = "BLOG_POST"
+    PROPERTY = "PROPERTY"
+    MENU = "MENU"
+    SETTINGS = "SETTINGS"
 
 
 class MediaUsage(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "media_usages"
 
     media_id: Mapped[str] = mapped_column(
-        "mediaId", String, ForeignKey("media.id"), nullable=False, index=True
+        "mediaId", String, ForeignKey("media.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    entity_type: Mapped[MediaUsageEntityType] = mapped_column(
-        "entityType", Enum(MediaUsageEntityType, name="MediaUsageEntityType", create_type=False), nullable=False
-    )
+    entity_type: Mapped[str] = mapped_column("entityType", String(100), nullable=False, index=True)
     entity_id: Mapped[str] = mapped_column("entityId", String, nullable=False, index=True)
-    field_name: Mapped[str] = mapped_column("fieldName", String(255), nullable=False)
+    field_name: Mapped[str | None] = mapped_column("fieldName", String(255), default=None)
+    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=False), default=utcnow)
+
 

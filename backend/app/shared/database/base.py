@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Base(DeclarativeBase):
@@ -24,13 +24,14 @@ class UUIDPrimaryKeyMixin:
 class TimestampMixin:
     """Maps `created_at` and `updated_at` to production `createdAt` and `updatedAt` columns."""
 
-    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=False), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        "updatedAt", DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        "updatedAt", DateTime(timezone=False), default=utcnow, onupdate=utcnow
     )
 
 
 class SoftDeleteMixin:
     """Maps `deleted_at` to production `deletedAt` column."""
 
-    deleted_at: Mapped[datetime | None] = mapped_column("deletedAt", DateTime(timezone=True), default=None)
+    deleted_at: Mapped[datetime | None] = mapped_column("deletedAt", DateTime(timezone=False), default=None)
+
