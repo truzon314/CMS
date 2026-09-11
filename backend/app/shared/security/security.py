@@ -3,6 +3,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from jose import JWTError, jwt
@@ -19,9 +20,19 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, password_hash: str) -> bool:
+    if not password_hash:
+        return False
     try:
-        return _hasher.verify(password_hash, password)
-    except VerifyMismatchError:
+        if password_hash.startswith(("$2a$", "$2b$", "$2y$")):
+            return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+        elif password_hash.startswith("$argon2"):
+            return _hasher.verify(password_hash, password)
+        else:
+            try:
+                return _hasher.verify(password_hash, password)
+            except Exception:
+                return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+    except Exception:
         return False
 
 
