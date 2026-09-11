@@ -66,17 +66,22 @@ class Property(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     created_by_id: Mapped[str | None] = mapped_column("createdById", String, ForeignKey("users.id"), default=None)
     updated_by_id: Mapped[str | None] = mapped_column("updatedById", String, ForeignKey("users.id"), default=None)
-    map_project_id: Mapped[str | None] = mapped_column(
-        "mapProjectId", String, ForeignKey("map_projects.id", ondelete="SET NULL"), default=None
-    )
-
-    seo_id: Mapped[str | None] = mapped_column("seoId", String, ForeignKey("seo_meta.id"), default=None)
-
-    seo: Mapped["SeoMeta | None"] = relationship()  # noqa: F821
     categories: Mapped[list["Category"]] = relationship(secondary=property_category)  # noqa: F821
     gallery: Mapped[list["PropertyMedia"]] = relationship(  # noqa: F821
         back_populates="property", order_by="PropertyMedia.position", cascade="all, delete-orphan"
     )
+
+    @property
+    def map_project_id(self) -> str | None:
+        return None
+
+    @property
+    def seo_id(self) -> str | None:
+        return None
+
+    @property
+    def seo(self) -> None:
+        return None
 
     @property
     def status(self) -> PropertyStatus:
