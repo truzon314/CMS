@@ -20,7 +20,7 @@ class SqlAlchemyGalleryRepository:
     ) -> tuple[list[GalleryItem], int]:
         conditions = []
         if is_published is not None:
-            conditions.append(GalleryItem.is_published == is_published)
+            conditions.append(GalleryItem.is_active == is_published)
         if category is not None:
             conditions.append(GalleryItem.category == category)
 
@@ -31,7 +31,7 @@ class SqlAlchemyGalleryRepository:
 
         stmt = (
             select(GalleryItem)
-            .order_by(GalleryItem.sort_order.asc(), GalleryItem.created_at.desc())
+            .order_by(GalleryItem.position.asc(), GalleryItem.created_at.desc())
             .offset((page - 1) * per_page)
             .limit(per_page)
         )
