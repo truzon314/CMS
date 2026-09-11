@@ -12,7 +12,6 @@ from app.models.seo_meta import SeoMeta
 _WITH_RELATIONS = (
     selectinload(Property.categories),
     selectinload(Property.gallery),
-    selectinload(Property.seo),
 )
 
 
@@ -94,12 +93,12 @@ class SqlAlchemyPropertyRepository:
     async def create(self, property_: Property) -> Property:
         self.session.add(property_)
         await self.session.commit()
-        await self.session.refresh(property_, attribute_names=["categories", "gallery", "seo"])
+        await self.session.refresh(property_, attribute_names=["categories", "gallery"])
         return property_
 
     async def update(self, property_: Property) -> Property:
         await self.session.commit()
-        await self.session.refresh(property_, attribute_names=["categories", "gallery", "seo"])
+        await self.session.refresh(property_, attribute_names=["categories", "gallery"])
         return property_
 
     async def upsert_seo(self, property_: Property, seo_data: dict) -> Property:
@@ -112,7 +111,7 @@ class SqlAlchemyPropertyRepository:
             for field, value in seo_data.items():
                 setattr(property_.seo, field, value)
         await self.session.commit()
-        await self.session.refresh(property_, attribute_names=["categories", "gallery", "seo"])
+        await self.session.refresh(property_, attribute_names=["categories", "gallery"])
         return property_
 
     async def set_gallery(self, property_id: str | uuid.UUID, media_ids: list[str | uuid.UUID]) -> Property | None:
