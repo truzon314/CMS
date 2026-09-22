@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppDrawer } from "@/components/ui/app-drawer";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -29,6 +29,10 @@ export function MediaDetailsDrawer({ media, open, onClose }: MediaDetailsDrawerP
   const [altText, setAltText] = useState(media?.alt_text ?? "");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [forceConfirm, setForceConfirm] = useState<{ usageCount: number } | null>(null);
+
+  useEffect(() => {
+    setAltText(media?.alt_text ?? "");
+  }, [media?.id, media?.alt_text]);
 
   if (!media) return null;
   const isImage = media.mime_type.startsWith("image/");

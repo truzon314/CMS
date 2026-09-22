@@ -1,11 +1,15 @@
+from datetime import datetime, timezone
 import enum
 import uuid
 
-from sqlalchemy import Enum, ForeignKey, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.shared.database.base import Base, UUIDPrimaryKeyMixin
+
+
+def naive_utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class MediaUsageEntityType(str, enum.Enum):
@@ -22,13 +26,16 @@ class MediaUsage(UUIDPrimaryKeyMixin, Base):
     safe-delete check: a `Media` row can't be deleted while any row here
     references it, unless `?force=true`."""
 
-    __tablename__ = "media_usage"
+    __tablename__ = "media_usages"
 
-    media_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("media.id"), nullable=False, index=True
+    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=False), default=naive_utcnow, nullable=False)
+    media_id: Mapped[str] = mapped_column(
+        "mediaId", String(255), ForeignKey("media.id"), nullable=False, index=True
     )
     entity_type: Mapped[MediaUsageEntityType] = mapped_column(
-        Enum(MediaUsageEntityType, name="media_usage_entity_type"), nullable=False
+        "entityType", String(50), nullable=False
     )
-    entity_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
-    field_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    entity_id: Mapped[str] = mapped_column("entityId", String(255), nullable=False, index=True)
+    field_name: Mapped[str] = mapped_column("fieldName", String(255), nullable=False)
+
+

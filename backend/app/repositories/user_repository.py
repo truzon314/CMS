@@ -7,7 +7,8 @@ from sqlalchemy.orm import selectinload
 
 from app.models.permission import Permission
 from app.models.role import Role, role_permission
-from app.models.user import User
+from app.models.user import User, UserStatus
+
 
 # Every read needs role.permissions available synchronously for RBAC checks
 # (app/auth/rbac.py) without triggering an async lazy-load.
@@ -18,8 +19,9 @@ class SqlAlchemyUserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, user_id: uuid.UUID) -> User | None:
-        stmt = select(User).where(User.id == user_id).options(_WITH_ROLE_AND_PERMISSIONS)
+    async def get_by_id(self, user_id: uuid.UUID | str) -> User | None:
+        user_id_str = str(user_id)
+        stmt = select(User).where(User.id == user_id_str).options(_WITH_ROLE_AND_PERMISSIONS)
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def get_by_email(self, email: str) -> User | None:
@@ -51,12 +53,13 @@ class SqlAlchemyUserRepository:
         stmt = (
             select(User)
             .join(Role, User.role_id == Role.id)
-            .join(role_permission, Role.id == role_permission.c.role_id)
-            .join(Permission, role_permission.c.permission_id == Permission.id)
-            .where(Permission.key == permission_key, User.deleted_at.is_(None), User.is_active.is_(True))
+            .join(Role.permissions)
+            .where(Permission.key == permission_key, User.deleted_at.is_(None), User.status == UserStatus.ACTIVE)
             .options(_WITH_ROLE_AND_PERMISSIONS)
         )
         return list((await self.session.execute(stmt)).unique().scalars().all())
+
+
 
     async def create(self, user: User) -> User:
         self.session.add(user)

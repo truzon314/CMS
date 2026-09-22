@@ -1,4 +1,3 @@
-import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -113,7 +112,7 @@ async def create_redirect(
 
 @router.put("/{redirect_id}")
 async def update_redirect(
-    redirect_id: uuid.UUID,
+    redirect_id: str,
     payload: RedirectUpdate,
     user: User = Depends(get_current_user),
     _=Depends(require_permission("settings.manage")),
@@ -147,7 +146,7 @@ async def update_redirect(
 
 @router.delete("/{redirect_id}")
 async def delete_redirect(
-    redirect_id: uuid.UUID,
+    redirect_id: str,
     user: User = Depends(get_current_user),
     _=Depends(require_permission("settings.manage")),
 ):

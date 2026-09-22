@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 
@@ -40,7 +39,7 @@ async def create_career(
 
 @router.put("/{career_id}")
 async def update_career(
-    career_id: uuid.UUID,
+    career_id: str,
     payload: CareerUpdate,
     careers: CareerService = Depends(get_career_service),
     user: User = Depends(get_current_user),
@@ -52,7 +51,7 @@ async def update_career(
 
 @router.delete("/{career_id}")
 async def delete_career(
-    career_id: uuid.UUID,
+    career_id: str,
     careers: CareerService = Depends(get_career_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("careers.manage")),

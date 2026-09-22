@@ -9,6 +9,7 @@ export interface ChatConversation {
   visitor_name: string | null;
   visitor_email: string | null;
   visitor_phone: string | null;
+  last_message_preview?: string | null;
   created_at: string;
   last_message_at: string;
 }

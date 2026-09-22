@@ -1,0 +1,13 @@
+.gcloudignore
+.git
+.gitignore
+.venv
+media_storage
+media_storage_optimized
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
+htmlcov

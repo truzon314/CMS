@@ -1,4 +1,3 @@
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 
@@ -38,7 +37,7 @@ async def list_trash(
 @router.post("/{entity_type}/{entity_id}/restore")
 async def restore_trash_item(
     entity_type: str,
-    entity_id: uuid.UUID,
+    entity_id: str,
     trash_service: TrashService = Depends(get_trash_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("trash.manage")),

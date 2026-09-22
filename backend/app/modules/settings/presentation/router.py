@@ -1,4 +1,3 @@
-import uuid
 
 from fastapi import APIRouter, Depends
 
@@ -45,7 +44,7 @@ async def list_settings_versions(
 
 @router.post("/versions/{version_id}/restore")
 async def restore_settings_version(
-    version_id: uuid.UUID,
+    version_id: str,
     settings_service: SettingsService = Depends(get_settings_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("settings.manage")),

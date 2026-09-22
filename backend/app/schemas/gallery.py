@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -7,8 +6,8 @@ from pydantic import BaseModel, ConfigDict, Field
 class GalleryItemRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    media_id: uuid.UUID
+    id: str
+    media_id: str
     caption: str | None
     category: str | None
     sort_order: int
@@ -20,7 +19,7 @@ class GalleryItemRead(BaseModel):
 class GalleryItemCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    media_id: uuid.UUID
+    media_id: str
     caption: str | None = Field(default=None, max_length=255)
     category: str | None = Field(default=None, max_length=100)
     sort_order: int = 0
@@ -30,7 +29,7 @@ class GalleryItemCreate(BaseModel):
 class GalleryItemUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    media_id: uuid.UUID | None = None
+    media_id: str | None = None
     caption: str | None = Field(default=None, max_length=255)
     category: str | None = Field(default=None, max_length=100)
     sort_order: int | None = None

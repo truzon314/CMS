@@ -16,8 +16,10 @@ export function useFormSubmissionsList(params: FormSubmissionListParams = {}) {
   return useQuery({
     queryKey: [...SUBMISSIONS_KEY, params],
     queryFn: () => formSubmissionService.list(params),
+    refetchInterval: 4_000,
   });
 }
+
 
 export function useUpdateFormSubmission() {
   const queryClient = useQueryClient();

@@ -1,4 +1,3 @@
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 
@@ -75,7 +74,7 @@ async def create_project(
 
 @router.patch("/projects/{project_id}")
 async def update_project(
-    project_id: uuid.UUID,
+    project_id: str,
     payload: MapProjectUpdate,
     mapping: MappingService = Depends(get_mapping_service),
     user: User = Depends(get_current_user),
@@ -87,7 +86,7 @@ async def update_project(
 
 @router.delete("/projects/{project_id}")
 async def delete_project(
-    project_id: uuid.UUID,
+    project_id: str,
     mapping: MappingService = Depends(get_mapping_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("mapping.edit")),
@@ -101,7 +100,7 @@ async def delete_project(
 
 @router.get("/layers")
 async def list_layers(
-    project_id: uuid.UUID | None = Query(default=None),
+    project_id: str | None = Query(default=None),
     mapping: MappingService = Depends(get_mapping_service),
     _=Depends(require_permission("mapping.view")),
 ):
@@ -111,7 +110,7 @@ async def list_layers(
 
 @router.get("/layers/{layer_id}")
 async def get_layer(
-    layer_id: uuid.UUID,
+    layer_id: str,
     mapping: MappingService = Depends(get_mapping_service),
     _=Depends(require_permission("mapping.view")),
 ):
@@ -132,7 +131,7 @@ async def upload_layer(
 
 @router.patch("/layers/{layer_id}")
 async def update_layer_style(
-    layer_id: uuid.UUID,
+    layer_id: str,
     payload: MapLayerStyleUpdate,
     mapping: MappingService = Depends(get_mapping_service),
     user: User = Depends(get_current_user),
@@ -144,7 +143,7 @@ async def update_layer_style(
 
 @router.delete("/layers/{layer_id}")
 async def delete_layer(
-    layer_id: uuid.UUID,
+    layer_id: str,
     mapping: MappingService = Depends(get_mapping_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("mapping.edit")),
@@ -155,7 +154,7 @@ async def delete_layer(
 
 @router.put("/layers/{layer_id}/features")
 async def update_layer_features(
-    layer_id: uuid.UUID,
+    layer_id: str,
     payload: MapFeatureUpdate,
     mapping: MappingService = Depends(get_mapping_service),
     user: User = Depends(get_current_user),
@@ -170,7 +169,7 @@ async def update_layer_features(
 
 @router.get("/share-links")
 async def get_share_link(
-    project_id: uuid.UUID = Query(...),
+    project_id: str = Query(...),
     mapping: MappingService = Depends(get_mapping_service),
     _=Depends(require_permission("mapping.view")),
 ):

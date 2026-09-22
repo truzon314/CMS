@@ -1,4 +1,3 @@
-import uuid
 
 from fastapi import APIRouter, Depends
 
@@ -34,7 +33,7 @@ async def create_category(
 
 @router.put("/categories/{category_id}")
 async def update_category(
-    category_id: uuid.UUID,
+    category_id: str,
     payload: CategoryUpdate,
     category_service: CategoryService = Depends(get_category_service),
     _=Depends(require_any_permission("blog.edit", "properties.edit")),
@@ -45,7 +44,7 @@ async def update_category(
 
 @router.delete("/categories/{category_id}")
 async def delete_category(
-    category_id: uuid.UUID,
+    category_id: str,
     category_service: CategoryService = Depends(get_category_service),
     _=Depends(require_any_permission("blog.edit", "properties.edit")),
 ):
@@ -74,7 +73,7 @@ async def create_tag(
 
 @router.put("/tags/{tag_id}")
 async def update_tag(
-    tag_id: uuid.UUID,
+    tag_id: str,
     payload: TagUpdate,
     tag_service: TagService = Depends(get_tag_service),
     _=Depends(require_permission("blog.edit")),
@@ -85,7 +84,7 @@ async def update_tag(
 
 @router.delete("/tags/{tag_id}")
 async def delete_tag(
-    tag_id: uuid.UUID,
+    tag_id: str,
     tag_service: TagService = Depends(get_tag_service),
     _=Depends(require_permission("blog.edit")),
 ):

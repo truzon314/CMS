@@ -4,24 +4,24 @@ against the shape for its `block_definition.key`, not treated as "any JSON"
 have a real schema as of Phase 4 (ROADMAP.md).
 """
 
-import uuid
 
 from pydantic import BaseModel, ConfigDict
 
 
 class HeroSlideItem(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     subheading: str = ""
     image_url: str = ""
-    image_media_id: uuid.UUID | None = None
+    image_media_id: str | None = None
     # Optional — a separate crop/shot for phone & tablet, since a wide
     # desktop hero photo often composes badly when stretched to a portrait
     # phone screen. Falls back to image_url/image_media_id above when unset
     # (my-app's Hero component does the fallback, not this schema).
     mobile_image_url: str = ""
-    mobile_image_media_id: uuid.UUID | None = None
+    mobile_image_media_id: str | None = None
+    alignment: str = "left"
 
 
 class HeroBannerConfig(BaseModel):
@@ -30,7 +30,7 @@ class HeroBannerConfig(BaseModel):
     usage-tracked (see `MEDIA_ID_FIELDS`'s note below), same as Gallery/
     Testimonials/Team's per-item images."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     button_label: str = ""
     button_href: str = ""
@@ -38,39 +38,39 @@ class HeroBannerConfig(BaseModel):
 
 
 class TextConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     body: str = ""
     image_url: str = ""
-    image_media_id: uuid.UUID | None = None
+    image_media_id: str | None = None
 
 
 class ImageConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     image_url: str = ""
-    image_media_id: uuid.UUID | None = None
+    image_media_id: str | None = None
     alt_text: str = ""
     caption: str = ""
 
 
 class FaqItem(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     q: str
     a: str
 
 
 class FaqConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     items: list[FaqItem] = []
 
 
 class CtaConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     description: str = ""
@@ -79,50 +79,50 @@ class CtaConfig(BaseModel):
 
 
 class GalleryImage(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     url: str = ""
-    media_id: uuid.UUID | None = None
+    media_id: str | None = None
     alt_text: str = ""
     caption: str = ""
 
 
 class GalleryConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     images: list[GalleryImage] = []
 
 
 class VideoConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     video_url: str = ""
     poster_image_url: str = ""
-    poster_image_media_id: uuid.UUID | None = None
+    poster_image_media_id: str | None = None
 
 
 class TestimonialItem(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     name: str = ""
     role: str = ""
     quote: str = ""
     avatar_url: str = ""
-    avatar_media_id: uuid.UUID | None = None
+    avatar_media_id: str | None = None
     rating: int = 5
 
 
 class TestimonialsConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     items: list[TestimonialItem] = []
 
 
 class FeatureItem(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     icon: str = ""
     title: str = ""
@@ -130,14 +130,14 @@ class FeatureItem(BaseModel):
 
 
 class FeaturesConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     items: list[FeatureItem] = []
 
 
 class PricingPlan(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     name: str = ""
     price: str = ""
@@ -149,31 +149,31 @@ class PricingPlan(BaseModel):
 
 
 class PricingConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     plans: list[PricingPlan] = []
 
 
 class TeamMember(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     name: str = ""
     role: str = ""
     photo_url: str = ""
-    photo_media_id: uuid.UUID | None = None
+    photo_media_id: str | None = None
     bio: str = ""
 
 
 class TeamConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     members: list[TeamMember] = []
 
 
 class TimelineItem(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     year: str = ""
     title: str = ""
@@ -181,14 +181,14 @@ class TimelineItem(BaseModel):
 
 
 class TimelineConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     items: list[TimelineItem] = []
 
 
 class MapConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     address: str = ""
@@ -196,21 +196,21 @@ class MapConfig(BaseModel):
 
 
 class AccordionItem(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     title: str = ""
     content: str = ""
 
 
 class AccordionConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     items: list[AccordionItem] = []
 
 
 class StatisticItem(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     label: str = ""
     value: str = ""
@@ -218,14 +218,14 @@ class StatisticItem(BaseModel):
 
 
 class StatisticsConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     items: list[StatisticItem] = []
 
 
 class ContactFormConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     heading: str = ""
     description: str = ""
@@ -233,13 +233,13 @@ class ContactFormConfig(BaseModel):
 
 
 class SpacerConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     height_px: int = 48
 
 
 class DividerConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     style: str = "solid"
 

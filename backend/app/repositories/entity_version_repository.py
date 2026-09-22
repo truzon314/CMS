@@ -16,21 +16,21 @@ class SqlAlchemyEntityVersionRepository:
         await self.session.refresh(version)
         return version
 
-    async def list_for_entity(self, entity_type: EntityType, entity_id: uuid.UUID) -> list[EntityVersion]:
+    async def list_for_entity(self, entity_type: EntityType, entity_id: uuid.UUID | str) -> list[EntityVersion]:
         stmt = (
             select(EntityVersion)
-            .where(EntityVersion.entity_type == entity_type, EntityVersion.entity_id == entity_id)
+            .where(EntityVersion.entity_type == entity_type, EntityVersion.entity_id == str(entity_id))
             .order_by(EntityVersion.version_number.desc())
         )
         return list((await self.session.execute(stmt)).scalars().all())
 
-    async def get_by_id(self, version_id: uuid.UUID) -> EntityVersion | None:
-        stmt = select(EntityVersion).where(EntityVersion.id == version_id)
+    async def get_by_id(self, version_id: uuid.UUID | str) -> EntityVersion | None:
+        stmt = select(EntityVersion).where(EntityVersion.id == str(version_id))
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
-    async def next_version_number(self, entity_type: EntityType, entity_id: uuid.UUID) -> int:
+    async def next_version_number(self, entity_type: EntityType, entity_id: uuid.UUID | str) -> int:
         stmt = select(func.coalesce(func.max(EntityVersion.version_number), 0)).where(
-            EntityVersion.entity_type == entity_type, EntityVersion.entity_id == entity_id
+            EntityVersion.entity_type == entity_type, EntityVersion.entity_id == str(entity_id)
         )
         current_max = (await self.session.execute(stmt)).scalar_one()
         return current_max + 1

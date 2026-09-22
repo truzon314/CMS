@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -33,7 +32,7 @@ class MapProjectUpdate(BaseModel):
 class MapProjectRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     name: str
     map_provider_type: str
     share_token: str | None = None
@@ -60,8 +59,8 @@ class MapLayerStyleUpdate(BaseModel):
 class MapLayerRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    project_id: uuid.UUID
+    id: str
+    project_id: str
     label: str
     stroke_color: str
     fill_color: str
@@ -121,7 +120,7 @@ class MapFeatureUpdate(BaseModel):
 class MapLayerUploadRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    project_id: uuid.UUID
+    project_id: str
     label: str
     geojson: dict  # a FeatureCollection, already parsed/validated by the frontend upload proxy
 
@@ -129,7 +128,7 @@ class MapLayerUploadRequest(BaseModel):
 class MapShareLinkUpsert(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    project_id: uuid.UUID
+    project_id: str
     is_active: bool | None = None
     password: str | None = None  # omit = leave as-is, null = remove, string = set/replace
     expires_at: datetime | None = None
@@ -140,8 +139,8 @@ class MapShareLinkUpsert(BaseModel):
 class MapShareLinkRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    project_id: uuid.UUID
+    id: str
+    project_id: str
     token: str
     is_active: bool
     has_password: bool
@@ -164,7 +163,7 @@ class MapProviderConfigUpsert(BaseModel):
 class MapProviderConfigRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     provider_type: str
     api_key: str | None
     tile_url: str | None

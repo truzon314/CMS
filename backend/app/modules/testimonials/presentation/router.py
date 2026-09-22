@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 
@@ -40,7 +39,7 @@ async def create_testimonial(
 
 @router.put("/{testimonial_id}")
 async def update_testimonial(
-    testimonial_id: uuid.UUID,
+    testimonial_id: str,
     payload: TestimonialUpdate,
     testimonials: TestimonialService = Depends(get_testimonial_service),
     user: User = Depends(get_current_user),
@@ -52,7 +51,7 @@ async def update_testimonial(
 
 @router.delete("/{testimonial_id}")
 async def delete_testimonial(
-    testimonial_id: uuid.UUID,
+    testimonial_id: str,
     testimonials: TestimonialService = Depends(get_testimonial_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("testimonials.manage")),

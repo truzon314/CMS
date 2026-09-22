@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 
@@ -27,7 +26,7 @@ async def list_properties(
     per_page: int = Query(20, ge=1, le=100),
     status: str | None = None,
     city: str | None = None,
-    type: uuid.UUID | None = None,
+    type: str | None = None,
     budget_bracket: str | None = None,
     search: str | None = None,
     property_service: PropertyService = Depends(get_property_service),
@@ -79,7 +78,7 @@ async def create_property(
 
 @router.get("/{property_id}")
 async def get_property(
-    property_id: uuid.UUID,
+    property_id: str,
     property_service: PropertyService = Depends(get_property_service),
     _=Depends(require_permission("properties.view")),
 ):
@@ -89,7 +88,7 @@ async def get_property(
 
 @router.put("/{property_id}")
 async def update_property(
-    property_id: uuid.UUID,
+    property_id: str,
     payload: PropertyUpdate,
     property_service: PropertyService = Depends(get_property_service),
     user: User = Depends(get_current_user),
@@ -101,7 +100,7 @@ async def update_property(
 
 @router.delete("/{property_id}")
 async def delete_property(
-    property_id: uuid.UUID,
+    property_id: str,
     property_service: PropertyService = Depends(get_property_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("properties.delete")),
@@ -112,7 +111,7 @@ async def delete_property(
 
 @router.post("/{property_id}/restore")
 async def restore_property(
-    property_id: uuid.UUID,
+    property_id: str,
     property_service: PropertyService = Depends(get_property_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("properties.delete")),
@@ -123,7 +122,7 @@ async def restore_property(
 
 @router.post("/{property_id}/duplicate")
 async def duplicate_property(
-    property_id: uuid.UUID,
+    property_id: str,
     property_service: PropertyService = Depends(get_property_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("properties.create")),
@@ -134,7 +133,7 @@ async def duplicate_property(
 
 @router.put("/{property_id}/gallery")
 async def set_property_gallery(
-    property_id: uuid.UUID,
+    property_id: str,
     payload: PropertyGalleryRequest,
     property_service: PropertyService = Depends(get_property_service),
     user: User = Depends(get_current_user),
@@ -146,7 +145,7 @@ async def set_property_gallery(
 
 @router.post("/{property_id}/publish")
 async def publish_property(
-    property_id: uuid.UUID,
+    property_id: str,
     property_service: PropertyService = Depends(get_property_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("properties.publish")),
@@ -157,7 +156,7 @@ async def publish_property(
 
 @router.post("/{property_id}/unpublish")
 async def unpublish_property(
-    property_id: uuid.UUID,
+    property_id: str,
     property_service: PropertyService = Depends(get_property_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("properties.publish")),

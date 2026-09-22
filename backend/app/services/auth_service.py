@@ -75,7 +75,7 @@ class AuthService:
             await self.refresh_tokens.revoke_all_for_user(token.user_id)
             raise UnauthorizedError("Session expired, please log in again.")
 
-        if token.expires_at < datetime.now(timezone.utc):
+        if token.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
             raise UnauthorizedError("Session expired, please log in again.")
 
         await self.refresh_tokens.revoke(token)

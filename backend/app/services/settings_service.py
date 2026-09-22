@@ -10,7 +10,7 @@ from app.services.audit_service import AuditService
 # Settings is a single global document, not a per-row entity — `EntityVersion`
 # still needs a stable entity_id, so every settings version snapshots against
 # this fixed nil UUID rather than a real row id.
-SETTINGS_ENTITY_ID = uuid.UUID(int=0)
+SETTINGS_ENTITY_ID = "00000000-0000-0000-0000-000000000000"
 
 
 class SettingsService:
@@ -57,7 +57,7 @@ class SettingsService:
             version_number=version_number,
             snapshot=settings.model_dump(mode="json"),
             change_note=note,
-            created_by=user_id,
+            created_by=str(user_id),
         )
         await self.versions.create(version)
-        await self.audit.log(user_id, f"settings.{note}", "settings", SETTINGS_ENTITY_ID)
+        await self.audit.log(user_id, f"settings.{note}", "settings", uuid.UUID(SETTINGS_ENTITY_ID))

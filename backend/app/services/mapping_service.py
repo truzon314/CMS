@@ -33,6 +33,57 @@ def _new_token() -> str:
     return secrets.token_urlsafe(18)
 
 
+def _expand_project_bounds(project: MapProject, geojson: dict | None) -> None:
+    """
+    Merge the bounding box of *geojson* features into project.geojson_filter_bounds.
+
+    Called automatically whenever a new layer is uploaded so the stored bounds
+    always encompass every intentionally uploaded feature.  A ~800 m padding is
+    added around the raw feature extents to tolerate slight boundary features.
+
+    This is a pure in-memory mutation — the caller must persist the project.
+    """
+    if not geojson or not isinstance(geojson.get("features"), list):
+        return
+
+    lats: list[float] = []
+    lngs: list[float] = []
+
+    def _collect(obj: object) -> None:
+        if isinstance(obj, list):
+            if obj and isinstance(obj[0], (int, float)):
+                lngs.append(float(obj[0]))
+                lats.append(float(obj[1]))
+            else:
+                for item in obj:
+                    _collect(item)
+
+    for feat in geojson["features"]:
+        try:
+            _collect(feat["geometry"]["coordinates"])
+        except Exception:
+            pass
+
+    if not lats:
+        return
+
+    pad = 0.008  # ~800 m at these latitudes
+    new_b = {
+        "min_lat": min(lats) - pad,
+        "max_lat": max(lats) + pad,
+        "min_lng": min(lngs) - pad,
+        "max_lng": max(lngs) + pad,
+    }
+
+    existing = project.geojson_filter_bounds or {}
+    project.geojson_filter_bounds = {
+        "min_lat": min(existing.get("min_lat",  90.0), new_b["min_lat"]),
+        "max_lat": max(existing.get("max_lat", -90.0), new_b["max_lat"]),
+        "min_lng": min(existing.get("min_lng", 180.0), new_b["min_lng"]),
+        "max_lng": max(existing.get("max_lng", -180.0), new_b["max_lng"]),
+    }
+
+
 class MappingService:
     def __init__(self, repo: MappingRepository, audit: AuditService):
         self.repo = repo
@@ -102,7 +153,7 @@ class MappingService:
 
     async def upload_layer(self, payload: MapLayerUploadRequest, actor_id: uuid.UUID | None = None) -> MapLayer:
         # Confirms the project exists before attaching a layer to it.
-        await self.get_project(payload.project_id)
+        project = await self.get_project(payload.project_id)
 
         existing_count = len(await self.repo.list_layers(payload.project_id))
         color = LAYER_COLOR_PALETTE[existing_count % len(LAYER_COLOR_PALETTE)]
@@ -120,6 +171,13 @@ class MappingService:
             actor_id, "mapping.upload_layer", "map_layer", layer.id,
             details={"label": layer.label, "project_id": str(payload.project_id), "features": feature_count},
         )
+
+        # Auto-expand the project's geo-filter bounds to include this layer's
+        # features.  This ensures any future stray features from other projects
+        # are silently dropped at the API level without manual cleanup.
+        _expand_project_bounds(project, payload.geojson)
+        await self.repo.update_project(project)
+
         return layer
 
     async def update_layer_style(

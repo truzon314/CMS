@@ -14,6 +14,7 @@ export function useNotificationsList(params: { page?: number; perPage?: number; 
   return useQuery({
     queryKey: [...NOTIFICATIONS_KEY, params],
     queryFn: () => notificationService.list(params),
+    refetchInterval: 4_000,
   });
 }
 
@@ -21,9 +22,10 @@ export function useUnreadNotificationCount() {
   return useQuery({
     queryKey: UNREAD_COUNT_KEY,
     queryFn: () => notificationService.unreadCount(),
-    refetchInterval: 30_000,
+    refetchInterval: 4_000,
   });
 }
+
 
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient();

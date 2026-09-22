@@ -5,7 +5,7 @@ from app.shared.database.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 
 class Tag(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    __tablename__ = "tag"
+    __tablename__ = "tags"
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)

@@ -1,5 +1,4 @@
 import math
-import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query
@@ -18,7 +17,7 @@ router = APIRouter(prefix="/audit-logs", tags=["audit-logs"])
 async def list_audit_logs(
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=200),
-    user_id: uuid.UUID | None = None,
+    user_id: str | None = None,
     action: str | None = None,
     entity_type: str | None = None,
     date_from: datetime | None = None,
@@ -42,7 +41,7 @@ async def list_audit_logs(
 
 @router.get("/export")
 async def export_audit_logs(
-    user_id: uuid.UUID | None = None,
+    user_id: str | None = None,
     action: str | None = None,
     entity_type: str | None = None,
     date_from: datetime | None = None,

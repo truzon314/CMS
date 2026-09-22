@@ -1,4 +1,8 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const PRODUCTION_BACKEND_URL = "https://truzon-backend-715189721854.asia-south1.run.app";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? PRODUCTION_BACKEND_URL;
+
 
 export interface ApiEnvelope<T> {
   success: boolean;

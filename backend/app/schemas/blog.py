@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
@@ -12,7 +11,7 @@ from app.schemas.validators import Slug
 class BlogPostListItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     title: str
     slug: str
     status: BlogPostStatus
@@ -26,13 +25,13 @@ class BlogPostListItem(BaseModel):
 class BlogPostRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     title: str
     slug: str
     excerpt: str | None
     body: str | None
-    featured_image_media_id: uuid.UUID | None
-    author_id: uuid.UUID
+    featured_image_media_id: str | None
+    author_id: str
     author_name: str
     status: BlogPostStatus
     published_at: datetime | None
@@ -53,9 +52,9 @@ class BlogPostCreate(BaseModel):
     slug: Slug
     excerpt: str | None = None
     body: str | None = None
-    featured_image_media_id: uuid.UUID | None = None
-    category_ids: list[uuid.UUID] = []
-    tag_ids: list[uuid.UUID] = []
+    featured_image_media_id: str | None = None
+    category_ids: list[str] = []
+    tag_ids: list[str] = []
     reading_time_minutes: int | None = None
     is_featured: bool = False
 
@@ -67,9 +66,9 @@ class BlogPostUpdate(BaseModel):
     slug: Slug | None = None
     excerpt: str | None = None
     body: str | None = None
-    featured_image_media_id: uuid.UUID | None = None
-    category_ids: list[uuid.UUID] | None = None
-    tag_ids: list[uuid.UUID] | None = None
+    featured_image_media_id: str | None = None
+    category_ids: list[str] | None = None
+    tag_ids: list[str] | None = None
     reading_time_minutes: int | None = None
     is_featured: bool | None = None
     seo: SeoMetaInput | None = None

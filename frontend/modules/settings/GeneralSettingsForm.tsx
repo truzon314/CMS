@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/forms/TextField";
 import { ImagePickerField } from "@/components/forms/ImagePickerField";
-import { useMediaItem } from "@/hooks/useMedia";
 import type { Settings, SettingsUpdatePayload } from "@/types/settings";
 
 interface GeneralSettingsFormProps {
@@ -20,40 +19,62 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
   const [callbackPhone, setCallbackPhone] = useState(settings.callback_phone ?? "");
   const [whatsappNumber, setWhatsappNumber] = useState(settings.whatsapp_number ?? "");
   const [contactAddress, setContactAddress] = useState(settings.contact_address ?? "");
+
   const [logoMediaId, setLogoMediaId] = useState(settings.logo_media_id);
   const [logoUrlOverride, setLogoUrlOverride] = useState<string | null>(null);
+
   const [faviconMediaId, setFaviconMediaId] = useState(settings.favicon_media_id);
   const [faviconUrlOverride, setFaviconUrlOverride] = useState<string | null>(null);
+
   const [whyChooseImageMediaId, setWhyChooseImageMediaId] = useState(settings.why_choose_image_media_id);
   const [whyChooseImageUrlOverride, setWhyChooseImageUrlOverride] = useState<string | null>(null);
 
-  const { data: currentLogo } = useMediaItem(logoUrlOverride === null ? settings.logo_media_id : null);
-  const { data: currentFavicon } = useMediaItem(faviconUrlOverride === null ? settings.favicon_media_id : null);
-  const { data: currentWhyChooseImage } = useMediaItem(
-    whyChooseImageUrlOverride === null ? settings.why_choose_image_media_id : null
-  );
+  const [contactMapImageMediaId, setContactMapImageMediaId] = useState(settings.contact_map_image_media_id);
+  const [contactMapImageUrlOverride, setContactMapImageUrlOverride] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSiteName(settings.site_name ?? "");
+    setContactEmail(settings.contact_email ?? "");
+    setContactPhone(settings.contact_phone ?? "");
+    setCallbackPhone(settings.callback_phone ?? "");
+    setWhatsappNumber(settings.whatsapp_number ?? "");
+    setContactAddress(settings.contact_address ?? "");
+    setLogoMediaId(settings.logo_media_id);
+    setFaviconMediaId(settings.favicon_media_id);
+    setWhyChooseImageMediaId(settings.why_choose_image_media_id);
+    setContactMapImageMediaId(settings.contact_map_image_media_id);
+    setLogoUrlOverride(null);
+    setFaviconUrlOverride(null);
+    setWhyChooseImageUrlOverride(null);
+    setContactMapImageUrlOverride(null);
+  }, [settings]);
 
   return (
-    <div className="flex flex-col gap-3 max-w-lg">
+    <div className="flex flex-col gap-4 max-w-lg">
       <TextField id="site_name" label="Site name" value={siteName} onChange={(e) => setSiteName(e.target.value)} />
+
       <ImagePickerField
         label="Logo"
         recommendedDimensions="400 × 120 px (PNG)"
-        imageUrl={logoUrlOverride ?? currentLogo?.url ?? ""}
+        mediaId={logoMediaId}
+        imageUrl={logoUrlOverride}
         onChange={({ url, mediaId }) => {
           setLogoUrlOverride(url);
           setLogoMediaId(mediaId);
         }}
       />
+
       <ImagePickerField
         label="Favicon"
         recommendedDimensions="64 × 64 px"
-        imageUrl={faviconUrlOverride ?? currentFavicon?.url ?? ""}
+        mediaId={faviconMediaId}
+        imageUrl={faviconUrlOverride}
         onChange={({ url, mediaId }) => {
           setFaviconUrlOverride(url);
           setFaviconMediaId(mediaId);
         }}
       />
+
       <TextField
         id="contact_email"
         label="Contact email"
@@ -84,17 +105,31 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
         value={contactAddress}
         onChange={(e) => setContactAddress(e.target.value)}
       />
+
       <ImagePickerField
         label="Home page — “Why Choose Us” photo"
         recommendedDimensions="900 × 1100 px (portrait)"
-        imageUrl={whyChooseImageUrlOverride ?? currentWhyChooseImage?.url ?? ""}
+        mediaId={whyChooseImageMediaId}
+        imageUrl={whyChooseImageUrlOverride}
         onChange={({ url, mediaId }) => {
           setWhyChooseImageUrlOverride(url);
           setWhyChooseImageMediaId(mediaId);
         }}
       />
+
+      <ImagePickerField
+        label="Contact page — Location Map image"
+        recommendedDimensions="1200 × 800 px"
+        mediaId={contactMapImageMediaId}
+        imageUrl={contactMapImageUrlOverride}
+        onChange={({ url, mediaId }) => {
+          setContactMapImageUrlOverride(url);
+          setContactMapImageMediaId(mediaId);
+        }}
+      />
+
       <Button
-        className="self-start"
+        className="self-start mt-2"
         disabled={isSaving}
         onClick={() =>
           onSave({
@@ -107,6 +142,7 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
             logo_media_id: logoMediaId,
             favicon_media_id: faviconMediaId,
             why_choose_image_media_id: whyChooseImageMediaId,
+            contact_map_image_media_id: contactMapImageMediaId,
           })
         }
       >
@@ -115,3 +151,4 @@ export function GeneralSettingsForm({ settings, isSaving, onSave }: GeneralSetti
     </div>
   );
 }
+

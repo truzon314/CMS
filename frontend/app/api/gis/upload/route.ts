@@ -1,4 +1,4 @@
-import { processGeoJsonUpload, processZipUpload } from "@/lib/gisProcessor";
+import { processGeoJsonUpload, processZipUpload, processShpUpload } from "@/lib/gisProcessor";
 
 const API_BASE_URL =
   process.env.INTERNAL_API_BASE_URL ??
@@ -63,8 +63,10 @@ export async function POST(request: Request) {
     result = await processZipUpload(fileBuffer, fileName);
   } else if (lowerName.endsWith(".geojson") || lowerName.endsWith(".json")) {
     result = await processGeoJsonUpload(fileBuffer, fileName);
+  } else if (lowerName.endsWith(".shp")) {
+    result = await processShpUpload(fileBuffer, fileName);
   } else {
-    return Response.json({ error: "Unsupported file format. Upload .geojson, .json, or .zip shapefile." }, { status: 400 });
+    return Response.json({ error: "Unsupported file format. Upload .geojson, .json, .shp, or .zip shapefile." }, { status: 400 });
   }
 
   if (!result.ok || !result.geojson) {

@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 
@@ -25,7 +24,7 @@ router = APIRouter(prefix="/media", tags=["media"])
 async def list_media(
     page: int = Query(1, ge=1),
     per_page: int = Query(40, ge=1, le=100),
-    folder_id: uuid.UUID | None = None,
+    folder_id: str | None = None,
     mime_type: str | None = None,
     search: str | None = None,
     media_service: MediaService = Depends(get_media_service),
@@ -42,7 +41,7 @@ async def list_media(
 @router.post("")
 async def upload_media(
     files: list[UploadFile] = File(...),
-    folder_id: uuid.UUID | None = None,
+    folder_id: str | None = None,
     media_service: MediaService = Depends(get_media_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("media.manage")),
@@ -74,7 +73,7 @@ async def create_folder(
 
 @router.put("/folders/{folder_id}")
 async def update_folder(
-    folder_id: uuid.UUID,
+    folder_id: str,
     payload: MediaFolderUpdate,
     media_service: MediaService = Depends(get_media_service),
     user: User = Depends(get_current_user),
@@ -86,7 +85,7 @@ async def update_folder(
 
 @router.delete("/folders/{folder_id}")
 async def delete_folder(
-    folder_id: uuid.UUID,
+    folder_id: str,
     media_service: MediaService = Depends(get_media_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("media.manage")),
@@ -97,7 +96,7 @@ async def delete_folder(
 
 @router.get("/{media_id}")
 async def get_media(
-    media_id: uuid.UUID,
+    media_id: str,
     media_service: MediaService = Depends(get_media_service),
     _=Depends(require_permission("media.view")),
 ):
@@ -107,7 +106,7 @@ async def get_media(
 
 @router.put("/{media_id}")
 async def update_media(
-    media_id: uuid.UUID,
+    media_id: str,
     payload: MediaUpdate,
     media_service: MediaService = Depends(get_media_service),
     user: User = Depends(get_current_user),
@@ -119,7 +118,7 @@ async def update_media(
 
 @router.delete("/{media_id}")
 async def delete_media(
-    media_id: uuid.UUID,
+    media_id: str,
     force: bool = False,
     media_service: MediaService = Depends(get_media_service),
     user: User = Depends(get_current_user),
@@ -131,7 +130,7 @@ async def delete_media(
 
 @router.post("/{media_id}/restore")
 async def restore_media(
-    media_id: uuid.UUID,
+    media_id: str,
     media_service: MediaService = Depends(get_media_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("media.manage")),
@@ -142,7 +141,7 @@ async def restore_media(
 
 @router.get("/{media_id}/usage")
 async def get_media_usage(
-    media_id: uuid.UUID,
+    media_id: str,
     media_service: MediaService = Depends(get_media_service),
     _=Depends(require_permission("media.view")),
 ):

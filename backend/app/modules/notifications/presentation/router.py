@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 
@@ -40,7 +39,7 @@ async def unread_count(
 
 @router.post("/{notification_id}/read")
 async def mark_read(
-    notification_id: uuid.UUID,
+    notification_id: str,
     notification_service: NotificationService = Depends(get_notification_service),
     user: User = Depends(get_current_user),
 ):

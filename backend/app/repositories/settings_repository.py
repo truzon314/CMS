@@ -18,12 +18,13 @@ class SqlAlchemySettingsRepository:
     async def upsert(self, key: str, value: Any, updated_by: uuid.UUID) -> Setting:
         stmt = select(Setting).where(Setting.key == key)
         setting = (await self.session.execute(stmt)).scalar_one_or_none()
+        updater_id_str = str(updated_by) if updated_by else None
         if setting is None:
-            setting = Setting(key=key, value=value, updated_by=updated_by)
+            setting = Setting(key=key, value=value, updated_by=updater_id_str)
             self.session.add(setting)
         else:
             setting.value = value
-            setting.updated_by = updated_by
+            setting.updated_by = updater_id_str
         await self.session.commit()
         await self.session.refresh(setting)
         return setting
