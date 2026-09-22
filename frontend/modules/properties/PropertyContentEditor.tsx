@@ -42,6 +42,34 @@ export function PropertyContentEditor({ property, isSaving, onSave }: PropertyCo
     featuredImageMediaId: property.featured_image_media_id,
     brochureMediaId: property.brochure_media_id,
     mapProjectId: property.map_project_id,
+
+    heroMediaType: property.hero_media_type ?? "image",
+    desktopHeroVideoUrl: property.desktop_hero_video_url ?? "",
+    mobileHeroVideoUrl: property.mobile_hero_video_url ?? "",
+    desktopHeroImageId: property.desktop_hero_image_id ?? null,
+    mobileHeroImageId: property.mobile_hero_image_id ?? null,
+    posterImageId: property.poster_image_id ?? null,
+    heroHeading: property.hero_heading ?? "",
+    heroSubheading: property.hero_subheading ?? "",
+    heroOverlayStrength: property.hero_overlay_strength ?? 40,
+    heroTextAlign: property.hero_text_align ?? "left",
+    heroTheme: property.hero_theme ?? "dark",
+
+    masterPlanMediaId: property.master_plan_media_id ?? null,
+    masterPlanTitle: property.master_plan_title ?? "",
+    masterPlanDescription: property.master_plan_description ?? "",
+    floorPlans: property.floor_plans ?? [],
+
+    locationLandmarks: property.location_landmarks ?? [],
+    videoExperience: property.video_experience ?? [],
+
+    highlights: property.highlights ?? [],
+    offers: property.offers ?? [],
+    constructionUpdates: property.construction_updates ?? [],
+    reraNumber: property.rera_number ?? "",
+    approvalInfo: property.approval_info ?? "",
+    disclaimerText: property.disclaimer_text ?? "",
+    possessionDate: property.possession_date ?? "",
   }));
   const [galleryMediaIds, setGalleryMediaIds] = useState(
     [...property.gallery].sort((a, b) => a.position - b.position).map((g) => g.media_id)
@@ -77,6 +105,34 @@ export function PropertyContentEditor({ property, isSaving, onSave }: PropertyCo
       brochure_media_id: draft.brochureMediaId,
       category_ids: draft.categoryIds,
       map_project_id: draft.mapProjectId,
+
+      hero_media_type: draft.heroMediaType,
+      desktop_hero_video_url: draft.desktopHeroVideoUrl || undefined,
+      mobile_hero_video_url: draft.mobileHeroVideoUrl || undefined,
+      desktop_hero_image_id: draft.desktopHeroImageId,
+      mobile_hero_image_id: draft.mobileHeroImageId,
+      poster_image_id: draft.posterImageId,
+      hero_heading: draft.heroHeading || undefined,
+      hero_subheading: draft.heroSubheading || undefined,
+      hero_overlay_strength: draft.heroOverlayStrength,
+      hero_text_align: draft.heroTextAlign,
+      hero_theme: draft.heroTheme,
+
+      master_plan_media_id: draft.masterPlanMediaId,
+      master_plan_title: draft.masterPlanTitle || undefined,
+      master_plan_description: draft.masterPlanDescription || undefined,
+      floor_plans: draft.floorPlans,
+
+      location_landmarks: draft.locationLandmarks,
+      video_experience: draft.videoExperience,
+
+      highlights: draft.highlights,
+      offers: draft.offers,
+      construction_updates: draft.constructionUpdates,
+      rera_number: draft.reraNumber || undefined,
+      approval_info: draft.approvalInfo || undefined,
+      disclaimer_text: draft.disclaimerText || undefined,
+      possession_date: draft.possessionDate || undefined,
     });
   }
 
@@ -105,8 +161,6 @@ export function PropertyContentEditor({ property, isSaving, onSave }: PropertyCo
         </div>
       </div>
 
-      {/* Moved to the bottom of the page, below both columns, rather than
-          living in the right-hand sidebar next to Gallery. */}
       <div className="flex flex-col gap-3">
         <SeoPanel
           value={seoDraft}

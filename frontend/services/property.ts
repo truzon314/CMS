@@ -33,7 +33,35 @@ export interface PropertyCreatePayload {
   brochure_media_id?: string | null;
   map_project_id?: string | null;
   category_ids?: string[];
+
+  // Extended Cinematic & Conversion Fields
+  hero_media_type?: string;
+  desktop_hero_video_url?: string | null;
+  mobile_hero_video_url?: string | null;
+  desktop_hero_image_id?: string | null;
+  mobile_hero_image_id?: string | null;
+  poster_image_id?: string | null;
+  hero_heading?: string | null;
+  hero_subheading?: string | null;
+  hero_overlay_strength?: number;
+  hero_text_align?: string;
+  hero_theme?: string;
+  video_experience?: any[];
+  master_plan_media_id?: string | null;
+  master_plan_title?: string | null;
+  master_plan_description?: string | null;
+  floor_plans?: any[];
+  location_landmarks?: any[];
+  highlights?: any[];
+  offers?: any[];
+  construction_updates?: any[];
+  sections?: any[];
+  rera_number?: string | null;
+  approval_info?: string | null;
+  disclaimer_text?: string | null;
+  possession_date?: string | null;
 }
+
 
 export interface PropertyUpdatePayload extends Partial<PropertyCreatePayload> {
   seo?: Partial<Omit<SeoMeta, "id">>;

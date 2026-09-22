@@ -266,3 +266,214 @@ class Property(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     @brochure_media_id.setter
     def brochure_media_id(self, value) -> None:
         self._set_spec("brochure_media_id", str(value) if value is not None else None)
+
+    # --- Extended Cinematic & Conversion Properties ---
+
+    @property
+    def hero_media_type(self) -> str:
+        return self._get_spec("hero_media_type") or "image"
+
+    @hero_media_type.setter
+    def hero_media_type(self, value) -> None:
+        self._set_spec("hero_media_type", str(value) if value is not None else "image")
+
+    @property
+    def desktop_hero_video_url(self) -> str | None:
+        return self._get_spec("desktop_hero_video_url")
+
+    @desktop_hero_video_url.setter
+    def desktop_hero_video_url(self, value) -> None:
+        self._set_spec("desktop_hero_video_url", str(value) if value is not None else None)
+
+    @property
+    def mobile_hero_video_url(self) -> str | None:
+        return self._get_spec("mobile_hero_video_url")
+
+    @mobile_hero_video_url.setter
+    def mobile_hero_video_url(self, value) -> None:
+        self._set_spec("mobile_hero_video_url", str(value) if value is not None else None)
+
+    @property
+    def desktop_hero_image_id(self) -> str | None:
+        return self._get_spec("desktop_hero_image_id") or self.featured_image_media_id
+
+    @desktop_hero_image_id.setter
+    def desktop_hero_image_id(self, value) -> None:
+        self._set_spec("desktop_hero_image_id", str(value) if value is not None else None)
+
+    @property
+    def mobile_hero_image_id(self) -> str | None:
+        return self._get_spec("mobile_hero_image_id") or self.desktop_hero_image_id
+
+    @mobile_hero_image_id.setter
+    def mobile_hero_image_id(self, value) -> None:
+        self._set_spec("mobile_hero_image_id", str(value) if value is not None else None)
+
+    @property
+    def poster_image_id(self) -> str | None:
+        return self._get_spec("poster_image_id") or self.featured_image_media_id
+
+    @poster_image_id.setter
+    def poster_image_id(self, value) -> None:
+        self._set_spec("poster_image_id", str(value) if value is not None else None)
+
+    @property
+    def hero_heading(self) -> str | None:
+        return self._get_spec("hero_heading") or self.name
+
+    @hero_heading.setter
+    def hero_heading(self, value) -> None:
+        self._set_spec("hero_heading", str(value) if value is not None else None)
+
+    @property
+    def hero_subheading(self) -> str | None:
+        return self._get_spec("hero_subheading") or self.short_description
+
+    @hero_subheading.setter
+    def hero_subheading(self, value) -> None:
+        self._set_spec("hero_subheading", str(value) if value is not None else None)
+
+    @property
+    def hero_overlay_strength(self) -> int:
+        val = self._get_spec("hero_overlay_strength")
+        return int(val) if val is not None else 40
+
+    @hero_overlay_strength.setter
+    def hero_overlay_strength(self, value) -> None:
+        self._set_spec("hero_overlay_strength", int(value) if value is not None else 40)
+
+    @property
+    def hero_text_align(self) -> str:
+        return self._get_spec("hero_text_align") or "left"
+
+    @hero_text_align.setter
+    def hero_text_align(self, value) -> None:
+        self._set_spec("hero_text_align", str(value) if value is not None else "left")
+
+    @property
+    def hero_theme(self) -> str:
+        return self._get_spec("hero_theme") or "dark"
+
+    @hero_theme.setter
+    def hero_theme(self, value) -> None:
+        self._set_spec("hero_theme", str(value) if value is not None else "dark")
+
+    @property
+    def video_experience(self) -> list:
+        val = self._get_spec("video_experience")
+        return val if isinstance(val, list) else []
+
+    @video_experience.setter
+    def video_experience(self, value) -> None:
+        self._set_spec("video_experience", value if isinstance(value, list) else [])
+
+    @property
+    def master_plan_media_id(self) -> str | None:
+        return self._get_spec("master_plan_media_id")
+
+    @master_plan_media_id.setter
+    def master_plan_media_id(self, value) -> None:
+        self._set_spec("master_plan_media_id", str(value) if value is not None else None)
+
+    @property
+    def master_plan_title(self) -> str | None:
+        return self._get_spec("master_plan_title") or "Master Layout Plan"
+
+    @master_plan_title.setter
+    def master_plan_title(self, value) -> None:
+        self._set_spec("master_plan_title", str(value) if value is not None else None)
+
+    @property
+    def master_plan_description(self) -> str | None:
+        return self._get_spec("master_plan_description")
+
+    @master_plan_description.setter
+    def master_plan_description(self, value) -> None:
+        self._set_spec("master_plan_description", str(value) if value is not None else None)
+
+    @property
+    def floor_plans(self) -> list:
+        val = self._get_spec("floor_plans")
+        return val if isinstance(val, list) else []
+
+    @floor_plans.setter
+    def floor_plans(self, value) -> None:
+        self._set_spec("floor_plans", value if isinstance(value, list) else [])
+
+    @property
+    def location_landmarks(self) -> list:
+        val = self._get_spec("location_landmarks")
+        return val if isinstance(val, list) else []
+
+    @location_landmarks.setter
+    def location_landmarks(self, value) -> None:
+        self._set_spec("location_landmarks", value if isinstance(value, list) else [])
+
+    @property
+    def highlights(self) -> list:
+        val = self._get_spec("highlights")
+        return val if isinstance(val, list) else []
+
+    @highlights.setter
+    def highlights(self, value) -> None:
+        self._set_spec("highlights", value if isinstance(value, list) else [])
+
+    @property
+    def offers(self) -> list:
+        val = self._get_spec("offers")
+        return val if isinstance(val, list) else []
+
+    @offers.setter
+    def offers(self, value) -> None:
+        self._set_spec("offers", value if isinstance(value, list) else [])
+
+    @property
+    def construction_updates(self) -> list:
+        val = self._get_spec("construction_updates")
+        return val if isinstance(val, list) else []
+
+    @construction_updates.setter
+    def construction_updates(self, value) -> None:
+        self._set_spec("construction_updates", value if isinstance(value, list) else [])
+
+    @property
+    def sections(self) -> list:
+        val = self._get_spec("sections")
+        return val if isinstance(val, list) else []
+
+    @sections.setter
+    def sections(self, value) -> None:
+        self._set_spec("sections", value if isinstance(value, list) else [])
+
+    @property
+    def rera_number(self) -> str | None:
+        return self._get_spec("rera_number")
+
+    @rera_number.setter
+    def rera_number(self, value) -> None:
+        self._set_spec("rera_number", str(value) if value is not None else None)
+
+    @property
+    def approval_info(self) -> str | None:
+        return self._get_spec("approval_info") or "DTCP & RERA Approved"
+
+    @approval_info.setter
+    def approval_info(self, value) -> None:
+        self._set_spec("approval_info", str(value) if value is not None else None)
+
+    @property
+    def disclaimer_text(self) -> str | None:
+        return self._get_spec("disclaimer_text")
+
+    @disclaimer_text.setter
+    def disclaimer_text(self, value) -> None:
+        self._set_spec("disclaimer_text", str(value) if value is not None else None)
+
+    @property
+    def possession_date(self) -> str | None:
+        return self._get_spec("possession_date")
+
+    @possession_date.setter
+    def possession_date(self, value) -> None:
+        self._set_spec("possession_date", str(value) if value is not None else None)
+

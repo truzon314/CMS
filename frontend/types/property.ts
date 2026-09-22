@@ -54,4 +54,32 @@ export interface Property {
   gallery: PropertyMediaItem[];
   created_at: string;
   updated_at: string;
+
+  // Extended Cinematic & Conversion Fields
+  hero_media_type?: "video" | "image" | "carousel";
+  desktop_hero_video_url?: string | null;
+  mobile_hero_video_url?: string | null;
+  desktop_hero_image_id?: string | null;
+  mobile_hero_image_id?: string | null;
+  poster_image_id?: string | null;
+  hero_heading?: string | null;
+  hero_subheading?: string | null;
+  hero_overlay_strength?: number;
+  hero_text_align?: "left" | "center" | "right";
+  hero_theme?: "dark" | "light";
+  video_experience?: any[];
+  master_plan_media_id?: string | null;
+  master_plan_title?: string | null;
+  master_plan_description?: string | null;
+  floor_plans?: any[];
+  location_landmarks?: any[];
+  highlights?: any[];
+  offers?: any[];
+  construction_updates?: any[];
+  sections?: any[];
+  rera_number?: string | null;
+  approval_info?: string | null;
+  disclaimer_text?: string | null;
+  possession_date?: string | null;
 }
+

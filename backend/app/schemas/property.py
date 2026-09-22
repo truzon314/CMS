@@ -68,9 +68,36 @@ class PropertyRead(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    # Extended Cinematic & Conversion Fields
+    hero_media_type: str | None = "image"
+    desktop_hero_video_url: str | None = None
+    mobile_hero_video_url: str | None = None
+    desktop_hero_image_id: str | None = None
+    mobile_hero_image_id: str | None = None
+    poster_image_id: str | None = None
+    hero_heading: str | None = None
+    hero_subheading: str | None = None
+    hero_overlay_strength: int | None = 40
+    hero_text_align: str | None = "left"
+    hero_theme: str | None = "dark"
+    video_experience: list[dict] | None = None
+    master_plan_media_id: str | None = None
+    master_plan_title: str | None = None
+    master_plan_description: str | None = None
+    floor_plans: list[dict] | None = None
+    location_landmarks: list[dict] | None = None
+    highlights: list[dict] | None = None
+    offers: list[dict] | None = None
+    construction_updates: list[dict] | None = None
+    sections: list[dict] | None = None
+    rera_number: str | None = None
+    approval_info: str | None = None
+    disclaimer_text: str | None = None
+    possession_date: str | None = None
+
 
 class PropertyCreate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     name: str
     slug: Slug
@@ -93,9 +120,35 @@ class PropertyCreate(BaseModel):
     map_project_id: str | None = None
     category_ids: list[str] = []
 
+    hero_media_type: str | None = "image"
+    desktop_hero_video_url: str | None = None
+    mobile_hero_video_url: str | None = None
+    desktop_hero_image_id: str | None = None
+    mobile_hero_image_id: str | None = None
+    poster_image_id: str | None = None
+    hero_heading: str | None = None
+    hero_subheading: str | None = None
+    hero_overlay_strength: int | None = 40
+    hero_text_align: str | None = "left"
+    hero_theme: str | None = "dark"
+    video_experience: list[dict] | None = None
+    master_plan_media_id: str | None = None
+    master_plan_title: str | None = None
+    master_plan_description: str | None = None
+    floor_plans: list[dict] | None = None
+    location_landmarks: list[dict] | None = None
+    highlights: list[dict] | None = None
+    offers: list[dict] | None = None
+    construction_updates: list[dict] | None = None
+    sections: list[dict] | None = None
+    rera_number: str | None = None
+    approval_info: str | None = None
+    disclaimer_text: str | None = None
+    possession_date: str | None = None
+
 
 class PropertyUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     name: str | None = None
     slug: Slug | None = None
@@ -118,6 +171,33 @@ class PropertyUpdate(BaseModel):
     map_project_id: str | None = None
     category_ids: list[str] | None = None
     seo: SeoMetaInput | None = None
+
+    hero_media_type: str | None = None
+    desktop_hero_video_url: str | None = None
+    mobile_hero_video_url: str | None = None
+    desktop_hero_image_id: str | None = None
+    mobile_hero_image_id: str | None = None
+    poster_image_id: str | None = None
+    hero_heading: str | None = None
+    hero_subheading: str | None = None
+    hero_overlay_strength: int | None = None
+    hero_text_align: str | None = None
+    hero_theme: str | None = None
+    video_experience: list[dict] | None = None
+    master_plan_media_id: str | None = None
+    master_plan_title: str | None = None
+    master_plan_description: str | None = None
+    floor_plans: list[dict] | None = None
+    location_landmarks: list[dict] | None = None
+    highlights: list[dict] | None = None
+    offers: list[dict] | None = None
+    construction_updates: list[dict] | None = None
+    sections: list[dict] | None = None
+    rera_number: str | None = None
+    approval_info: str | None = None
+    disclaimer_text: str | None = None
+    possession_date: str | None = None
+
 
 
 class PropertyGalleryRequest(BaseModel):

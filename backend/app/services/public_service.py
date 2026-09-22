@@ -284,6 +284,8 @@ class PublicService:
             status_text=property_.status_text,
             is_signature=property_.is_signature,
             featured_image_url=await self._media_url(property_.featured_image_media_id),
+            hero_video_url=property_.desktop_hero_video_url or property_.mobile_hero_video_url,
+            hero_image_url=await self._media_url(property_.desktop_hero_image_id),
         )
 
     async def to_public_property(self, property_: Property) -> PublicProperty:
@@ -304,6 +306,52 @@ class PublicService:
             )
             for item in (property_.amenities or [])
         ]
+
+        # Resolve Master Plan
+        master_plan = None
+        if property_.master_plan_media_id or property_.master_plan_title:
+            master_plan = {
+                "title": property_.master_plan_title or "Master Layout Plan",
+                "description": property_.master_plan_description,
+                "image_url": await self._media_url(property_.master_plan_media_id),
+            }
+
+        # Resolve Floor Plans
+        resolved_floor_plans = []
+        for plan in property_.floor_plans or []:
+            plan_copy = dict(plan)
+            if plan_copy.get("image_media_id"):
+                plan_copy["image_url"] = await self._media_url(plan_copy["image_media_id"])
+            resolved_floor_plans.append(plan_copy)
+
+        # Resolve Video Experiences
+        resolved_videos = []
+        for vid in property_.video_experience or []:
+            vid_copy = dict(vid)
+            if vid_copy.get("poster_media_id"):
+                vid_copy["poster_image_url"] = await self._media_url(vid_copy["poster_media_id"])
+            resolved_videos.append(vid_copy)
+
+        # Resolve Offers
+        resolved_offers = []
+        for offer in property_.offers or []:
+            off_copy = dict(offer)
+            if off_copy.get("desktop_creative_media_id"):
+                off_copy["desktop_creative_url"] = await self._media_url(off_copy["desktop_creative_media_id"])
+            if off_copy.get("mobile_creative_media_id"):
+                off_copy["mobile_creative_url"] = await self._media_url(off_copy["mobile_creative_media_id"])
+            resolved_offers.append(off_copy)
+
+        # Resolve Construction Updates
+        resolved_construction = []
+        for update in property_.construction_updates or []:
+            upd_copy = dict(update)
+            img_ids = upd_copy.get("image_media_ids") or []
+            upd_copy["image_urls"] = [
+                url for url in [await self._media_url(m_id) for m_id in img_ids] if url
+            ]
+            resolved_construction.append(upd_copy)
+
         return PublicProperty(
             **list_item.model_dump(),
             area_sqft=str(property_.area_sqft) if property_.area_sqft is not None else None,
@@ -314,7 +362,31 @@ class PublicService:
             seo=await self._public_seo(property_.seo),
             map_project_id=str(property_.map_project_id) if property_.map_project_id else None,
             brochure_url=await self._media_url(property_.brochure_media_id),
+            hero_media_type=property_.hero_media_type,
+            desktop_hero_video_url=property_.desktop_hero_video_url,
+            mobile_hero_video_url=property_.mobile_hero_video_url,
+            desktop_hero_image_url=await self._media_url(property_.desktop_hero_image_id),
+            mobile_hero_image_url=await self._media_url(property_.mobile_hero_image_id),
+            poster_image_url=await self._media_url(property_.poster_image_id),
+            hero_heading=property_.hero_heading,
+            hero_subheading=property_.hero_subheading,
+            hero_overlay_strength=property_.hero_overlay_strength,
+            hero_text_align=property_.hero_text_align,
+            hero_theme=property_.hero_theme,
+            video_experience=resolved_videos,
+            master_plan=master_plan,
+            floor_plans=resolved_floor_plans,
+            location_landmarks=property_.location_landmarks,
+            highlights=property_.highlights,
+            offers=resolved_offers,
+            construction_updates=resolved_construction,
+            sections=property_.sections,
+            rera_number=property_.rera_number,
+            approval_info=property_.approval_info,
+            disclaimer_text=property_.disclaimer_text,
+            possession_date=property_.possession_date,
         )
+
 
     # --- Menus ---
 
