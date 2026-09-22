@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
@@ -49,7 +48,7 @@ async def export_submissions(
 
 @router.get("/submissions/{submission_id}")
 async def get_submission(
-    submission_id: uuid.UUID,
+    submission_id: str,
     submission_service: FormSubmissionService = Depends(get_form_submission_service),
     _=Depends(require_permission("forms.view")),
 ):
@@ -59,7 +58,7 @@ async def get_submission(
 
 @router.put("/submissions/{submission_id}")
 async def update_submission(
-    submission_id: uuid.UUID,
+    submission_id: str,
     payload: FormSubmissionUpdate,
     submission_service: FormSubmissionService = Depends(get_form_submission_service),
     user: User = Depends(get_current_user),
@@ -71,7 +70,7 @@ async def update_submission(
 
 @router.delete("/submissions/{submission_id}")
 async def delete_submission(
-    submission_id: uuid.UUID,
+    submission_id: str,
     submission_service: FormSubmissionService = Depends(get_form_submission_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("forms.manage")),

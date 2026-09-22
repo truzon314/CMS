@@ -5,7 +5,8 @@ from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.property import Property, property_category
+from app.models.category import Category
+from app.models.property import Property, PropertyType, property_category
 from app.models.property_media import PropertyMedia
 from app.models.seo_meta import SeoMeta
 
@@ -19,8 +20,9 @@ class SqlAlchemyPropertyRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, property_id: str | uuid.UUID, include_deleted: bool = False) -> Property | None:
-        stmt = select(Property).where(Property.id == str(property_id)).options(*_WITH_RELATIONS)
+    async def get_by_id(self, property_id: uuid.UUID | str, include_deleted: bool = False) -> Property | None:
+        pid_str = str(property_id)
+        stmt = select(Property).where(Property.id == pid_str).options(*_WITH_RELATIONS)
         if not include_deleted:
             stmt = stmt.where(Property.deleted_at.is_(None))
         return (await self.session.execute(stmt)).scalar_one_or_none()
@@ -49,9 +51,9 @@ class SqlAlchemyPropertyRepository:
         count_stmt = select(func.count()).select_from(Property).where(Property.deleted_at.is_(None))
 
         if status:
-            is_pub = str(status).upper() == "PUBLISHED"
-            stmt = stmt.where(Property.is_active == is_pub)
-            count_stmt = count_stmt.where(Property.is_active == is_pub)
+            is_active_val = status.upper() == "PUBLISHED"
+            stmt = stmt.where(Property.is_active == is_active_val)
+            count_stmt = count_stmt.where(Property.is_active == is_active_val)
         if is_signature is not None:
             stmt = stmt.where(Property.is_signature == is_signature)
             count_stmt = count_stmt.where(Property.is_signature == is_signature)
@@ -60,9 +62,25 @@ class SqlAlchemyPropertyRepository:
             stmt = stmt.where(or_(Property.name.ilike(like), Property.slug.ilike(like)))
             count_stmt = count_stmt.where(or_(Property.name.ilike(like), Property.slug.ilike(like)))
         if category_id:
-            stmt = stmt.join(property_category).where(property_category.c.B == str(category_id))
-            count_stmt = count_stmt.join(property_category).where(property_category.c.B == str(category_id))
+            cat_str = str(category_id).strip()
+            is_uuid = False
+            try:
+                uuid.UUID(cat_str)
+                is_uuid = True
+            except ValueError:
+                pass
 
+            if is_uuid:
+                stmt = stmt.join(property_category, Property.id == property_category.c.A).where(property_category.c.B == cat_str)
+                count_stmt = count_stmt.join(property_category, Property.id == property_category.c.A).where(property_category.c.B == cat_str)
+            else:
+                type_upper = cat_str.upper()
+                conds = [Category.name.ilike(cat_str), Category.slug.ilike(cat_str)]
+                if type_upper in PropertyType.__members__:
+                    conds.append(Property.property_type == PropertyType[type_upper])
+                
+                stmt = stmt.outerjoin(property_category, Property.id == property_category.c.A).outerjoin(Category, Category.id == property_category.c.B).where(or_(*conds))
+                count_stmt = count_stmt.outerjoin(property_category, Property.id == property_category.c.A).outerjoin(Category, Category.id == property_category.c.B).where(or_(*conds))
 
         total = (await self.session.execute(count_stmt)).scalar_one()
         stmt = (
@@ -114,11 +132,19 @@ class SqlAlchemyPropertyRepository:
         await self.session.refresh(property_, attribute_names=["categories", "gallery"])
         return property_
 
-    async def set_gallery(self, property_id: str | uuid.UUID, media_ids: list[str | uuid.UUID]) -> Property | None:
-        property_id_str = str(property_id)
-        await self.session.execute(delete(PropertyMedia).where(PropertyMedia.property_id == property_id_str))
+    async def set_gallery(self, property_id: uuid.UUID | str, media_ids: list[uuid.UUID | str]) -> Property:
+        pid_str = str(property_id)
+        await self.session.execute(delete(PropertyMedia).where(PropertyMedia.property_id == pid_str))
         for position, media_id in enumerate(media_ids):
-            self.session.add(PropertyMedia(property_id=property_id_str, media_id=str(media_id), position=position))
+            self.session.add(
+                PropertyMedia(
+                    property_id=pid_str,
+                    media_id=str(media_id),
+                    type="GALLERY",
+                    is_primary=(position == 0),
+                    position=position,
+                )
+            )
         await self.session.commit()
         return await self.get_by_id(property_id_str)
 

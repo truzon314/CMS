@@ -1,3 +1,4 @@
+import bcrypt
 import hashlib
 import secrets
 import uuid
@@ -25,18 +26,12 @@ def verify_password(password: str, password_hash: str) -> bool:
     try:
         if password_hash.startswith(("$2a$", "$2b$", "$2y$")):
             return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
-        elif password_hash.startswith("$argon2"):
-            return _hasher.verify(password_hash, password)
-        else:
-            try:
-                return _hasher.verify(password_hash, password)
-            except Exception:
-                return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
-    except Exception:
+        return _hasher.verify(password_hash, password)
+    except (VerifyMismatchError, ValueError):
         return False
 
 
-def create_access_token(user_id: uuid.UUID) -> tuple[str, int]:
+def create_access_token(user_id: str | uuid.UUID) -> tuple[str, int]:
     expires_in = settings.access_token_expire_minutes * 60
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {"sub": str(user_id), "exp": expire, "type": "access"}
@@ -44,7 +39,7 @@ def create_access_token(user_id: uuid.UUID) -> tuple[str, int]:
     return token, expires_in
 
 
-def decode_access_token(token: str) -> uuid.UUID | None:
+def decode_access_token(token: str) -> str | None:
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
     except JWTError:
@@ -52,7 +47,7 @@ def decode_access_token(token: str) -> uuid.UUID | None:
     if payload.get("type") != "access":
         return None
     try:
-        return uuid.UUID(payload["sub"])
+        return str(payload["sub"])
     except (KeyError, ValueError):
         return None
 

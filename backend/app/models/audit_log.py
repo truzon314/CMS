@@ -1,8 +1,8 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON, DateTime, ForeignKey, String
+
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.shared.database.base import Base, UUIDPrimaryKeyMixin, utcnow
@@ -52,16 +52,16 @@ class EntityTypeForAudit(str, enum.Enum):
 class AuditLog(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "audit_logs"
 
-    user_id: Mapped[str | None] = mapped_column("userId", String, ForeignKey("users.id"), default=None)
-    action: Mapped[str] = mapped_column("action", String(100), nullable=False)
-    entity_type: Mapped[str] = mapped_column("entityType", String(100), nullable=False)
-    entity_id: Mapped[str] = mapped_column("entityId", String, nullable=False, index=True)
-    previous_value: Mapped[dict | None] = mapped_column("previousValue", JSONB, default=None)
-    new_value: Mapped[dict | None] = mapped_column("newValue", JSONB, default=None)
+    __tablename__ = "audit_logs"
+
+    user_id: Mapped[str | None] = mapped_column("userId", String(255), ForeignKey("users.id"), default=None)
+    action: Mapped[str] = mapped_column(String(255), nullable=False)
+    entity_type: Mapped[str | None] = mapped_column("entityType", String(50), default=None)
+    entity_id: Mapped[str | None] = mapped_column("entityId", String(255), default=None, index=True)
     ip_address: Mapped[str | None] = mapped_column("ipAddress", String(64), default=None)
     user_agent: Mapped[str | None] = mapped_column("userAgent", String(500), default=None)
-    metadata_json: Mapped[dict | None] = mapped_column("metadata", JSONB, default=None)
-    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=False), default=utcnow, index=True)
+    details: Mapped[dict | None] = mapped_column("metadata", JSON, default=None)
+    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=True), default=utcnow, index=True)
 
     user: Mapped["User | None"] = relationship()  # noqa: F821
 

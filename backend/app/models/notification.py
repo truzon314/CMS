@@ -1,8 +1,8 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import ARRAY, Boolean, DateTime, Enum, ForeignKey, String
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
+
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.shared.database.base import Base, UUIDPrimaryKeyMixin, utcnow
@@ -36,23 +36,15 @@ class NotificationChannel(str, enum.Enum):
 class Notification(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "notifications"
 
-    user_id: Mapped[str] = mapped_column("userId", String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    type: Mapped[NotificationType] = mapped_column(
-        "type", Enum(NotificationType, name="NotificationType", create_type=False), nullable=False
-    )
+    __tablename__ = "notifications"
+
+    user_id: Mapped[str] = mapped_column("userId", String(255), ForeignKey("users.id"), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(50), nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    message: Mapped[str] = mapped_column(String(1000), nullable=False)
-    data: Mapped[dict | None] = mapped_column(JSONB, default=None)
-    channels: Mapped[list[str] | None] = mapped_column(ARRAY(String), default=list)
+    message: Mapped[str | None] = mapped_column(String(1000), default=None)
+    link: Mapped[str | None] = mapped_column("actionUrl", String(500), default=None)
     is_read: Mapped[bool] = mapped_column("isRead", Boolean, default=False)
-    read_at: Mapped[datetime | None] = mapped_column("readAt", DateTime(timezone=False), default=None)
-    priority: Mapped[str] = mapped_column(String(20), default="NORMAL")
-    action_url: Mapped[str | None] = mapped_column("actionUrl", String(500), default=None)
-    action_label: Mapped[str | None] = mapped_column("actionLabel", String(100), default=None)
-    expires_at: Mapped[datetime | None] = mapped_column("expiresAt", DateTime(timezone=False), default=None)
-    sent_at: Mapped[datetime | None] = mapped_column("sentAt", DateTime(timezone=False), default=None)
-    delivered_at: Mapped[datetime | None] = mapped_column("deliveredAt", DateTime(timezone=False), default=None)
-    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=False), default=utcnow, index=True)
+    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime(timezone=True), default=utcnow, index=True)
 
     user: Mapped["User"] = relationship()  # noqa: F821
 

@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 
@@ -20,9 +19,9 @@ async def list_posts(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
     status: str | None = None,
-    category: uuid.UUID | None = None,
-    tag: uuid.UUID | None = None,
-    author_id: uuid.UUID | None = None,
+    category: str | None = None,
+    tag: str | None = None,
+    author_id: str | None = None,
     search: str | None = None,
     blog_service: BlogPostService = Depends(get_blog_service),
     _=Depends(require_permission("blog.view")),
@@ -67,7 +66,7 @@ async def create_post(
 
 @router.get("/posts/{post_id}")
 async def get_post(
-    post_id: uuid.UUID,
+    post_id: str,
     blog_service: BlogPostService = Depends(get_blog_service),
     _=Depends(require_permission("blog.view")),
 ):
@@ -77,7 +76,7 @@ async def get_post(
 
 @router.put("/posts/{post_id}")
 async def update_post(
-    post_id: uuid.UUID,
+    post_id: str,
     payload: BlogPostUpdate,
     blog_service: BlogPostService = Depends(get_blog_service),
     user: User = Depends(get_current_user),
@@ -89,7 +88,7 @@ async def update_post(
 
 @router.delete("/posts/{post_id}")
 async def delete_post(
-    post_id: uuid.UUID,
+    post_id: str,
     blog_service: BlogPostService = Depends(get_blog_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("blog.delete")),
@@ -100,7 +99,7 @@ async def delete_post(
 
 @router.post("/posts/{post_id}/restore")
 async def restore_post(
-    post_id: uuid.UUID,
+    post_id: str,
     blog_service: BlogPostService = Depends(get_blog_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("blog.delete")),
@@ -111,7 +110,7 @@ async def restore_post(
 
 @router.post("/posts/{post_id}/duplicate")
 async def duplicate_post(
-    post_id: uuid.UUID,
+    post_id: str,
     blog_service: BlogPostService = Depends(get_blog_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("blog.create")),
@@ -122,7 +121,7 @@ async def duplicate_post(
 
 @router.post("/posts/{post_id}/publish")
 async def publish_post(
-    post_id: uuid.UUID,
+    post_id: str,
     blog_service: BlogPostService = Depends(get_blog_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("blog.publish")),
@@ -133,7 +132,7 @@ async def publish_post(
 
 @router.post("/posts/{post_id}/unpublish")
 async def unpublish_post(
-    post_id: uuid.UUID,
+    post_id: str,
     blog_service: BlogPostService = Depends(get_blog_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("blog.publish")),
@@ -144,7 +143,7 @@ async def unpublish_post(
 
 @router.post("/posts/{post_id}/schedule")
 async def schedule_post(
-    post_id: uuid.UUID,
+    post_id: str,
     payload: BlogScheduleRequest,
     blog_service: BlogPostService = Depends(get_blog_service),
     user: User = Depends(get_current_user),
@@ -156,7 +155,7 @@ async def schedule_post(
 
 @router.get("/posts/{post_id}/versions")
 async def list_post_versions(
-    post_id: uuid.UUID,
+    post_id: str,
     blog_service: BlogPostService = Depends(get_blog_service),
     _=Depends(require_permission("blog.view")),
 ):
@@ -166,8 +165,8 @@ async def list_post_versions(
 
 @router.post("/posts/{post_id}/versions/{version_id}/restore")
 async def restore_post_version(
-    post_id: uuid.UUID,
-    version_id: uuid.UUID,
+    post_id: str,
+    version_id: str,
     blog_service: BlogPostService = Depends(get_blog_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("blog.edit")),

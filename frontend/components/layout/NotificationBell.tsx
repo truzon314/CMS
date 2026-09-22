@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +30,7 @@ function timeAgo(iso: string): string {
 }
 
 export function NotificationBell() {
+
   const { data: unread } = useUnreadNotificationCount();
   const { data } = useNotificationsList({ perPage: 8 });
   const markRead = useMarkNotificationRead();
@@ -36,7 +39,24 @@ export function NotificationBell() {
   const notifications = data?.data ?? [];
   const count = unread?.count ?? 0;
 
+  const prevLatestIdRef = useRef<string | null>(null);
+  const isFirstRenderRef = useRef(true);
+
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const latest = notifications[0];
+      if (!isFirstRenderRef.current && prevLatestIdRef.current && latest.id !== prevLatestIdRef.current && !latest.is_read) {
+        toast.info(latest.title, {
+          description: latest.message || undefined,
+        });
+      }
+      prevLatestIdRef.current = latest.id;
+      isFirstRenderRef.current = false;
+    }
+  }, [notifications]);
+
   return (
+
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Notifications"

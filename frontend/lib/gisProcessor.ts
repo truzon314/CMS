@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+﻿import { createHash } from "node:crypto";
 import path from "node:path";
 import { open as openShapefile } from "shapefile";
 import AdmZip from "adm-zip";
@@ -23,20 +23,15 @@ export function computeContentHash(buffer: Buffer): string {
 
 export function isValidGeometry(geom: Geometry | null): boolean {
   if (!geom || !geom.type) return false;
-  const validTypes = ["Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon", "GeometryCollection"];
+  const validTypes = ["Point","MultiPoint","LineString","MultiLineString","Polygon","MultiPolygon","GeometryCollection"];
   return validTypes.includes(geom.type);
 }
 
 export function reprojectFeatureCollection(fc: FeatureCollection, prjText?: string): FeatureCollection {
   if (!prjText || prjText.trim() === "") return fc;
-
   try {
-    if (prjText.includes("WGS_1984") || prjText.includes("EPSG:4326") || prjText.includes("4326")) {
-      return fc;
-    }
-
-    type CoordArray = number[] | CoordArray[];
-    const reprojectCoords = (coords: CoordArray): CoordArray => {
+    if (prjText.includes("WGS_1984") || prjText.includes("EPSG:4326") || prjText.includes("4326")) return fc;
+    const reprojectCoords = (coords: any): any => {
       if (typeof coords[0] === "number") {
         const [x, y] = coords as [number, number];
         const [lng, lat] = proj4(prjText, WGS84, [x, y]);
@@ -44,26 +39,14 @@ export function reprojectFeatureCollection(fc: FeatureCollection, prjText?: stri
       }
       return (coords as CoordArray[]).map(reprojectCoords);
     };
-
     const reprojectGeom = (geom: Geometry | null): Geometry | null => {
       if (!geom) return null;
       if (geom.type === "GeometryCollection") {
-        return {
-          ...geom,
-          geometries: geom.geometries.map((g) => reprojectGeom(g)!).filter(Boolean),
-        };
+        return { ...geom, geometries: geom.geometries.map((g) => reprojectGeom(g)!).filter(Boolean) };
       }
-      return {
-        ...geom,
-        coordinates: reprojectCoords(geom.coordinates as CoordArray),
-      } as Geometry;
+      return { ...geom, coordinates: reprojectCoords((geom as any).coordinates) };
     };
-
-    const features = fc.features.map((f) => ({
-      ...f,
-      geometry: reprojectGeom(f.geometry)!,
-    }));
-
+    const features = fc.features.map((f) => ({ ...f, geometry: reprojectGeom(f.geometry)! }));
     return { ...fc, features };
   } catch (err) {
     console.warn("CRS reprojection notice:", err);
@@ -73,85 +56,56 @@ export function reprojectFeatureCollection(fc: FeatureCollection, prjText?: stri
 
 export async function processGeoJsonUpload(buffer: Buffer, fileName: string): Promise<UploadValidationResult> {
   const contentHash = computeContentHash(buffer);
-  let parsed: { type?: unknown; features?: unknown };
-  try {
-    parsed = JSON.parse(buffer.toString("utf-8"));
-  } catch {
-    return { ok: false, error: "File is not valid JSON." };
-  }
-
-  if (!parsed || parsed.type !== "FeatureCollection" || !Array.isArray(parsed.features)) {
-    return { ok: false, error: "Uploaded file is not a valid GeoJSON FeatureCollection." };
-  }
-
+  let parsed: any;
+  try { parsed = JSON.parse(buffer.toString("utf-8")); } catch { return { ok: false, error: "File is not valid JSON." }; }
+  if (!parsed || parsed.type !== "FeatureCollection" || !Array.isArray(parsed.features))
+    return { ok: false, error: "Not a valid GeoJSON FeatureCollection." };
   const validFeatures: Feature[] = parsed.features.filter((f: Feature) => isValidGeometry(f.geometry));
-  if (validFeatures.length === 0) {
-    return { ok: false, error: "GeoJSON contains no valid vector geometries." };
-  }
-
-  const layerName = fileName.replace(/\.(geojson|json)$/i, "");
-  return {
-    ok: true,
-    geojson: { type: "FeatureCollection", features: validFeatures },
-    layerName,
-    featureCount: validFeatures.length,
-    crs: "EPSG:4326",
-    contentHash,
-  };
+  if (validFeatures.length === 0) return { ok: false, error: "GeoJSON contains no valid vector geometries." };
+  return { ok: true, geojson: { type: "FeatureCollection", features: validFeatures }, layerName: fileName.replace(/\.(geojson|json)$/i, ""), featureCount: validFeatures.length, crs: "EPSG:4326", contentHash };
 }
 
 export async function processZipUpload(buffer: Buffer, _fileName: string): Promise<UploadValidationResult> {
   const contentHash = computeContentHash(buffer);
   let zip: AdmZip;
-  try {
-    zip = new AdmZip(buffer);
-  } catch {
-    return { ok: false, error: "Invalid or corrupted ZIP archive." };
-  }
-
+  try { zip = new AdmZip(buffer); } catch { return { ok: false, error: "Invalid or corrupted ZIP archive." }; }
   const zipEntries = zip.getEntries();
   const shpEntry = zipEntries.find((e) => e.entryName.toLowerCase().endsWith(".shp"));
-  if (!shpEntry) {
-    return { ok: false, error: "No .shp file found inside the ZIP archive." };
-  }
-
+  if (!shpEntry) return { ok: false, error: "No .shp file found inside the ZIP archive." };
   const baseName = shpEntry.entryName.slice(0, -4).toLowerCase();
-  const dbfEntry = zipEntries.find((e) => e.entryName.toLowerCase() === `${baseName}.dbf`);
-  const prjEntry = zipEntries.find((e) => e.entryName.toLowerCase() === `${baseName}.prj`);
-
+  const dbfEntry = zipEntries.find((e) => e.entryName.toLowerCase() === baseName + ".dbf");
+  const prjEntry = zipEntries.find((e) => e.entryName.toLowerCase() === baseName + ".prj");
   const shpBuf = shpEntry.getData();
   const dbfBuf = dbfEntry ? dbfEntry.getData() : undefined;
   const prjText = prjEntry ? prjEntry.getData().toString("utf-8") : undefined;
-
   try {
     const source = await openShapefile(shpBuf, dbfBuf);
     const features: Feature[] = [];
     let result = await source.read();
-    while (!result.done) {
-      if (result.value && isValidGeometry((result.value as Feature).geometry)) {
-        features.push(result.value as Feature);
-      }
-      result = await source.read();
-    }
-
-    if (features.length === 0) {
-      return { ok: false, error: "Shapefile inside ZIP contains no valid features." };
-    }
-
+    while (!result.done) { if (result.value && isValidGeometry(result.value.geometry)) features.push(result.value as Feature); result = await source.read(); }
+    if (features.length === 0) return { ok: false, error: "Shapefile inside ZIP contains no valid features." };
     let fc: FeatureCollection = { type: "FeatureCollection", features };
     fc = reprojectFeatureCollection(fc, prjText);
+    return { ok: true, geojson: fc, layerName: path.basename(shpEntry.entryName, ".shp"), featureCount: features.length, crs: prjText ? "Custom / Reprojected" : "EPSG:4326", contentHash };
+  } catch (err: any) { return { ok: false, error: "Shapefile parsing failed: " + (err?.message || "Invalid shapefile structure") }; }
+}
 
-    const layerName = path.basename(shpEntry.entryName, ".shp");
-    return {
-      ok: true,
-      geojson: fc,
-      layerName,
-      featureCount: features.length,
-      crs: prjText ? "Custom / Reprojected" : "EPSG:4326",
-      contentHash,
-    };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Invalid shapefile structure";
-    return { ok: false, error: `Shapefile parsing failed: ${message}` };
+/**
+ * Process a standalone .shp file directly (no ZIP needed).
+ * Without .dbf companion, features have no attribute data.
+ * Without .prj, WGS84 (EPSG:4326) is assumed.
+ * For full support, zip .shp + .dbf + .prj together.
+ */
+export async function processShpUpload(buffer: Buffer, fileName: string): Promise<UploadValidationResult> {
+  const contentHash = computeContentHash(buffer);
+  try {
+    const source = await openShapefile(buffer, undefined);
+    const features: Feature[] = [];
+    let result = await source.read();
+    while (!result.done) { if (result.value && isValidGeometry(result.value.geometry)) features.push(result.value as Feature); result = await source.read(); }
+    if (features.length === 0) return { ok: false, error: "Shapefile has no valid geometries. Upload a .zip with .shp + .dbf + .prj for full support." };
+    return { ok: true, geojson: { type: "FeatureCollection", features }, layerName: path.basename(fileName, ".shp"), featureCount: features.length, crs: "EPSG:4326 (assumed)", contentHash };
+  } catch (err: any) {
+    return { ok: false, error: "Could not read .shp: " + (err?.message || "Invalid shapefile") + ". Try a .zip with .shp + .dbf + .prj." };
   }
 }

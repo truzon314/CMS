@@ -1,10 +1,18 @@
 from sqlalchemy import Boolean, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.shared.database.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 
 class Menu(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Fixed set of 5 keys (header, footer_company, footer_properties,
+    footer_resources, footer_legal) — same "fixed rows, not free CRUD" pattern
+    as `Page.page_type` (ERD.md). No ORM relationship to `MenuItem` — the tree
+    is shallow and always fetched/rebuilt as a flat list by
+    `MenuRepository`, then assembled into a tree in Python (simpler and more
+    predictable than a self-referential ORM relationship at arbitrary depth)."""
+
     __tablename__ = "menus"
 
     key: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
@@ -19,37 +27,17 @@ class MenuItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "menu_items"
 
     menu_id: Mapped[str] = mapped_column(
-        "menuId", String, ForeignKey("menus.id", ondelete="CASCADE"), nullable=False
+        "menuId", String(255), ForeignKey("menus.id", ondelete="CASCADE"), nullable=False
     )
-    parent_id: Mapped[str | None] = mapped_column(
-        "parentId", String, ForeignKey("menu_items.id", ondelete="CASCADE"), default=None
+    parent_item_id: Mapped[str | None] = mapped_column(
+        "parentId", String(255), ForeignKey("menu_items.id", ondelete="CASCADE"), default=None
     )
     label: Mapped[str] = mapped_column(String(150), nullable=False)
-    href: Mapped[str | None] = mapped_column(String(500), default=None)
-    page_id: Mapped[str | None] = mapped_column("pageId", String, ForeignKey("pages.id"), default=None)
+    url: Mapped[str | None] = mapped_column("href", String(500), default=None)
+    # No FK constraint — mirrors `Page.featured_image_media_id`'s pattern of a
+    # soft reference where the referenced table's identity matters more than a
+    # DB-level constraint (here: one of the 5 fixed Page rows).
+    page_id: Mapped[str | None] = mapped_column("pageId", String(255), default=None)
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_external: Mapped[bool] = mapped_column("isExternal", Boolean, default=False)
     open_in_new_tab: Mapped[bool] = mapped_column("openInNewTab", Boolean, default=False)
-    icon: Mapped[str | None] = mapped_column(String(100), default=None)
-    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    is_active: Mapped[bool] = mapped_column("isActive", Boolean, default=True)
-
-    menu: Mapped["Menu"] = relationship(back_populates="items")
-    parent: Mapped["MenuItem | None"] = relationship("MenuItem", remote_side="MenuItem.id", backref="children")
-
-    @property
-    def parent_item_id(self) -> str | None:
-        return self.parent_id
-
-    @parent_item_id.setter
-    def parent_item_id(self, value: str | None) -> None:
-        self.parent_id = value
-
-    @property
-    def url(self) -> str | None:
-        return self.href
-
-    @url.setter
-    def url(self, value: str | None) -> None:
-        self.href = value
-
-

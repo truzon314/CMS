@@ -20,7 +20,13 @@ class CategoryService:
         return category
 
     async def create(self, payload: CategoryCreate) -> Category:
-        category = Category(name=payload.name, slug=payload.slug, applies_to=payload.applies_to)
+        category = Category(
+            name=payload.name,
+            slug=payload.slug,
+            applies_to=payload.applies_to,
+            is_active=True,
+            sort_order=0,
+        )
         return await self.categories.create(category)
 
     async def update(self, category_id: uuid.UUID, payload: CategoryUpdate) -> Category:

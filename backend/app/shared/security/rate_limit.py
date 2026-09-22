@@ -41,4 +41,7 @@ def rate_limit(request: Request, *, scope: str, limit: int, window_seconds: floa
 
 
 def global_backstop(request: Request) -> None:
+    if request.url.path.startswith("/media-files/"):
+        return
     rate_limit(request, scope="global", limit=300, window_seconds=60)
+

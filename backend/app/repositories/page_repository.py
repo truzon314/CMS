@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import cast, func, select, String
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -18,8 +18,13 @@ class SqlAlchemyPageRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_type(self, page_type: PageType) -> Page | None:
-        stmt = select(Page).where(Page.page_type == page_type).options(*_WITH_RELATIONS)
+    async def get_by_type(self, page_type: PageType | str) -> Page | None:
+        type_str = (page_type.value if isinstance(page_type, PageType) else str(page_type)).lower()
+        stmt = (
+            select(Page)
+            .where(func.lower(cast(Page.page_type, String)) == type_str)
+            .options(*_WITH_RELATIONS)
+        )
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def list_all(self) -> list[Page]:

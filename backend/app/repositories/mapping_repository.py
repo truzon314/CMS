@@ -20,8 +20,8 @@ class SqlAlchemyMappingRepository:
         stmt = select(MapProject).options(selectinload(MapProject.share_link)).order_by(MapProject.created_at.desc())
         return list((await self.session.execute(stmt)).unique().scalars().all())
 
-    async def get_project(self, project_id: uuid.UUID) -> MapProject | None:
-        stmt = select(MapProject).where(MapProject.id == project_id).options(selectinload(MapProject.share_link))
+    async def get_project(self, project_id: uuid.UUID | str) -> MapProject | None:
+        stmt = select(MapProject).where(MapProject.id == str(project_id)).options(selectinload(MapProject.share_link))
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def create_project(self, project: MapProject) -> MapProject:
@@ -41,15 +41,15 @@ class SqlAlchemyMappingRepository:
 
     # -- layers ------------------------------------------------------------
 
-    async def list_layers(self, project_id: uuid.UUID | None = None) -> list[MapLayer]:
+    async def list_layers(self, project_id: uuid.UUID | str | None = None) -> list[MapLayer]:
         stmt = select(MapLayer)
         if project_id is not None:
-            stmt = stmt.where(MapLayer.project_id == project_id)
+            stmt = stmt.where(MapLayer.project_id == str(project_id))
         stmt = stmt.order_by(MapLayer.created_at.asc())
         return list((await self.session.execute(stmt)).scalars().all())
 
-    async def get_layer(self, layer_id: uuid.UUID) -> MapLayer | None:
-        return (await self.session.execute(select(MapLayer).where(MapLayer.id == layer_id))).scalar_one_or_none()
+    async def get_layer(self, layer_id: uuid.UUID | str) -> MapLayer | None:
+        return (await self.session.execute(select(MapLayer).where(MapLayer.id == str(layer_id)))).scalar_one_or_none()
 
     async def create_layer(self, layer: MapLayer) -> MapLayer:
         self.session.add(layer)

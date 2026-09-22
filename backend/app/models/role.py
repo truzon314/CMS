@@ -1,6 +1,5 @@
-import enum
+from sqlalchemy import Boolean, Column, ForeignKey, String, Table
 
-from sqlalchemy import Boolean, Column, Enum, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.shared.database.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -8,25 +7,13 @@ from app.shared.database.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 role_permission = Table(
     "_PermissionToRole",
     Base.metadata,
-    Column("B", String, ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
-    Column(
-        "A",
-        String,
-        ForeignKey("permissions.id", ondelete="CASCADE"),
-        primary_key=True,
-    ),
+    Column("A", String(255), ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True),
+    Column("B", String(255), ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
 )
 
 
-class RoleType(str, enum.Enum):
-    SUPER_ADMIN = "SUPER_ADMIN"
-    ADMIN = "ADMIN"
-    MANAGER = "MANAGER"
-    SALES = "SALES"
-    CP = "CP"
-    CLIENT = "CLIENT"
-    CONTENT_MANAGER = "CONTENT_MANAGER"
-    FINANCE = "FINANCE"
+class Role(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "roles"
 
 
 class Role(UUIDPrimaryKeyMixin, TimestampMixin, Base):

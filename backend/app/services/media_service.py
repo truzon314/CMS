@@ -1,4 +1,4 @@
-﻿import io
+import io
 import uuid
 from urllib.parse import urlparse
 
@@ -132,17 +132,28 @@ class MediaService:
                 mime_type,
             )
 
+            if is_image(mime_type):
+                media_type = "IMAGE"
+            elif mime_type.startswith("video/"):
+                media_type = "VIDEO"
+            elif mime_type == "application/pdf" or mime_type.startswith("application/"):
+                media_type = "DOCUMENT"
+            else:
+                media_type = "OTHER"
+
             created.append(
                 Media(
                     file_name=file_name,
                     file_key=key,
                     url=url,
                     mime_type=mime_type,
+                    type=media_type,
                     size_bytes=len(content),
                     width=width,
                     height=height,
                     folder_id=folder_id,
                     uploaded_by=user_id,
+                    storage_provider=get_settings().storage_backend,
                 )
             )
 
@@ -287,9 +298,16 @@ class MediaService:
         payload: MediaFolderCreate,
         actor_id: uuid.UUID | None = None,
     ) -> MediaFolder:
+        folder_path = f"/{payload.name}"
+        if payload.parent_folder_id:
+            parent = await self.folders.get_by_id(payload.parent_folder_id)
+            if parent and parent.path:
+                folder_path = f"{parent.path}/{payload.name}"
+
         folder = MediaFolder(
             name=payload.name,
             parent_folder_id=payload.parent_folder_id,
+            path=folder_path,
         )
 
         folder = await self.folders.create(folder)
@@ -299,7 +317,7 @@ class MediaService:
             "media.create_folder",
             "media_folder",
             folder.id,
-            details={"name": folder.name},
+            details={"name": folder.name, "path": folder.path},
         )
 
         return folder

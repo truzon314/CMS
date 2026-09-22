@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, Trash2 } from "lucide-react";
+import { Mail, MessageCircle, Phone, Trash2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable, type ColumnDef } from "@/components/data-table/DataTable";
 import { useConversationsList, useDeleteConversation } from "@/hooks/useCrm";
@@ -30,12 +30,56 @@ export function ConversationsListPage() {
 
   const columns: ColumnDef<ChatConversation>[] = [
     {
-      id: "visitor",
-      header: "Conversation",
+      id: "visitor_name",
+      header: "Name",
       cell: (c) => (
-        <span className="flex items-center gap-2 font-medium">
-          {c.has_unread && <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />}
-          {c.visitor_name ?? `Conversation #${shortId(c.id)}`}
+        <span className="flex items-center gap-2 font-medium text-neutral-900">
+          {c.has_unread && <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 animate-pulse" title="New message" />}
+          <User size={14} className="text-neutral-400 shrink-0" />
+          {c.visitor_name ?? `Visitor #${shortId(c.id)}`}
+        </span>
+      ),
+    },
+    {
+      id: "visitor_phone",
+      header: "Phone Number",
+      cell: (c) =>
+        c.visitor_phone ? (
+          <a
+            href={`tel:${c.visitor_phone}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 text-xs text-emerald-700 hover:underline font-medium"
+          >
+            <Phone size={13} className="shrink-0 text-emerald-600" />
+            {c.visitor_phone}
+          </a>
+        ) : (
+          <span className="text-xs text-neutral-400">—</span>
+        ),
+    },
+    {
+      id: "visitor_email",
+      header: "Email",
+      cell: (c) =>
+        c.visitor_email ? (
+          <a
+            href={`mailto:${c.visitor_email}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 text-xs text-emerald-700 hover:underline truncate max-w-[180px]"
+          >
+            <Mail size={13} className="shrink-0 text-emerald-600" />
+            {c.visitor_email}
+          </a>
+        ) : (
+          <span className="text-xs text-neutral-400">—</span>
+        ),
+    },
+    {
+      id: "last_message",
+      header: "Latest Chat / Message",
+      cell: (c) => (
+        <span className="text-xs text-neutral-700 truncate max-w-[260px] block" title={c.last_message_preview ?? ""}>
+          {c.last_message_preview ?? "No messages yet"}
         </span>
       ),
     },
@@ -46,19 +90,22 @@ export function ConversationsListPage() {
         <span
           className={
             c.status === "open"
-              ? "inline-flex items-center gap-1.5 rounded-full bg-[#e6f4ea] px-3 py-0.5 text-xs font-semibold text-[#137333] border border-[#ceead6]"
-              : "inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-0.5 text-xs font-semibold text-slate-600 border border-slate-200"
+              ? "inline-flex items-center gap-1.5 rounded-full bg-[#e6f4ea] px-2.5 py-0.5 text-xs font-semibold text-[#137333] border border-[#ceead6]"
+              : "inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 border border-slate-200"
           }
         >
           {c.status === "open" ? "Open" : "Closed"}
         </span>
       ),
     },
-    { id: "assigned", header: "Assigned to", cell: (c) => c.assigned_to ?? "—" },
     {
       id: "last_message_at",
-      header: "Last message",
-      cell: (c) => new Date(c.last_message_at).toLocaleString(),
+      header: "Last Active",
+      cell: (c) => (
+        <span className="text-xs text-neutral-500 whitespace-nowrap">
+          {c.last_message_at ? new Date(c.last_message_at).toLocaleString() : "—"}
+        </span>
+      ),
     },
     {
       id: "actions",
@@ -107,7 +154,7 @@ export function ConversationsListPage() {
       />
 
       <ConversationThreadDrawer
-        conversationId={selected?.id ?? null}
+        conversation={selected}
         open={!!selected}
         onClose={() => setSelectedId(null)}
       />

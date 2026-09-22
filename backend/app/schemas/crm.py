@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -10,7 +9,7 @@ from app.models.chat_message import ChatMessageSender
 class ChatMessageCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    conversation_id: uuid.UUID | None = None
+    conversation_id: str | None = None
     body: str = Field(min_length=1, max_length=4000)
     # Only required (enforced in CrmService) when conversation_id is None —
     # the widget's pre-chat form collects these once, on the first message.
@@ -22,8 +21,8 @@ class ChatMessageCreate(BaseModel):
 class ChatMessageRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    conversation_id: uuid.UUID
+    id: str
+    conversation_id: str
     sender: ChatMessageSender
     body: str
     created_at: datetime
@@ -32,22 +31,23 @@ class ChatMessageRead(BaseModel):
 class ChatConversationRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     status: ChatConversationStatus
     has_unread: bool
-    assigned_to: uuid.UUID | None
+    assigned_to: str | None
     visitor_name: str | None
     visitor_email: str | None
     visitor_phone: str | None
+    last_message_preview: str | None = None
     created_at: datetime
-    last_message_at: datetime
+    last_message_at: datetime | None
 
 
 class ChatConversationUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     status: ChatConversationStatus | None = None
-    assigned_to: uuid.UUID | None = None
+    assigned_to: str | None = None
 
 
 class AdminReplyCreate(BaseModel):

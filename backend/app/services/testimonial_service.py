@@ -24,7 +24,12 @@ class TestimonialService:
         return testimonial
 
     async def create(self, payload: TestimonialCreate, actor_id: uuid.UUID) -> Testimonial:
-        testimonial = Testimonial(**payload.model_dump())
+        data = payload.model_dump()
+        if data.get("rating") is None:
+            data["rating"] = 5
+        if data.get("sort_order") is None:
+            data["sort_order"] = 0
+        testimonial = Testimonial(**data)
         testimonial = await self.testimonials.create(testimonial)
         await self.audit.log(actor_id, "testimonials.create", "testimonial", testimonial.id)
         return testimonial

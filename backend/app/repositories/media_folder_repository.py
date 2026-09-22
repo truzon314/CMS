@@ -11,7 +11,7 @@ class SqlAlchemyMediaFolderRepository:
         self.session = session
 
     async def get_by_id(self, folder_id: uuid.UUID) -> MediaFolder | None:
-        stmt = select(MediaFolder).where(MediaFolder.id == folder_id)
+        stmt = select(MediaFolder).where(MediaFolder.id == str(folder_id))
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def list_all(self) -> list[MediaFolder]:
@@ -34,5 +34,5 @@ class SqlAlchemyMediaFolderRepository:
         await self.session.commit()
 
     async def count_children(self, folder_id: uuid.UUID) -> int:
-        stmt = select(func.count()).select_from(MediaFolder).where(MediaFolder.parent_folder_id == folder_id)
+        stmt = select(func.count()).select_from(MediaFolder).where(MediaFolder.parent_folder_id == str(folder_id))
         return (await self.session.execute(stmt)).scalar_one()

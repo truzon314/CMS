@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 from decimal import Decimal
 
@@ -13,7 +12,7 @@ from app.schemas.validators import Slug
 class PropertyMediaRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    media_id: uuid.UUID
+    media_id: str
     position: int
 
 
@@ -21,13 +20,13 @@ class PropertyAmenity(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str
-    image_media_id: uuid.UUID | None = None
+    image_media_id: str | None = None
 
 
 class PropertyListItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     name: str
     slug: str
     city: str | None
@@ -41,7 +40,7 @@ class PropertyListItem(BaseModel):
 class PropertyRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     name: str
     slug: str
     city: str | None
@@ -58,9 +57,9 @@ class PropertyRead(BaseModel):
     tag_text: str | None
     status_text: str | None
     is_signature: bool
-    featured_image_media_id: uuid.UUID | None
-    brochure_media_id: uuid.UUID | None
-    map_project_id: uuid.UUID | None
+    featured_image_media_id: str | None
+    brochure_media_id: str | None
+    map_project_id: str | None
     seo: SeoMetaRead | None
     status: PropertyStatus
     sort_order: int
@@ -89,10 +88,10 @@ class PropertyCreate(BaseModel):
     tag_text: str | None = None
     status_text: str | None = None
     is_signature: bool = False
-    featured_image_media_id: uuid.UUID | None = None
-    brochure_media_id: uuid.UUID | None = None
-    map_project_id: uuid.UUID | None = None
-    category_ids: list[uuid.UUID] = []
+    featured_image_media_id: str | None = None
+    brochure_media_id: str | None = None
+    map_project_id: str | None = None
+    category_ids: list[str] = []
 
 
 class PropertyUpdate(BaseModel):
@@ -114,20 +113,20 @@ class PropertyUpdate(BaseModel):
     tag_text: str | None = None
     status_text: str | None = None
     is_signature: bool | None = None
-    featured_image_media_id: uuid.UUID | None = None
-    brochure_media_id: uuid.UUID | None = None
-    map_project_id: uuid.UUID | None = None
-    category_ids: list[uuid.UUID] | None = None
+    featured_image_media_id: str | None = None
+    brochure_media_id: str | None = None
+    map_project_id: str | None = None
+    category_ids: list[str] | None = None
     seo: SeoMetaInput | None = None
 
 
 class PropertyGalleryRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    media_ids: list[uuid.UUID]
+    media_ids: list[str]
 
 
 class PropertiesReorderRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    order: list[uuid.UUID]
+    order: list[str]

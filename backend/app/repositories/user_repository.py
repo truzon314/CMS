@@ -19,8 +19,9 @@ class SqlAlchemyUserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, user_id: str | uuid.UUID) -> User | None:
-        stmt = select(User).where(User.id == str(user_id)).options(_WITH_ROLE_AND_PERMISSIONS)
+    async def get_by_id(self, user_id: uuid.UUID | str) -> User | None:
+        user_id_str = str(user_id)
+        stmt = select(User).where(User.id == user_id_str).options(_WITH_ROLE_AND_PERMISSIONS)
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def get_by_email(self, email: str) -> User | None:
@@ -53,12 +54,12 @@ class SqlAlchemyUserRepository:
         stmt = (
             select(User)
             .join(Role, User.role_id == Role.id)
-            .join(role_permission, Role.id == role_permission.c.B)
-            .join(Permission, role_permission.c.A == Permission.id)
+            .join(Role.permissions)
             .where(Permission.key == permission_key, User.deleted_at.is_(None), User.status == UserStatus.ACTIVE)
             .options(_WITH_ROLE_AND_PERMISSIONS)
         )
         return list((await self.session.execute(stmt)).unique().scalars().all())
+
 
 
     async def create(self, user: User) -> User:

@@ -27,3 +27,9 @@ backend/media_storage/
 
 # Dev server logs
 *.log
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+

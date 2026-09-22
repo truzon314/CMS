@@ -70,56 +70,43 @@ async def get_media_file(key: str):
 
     settings = get_settings()
 
+    content = None
+
     # ------------------------------------------------------------------
-    # Google Cloud Storage
+    # 1. Try Google Cloud Storage
     # ------------------------------------------------------------------
-    if settings.storage_backend == "gcs":
+    if settings.storage_backend == "gcs" or settings.gcs_bucket:
         try:
             bucket = _get_gcs_bucket()
             blob = bucket.blob(key)
-
-            # Do not call blob.exists() first.
-            # download_as_bytes() already tells us whether the object exists.
-            content = await asyncio.to_thread(
-                blob.download_as_bytes,
-            )
-
+            content = await asyncio.to_thread(blob.download_as_bytes)
         except NotFound:
-            raise HTTPException(
-                status_code=404,
-                detail="Not found.",
-            )
-
-        except Exception as exc:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Unable to retrieve media file: {exc}",
-            ) from exc
+            content = None
+        except Exception:
+            content = None
 
     # ------------------------------------------------------------------
-    # Local storage fallback
+    # 2. Local storage fallback if not retrieved from GCS
     # ------------------------------------------------------------------
-    else:
+    if content is None:
         from pathlib import Path
 
         path = Path(settings.media_storage_dir) / key
+        if path.is_file():
+            try:
+                content = await asyncio.to_thread(path.read_bytes)
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Unable to retrieve local media file: {exc}",
+                ) from exc
 
-        if not path.is_file():
-            raise HTTPException(
-                status_code=404,
-                detail="Not found.",
-            )
+    if content is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Media file not found.",
+        )
 
-        try:
-            content = await asyncio.to_thread(
-                path.read_bytes,
-            )
-
-        except Exception as exc:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Unable to retrieve media file: {exc}",
-            ) from exc
 
     # ------------------------------------------------------------------
     # Response metadata
@@ -132,7 +119,7 @@ async def get_media_file(key: str):
     )
 
     headers = {
-        # Media files use UUID-style filenames, so they are effectively
+        # Media files use str-style filenames, so they are effectively
         # immutable references. Cache for one day and allow stale content
         # while the browser revalidates.
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",

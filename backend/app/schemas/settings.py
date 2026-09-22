@@ -1,4 +1,3 @@
-import uuid
 
 from pydantic import BaseModel, ConfigDict
 
@@ -56,8 +55,8 @@ class SettingsRead(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     site_name: str | None = None
-    logo_media_id: uuid.UUID | None = None
-    favicon_media_id: uuid.UUID | None = None
+    logo_media_id: str | None = None
+    favicon_media_id: str | None = None
     contact_email: str | None = None
     contact_phone: str | None = None
     callback_phone: str | None = None
@@ -84,7 +83,7 @@ class SettingsRead(BaseModel):
     google_tag_manager_id: str | None = None
     meta_pixel_id: str | None = None
     google_search_console_verification: str | None = None
-    og_default_image_media_id: uuid.UUID | None = None
+    og_default_image_media_id: str | None = None
     twitter_card_default_type: str | None = "summary_large_image"
     robots_txt_content: str | None = None
     working_hours: str | None = None
@@ -95,16 +94,16 @@ class SettingsRead(BaseModel):
     google_gsc_service_account_json: str | None = None
     google_gsc_site_url: str | None = None
     ahrefs_api_key: str | None = None
-    why_choose_image_media_id: uuid.UUID | None = None
-    contact_map_image_media_id: uuid.UUID | None = None
+    why_choose_image_media_id: str | None = None
+    contact_map_image_media_id: str | None = None
 
 
 class SettingsUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     site_name: str | None = None
-    logo_media_id: uuid.UUID | None = None
-    favicon_media_id: uuid.UUID | None = None
+    logo_media_id: str | None = None
+    favicon_media_id: str | None = None
     contact_email: str | None = None
     contact_phone: str | None = None
     callback_phone: str | None = None
@@ -131,7 +130,7 @@ class SettingsUpdate(BaseModel):
     google_tag_manager_id: str | None = None
     meta_pixel_id: str | None = None
     google_search_console_verification: str | None = None
-    og_default_image_media_id: uuid.UUID | None = None
+    og_default_image_media_id: str | None = None
     twitter_card_default_type: str | None = None
     robots_txt_content: str | None = None
     working_hours: str | None = None
@@ -142,5 +141,5 @@ class SettingsUpdate(BaseModel):
     google_gsc_service_account_json: str | None = None
     google_gsc_site_url: str | None = None
     ahrefs_api_key: str | None = None
-    why_choose_image_media_id: uuid.UUID | None = None
-    contact_map_image_media_id: uuid.UUID | None = None
+    why_choose_image_media_id: str | None = None
+    contact_map_image_media_id: str | None = None

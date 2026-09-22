@@ -60,12 +60,13 @@ class SqlAlchemyBlogPostRepository:
             stmt = stmt.where(or_(BlogPost.title.ilike(like), BlogPost.slug.ilike(like)))
             count_stmt = count_stmt.where(or_(BlogPost.title.ilike(like), BlogPost.slug.ilike(like)))
         if category_id:
-            stmt = stmt.join(blog_post_category).where(blog_post_category.c.B == str(category_id))
-            count_stmt = count_stmt.join(blog_post_category).where(blog_post_category.c.B == str(category_id))
+            cat_str = str(category_id)
+            stmt = stmt.join(blog_post_category, BlogPost.id == blog_post_category.c.A).where(blog_post_category.c.B == cat_str)
+            count_stmt = count_stmt.join(blog_post_category, BlogPost.id == blog_post_category.c.A).where(blog_post_category.c.B == cat_str)
         if tag_id:
-            stmt = stmt.join(blog_post_tag).where(blog_post_tag.c.B == str(tag_id))
-            count_stmt = count_stmt.join(blog_post_tag).where(blog_post_tag.c.B == str(tag_id))
-
+            tag_str = str(tag_id)
+            stmt = stmt.join(blog_post_tag, BlogPost.id == blog_post_tag.c.A).where(blog_post_tag.c.B == tag_str)
+            count_stmt = count_stmt.join(blog_post_tag, BlogPost.id == blog_post_tag.c.A).where(blog_post_tag.c.B == tag_str)
 
         total = (await self.session.execute(count_stmt)).scalar_one()
         stmt = stmt.order_by(BlogPost.updated_at.desc()).offset((page - 1) * per_page).limit(per_page)

@@ -1,4 +1,3 @@
-import uuid
 
 from fastapi import APIRouter, Depends
 
@@ -37,7 +36,7 @@ async def create_role(
 
 @router.get("/roles/{role_id}")
 async def get_role(
-    role_id: uuid.UUID,
+    role_id: str,
     role_service: RoleService = Depends(get_role_service),
     _=Depends(require_permission("users.manage")),
 ):
@@ -47,7 +46,7 @@ async def get_role(
 
 @router.put("/roles/{role_id}")
 async def update_role(
-    role_id: uuid.UUID,
+    role_id: str,
     payload: RoleUpdate,
     role_service: RoleService = Depends(get_role_service),
     actor: User = Depends(get_current_user),
@@ -59,7 +58,7 @@ async def update_role(
 
 @router.delete("/roles/{role_id}")
 async def delete_role(
-    role_id: uuid.UUID,
+    role_id: str,
     role_service: RoleService = Depends(get_role_service),
     actor: User = Depends(get_current_user),
     _=Depends(require_permission("users.manage")),
@@ -70,7 +69,7 @@ async def delete_role(
 
 @router.put("/roles/{role_id}/permissions")
 async def update_role_permissions(
-    role_id: uuid.UUID,
+    role_id: str,
     payload: RolePermissionsUpdate,
     role_service: RoleService = Depends(get_role_service),
     actor: User = Depends(get_current_user),

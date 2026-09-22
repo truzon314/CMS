@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 
@@ -43,7 +42,7 @@ async def create_user(
 
 @router.get("/{user_id}")
 async def get_user(
-    user_id: uuid.UUID,
+    user_id: str,
     user_service: UserService = Depends(get_user_service),
     _=Depends(require_permission("users.view")),
 ):
@@ -53,7 +52,7 @@ async def get_user(
 
 @router.put("/{user_id}")
 async def update_user(
-    user_id: uuid.UUID,
+    user_id: str,
     payload: UserUpdate,
     user_service: UserService = Depends(get_user_service),
     actor: User = Depends(get_current_user),
@@ -65,7 +64,7 @@ async def update_user(
 
 @router.delete("/{user_id}")
 async def delete_user(
-    user_id: uuid.UUID,
+    user_id: str,
     user_service: UserService = Depends(get_user_service),
     actor: User = Depends(get_current_user),
     _=Depends(require_permission("users.manage")),
@@ -76,7 +75,7 @@ async def delete_user(
 
 @router.post("/{user_id}/restore")
 async def restore_user(
-    user_id: uuid.UUID,
+    user_id: str,
     user_service: UserService = Depends(get_user_service),
     actor: User = Depends(get_current_user),
     _=Depends(require_permission("users.manage")),

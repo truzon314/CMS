@@ -20,8 +20,12 @@ class SqlAlchemyCrmRepository:
         await self.session.refresh(conversation)
         return conversation
 
-    async def get_conversation(self, conversation_id: uuid.UUID) -> ChatConversation | None:
-        stmt = select(ChatConversation).where(ChatConversation.id == conversation_id).options(_WITH_ASSIGNEE)
+    async def get_conversation(self, conversation_id: uuid.UUID | str) -> ChatConversation | None:
+        stmt = (
+            select(ChatConversation)
+            .where(ChatConversation.id == str(conversation_id))
+            .options(_WITH_ASSIGNEE, selectinload(ChatConversation.messages))
+        )
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def list_conversations(self, *, page: int, per_page: int) -> tuple[list[ChatConversation], int]:
@@ -30,7 +34,7 @@ class SqlAlchemyCrmRepository:
 
         stmt = (
             select(ChatConversation)
-            .options(_WITH_ASSIGNEE)
+            .options(_WITH_ASSIGNEE, selectinload(ChatConversation.messages))
             .order_by(ChatConversation.last_message_at.desc())
             .offset((page - 1) * per_page)
             .limit(per_page)
@@ -49,19 +53,19 @@ class SqlAlchemyCrmRepository:
         await self.session.refresh(message)
         return message
 
-    async def list_messages(self, conversation_id: uuid.UUID) -> list[ChatMessage]:
+    async def list_messages(self, conversation_id: uuid.UUID | str) -> list[ChatMessage]:
         stmt = (
             select(ChatMessage)
-            .where(ChatMessage.conversation_id == conversation_id)
+            .where(ChatMessage.conversation_id == str(conversation_id))
             .order_by(ChatMessage.created_at.asc())
         )
         return list((await self.session.execute(stmt)).scalars().all())
 
-    async def delete_conversation(self, conversation_id: uuid.UUID) -> None:
+    async def delete_conversation(self, conversation_id: uuid.UUID | str) -> None:
         await self.session.execute(
-            delete(ChatMessage).where(ChatMessage.conversation_id == conversation_id)
+            delete(ChatMessage).where(ChatMessage.conversation_id == str(conversation_id))
         )
         await self.session.execute(
-            delete(ChatConversation).where(ChatConversation.id == conversation_id)
+            delete(ChatConversation).where(ChatConversation.id == str(conversation_id))
         )
         await self.session.commit()

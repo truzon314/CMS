@@ -25,7 +25,8 @@ class SqlAlchemyCategoryRepository:
     async def list_all(self, applies_to: str | None = None) -> list[Category]:
         stmt = select(Category)
         if applies_to:
-            stmt = stmt.where(Category.applies_to.in_([applies_to, "both"]))
+            from sqlalchemy.dialects import postgresql
+            stmt = stmt.where(Category.applies_to.op("&&")(postgresql.array([applies_to, "both", applies_to.upper(), "BOTH"])))
         stmt = stmt.order_by(Category.name)
         return list((await self.session.execute(stmt)).scalars().all())
 
@@ -45,12 +46,13 @@ class SqlAlchemyCategoryRepository:
         await self.session.commit()
 
     async def count_usage(self, category_id: uuid.UUID) -> int:
+        cat_str = str(category_id)
         blog_count_stmt = (
-            select(func.count()).select_from(blog_post_category).where(blog_post_category.c.category_id == category_id)
+            select(func.count()).select_from(blog_post_category).where(blog_post_category.c.B == cat_str)
         )
         blog_count = (await self.session.execute(blog_count_stmt)).scalar_one()
         property_count_stmt = (
-            select(func.count()).select_from(property_category).where(property_category.c.category_id == category_id)
+            select(func.count()).select_from(property_category).where(property_category.c.B == cat_str)
         )
         property_count = (await self.session.execute(property_count_stmt)).scalar_one()
         return blog_count + property_count

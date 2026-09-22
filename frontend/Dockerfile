@@ -15,7 +15,7 @@ COPY . .
 # NEXT_PUBLIC_* vars are baked into the client bundle at build time, not
 # read at runtime — must be supplied as build args, not just env vars on
 # the deployed container.
-ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_API_BASE_URL="https://truzon-backend-715189721854.asia-south1.run.app"
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 RUN npm run build
 

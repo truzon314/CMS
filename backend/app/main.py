@@ -126,8 +126,14 @@ app.include_router(dashboard_router, prefix="/api/v1")
 app.include_router(public_router)
 
 
+@app.get("/")
+async def root() -> dict:
+    return {"success": True, "data": {"name": "Truzon CMS API", "version": "0.1.0", "status": "ok"}}
+
+
 @app.get("/health")
 async def health() -> dict:
     async with engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
     return {"success": True, "data": {"status": "ok", "environment": settings.environment}}
+

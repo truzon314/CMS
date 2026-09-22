@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 
@@ -36,7 +35,7 @@ async def list_conversations(
 
 @router.get("/conversations/{conversation_id}/messages")
 async def get_conversation_thread(
-    conversation_id: uuid.UUID,
+    conversation_id: str,
     crm: CrmService = Depends(get_crm_service),
     _=Depends(require_permission("crm.view")),
 ):
@@ -49,7 +48,7 @@ async def get_conversation_thread(
 
 @router.post("/conversations/{conversation_id}/messages")
 async def post_admin_reply(
-    conversation_id: uuid.UUID,
+    conversation_id: str,
     payload: AdminReplyCreate,
     crm: CrmService = Depends(get_crm_service),
     user: User = Depends(get_current_user),
@@ -61,7 +60,7 @@ async def post_admin_reply(
 
 @router.patch("/conversations/{conversation_id}")
 async def update_conversation(
-    conversation_id: uuid.UUID,
+    conversation_id: str,
     payload: ChatConversationUpdate,
     crm: CrmService = Depends(get_crm_service),
     user: User = Depends(get_current_user),
@@ -73,7 +72,7 @@ async def update_conversation(
 
 @router.delete("/conversations/{conversation_id}")
 async def delete_conversation(
-    conversation_id: uuid.UUID,
+    conversation_id: str,
     crm: CrmService = Depends(get_crm_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("crm.manage")),

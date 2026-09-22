@@ -1,5 +1,4 @@
 import json
-import uuid
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -28,11 +27,11 @@ class SeoMetaInput(BaseModel):
     canonical_url: str | None = None
     og_title: str | None = None
     og_description: str | None = None
-    og_image_media_id: uuid.UUID | None = None
+    og_image_media_id: str | None = None
     twitter_card_type: str | None = None
     twitter_title: str | None = None
     twitter_description: str | None = None
-    twitter_image_media_id: uuid.UUID | None = None
+    twitter_image_media_id: str | None = None
     robots: str | None = None
     schema_jsonld: dict | None = None
 
@@ -83,7 +82,7 @@ class SeoMetaInput(BaseModel):
 class SeoMetaRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     seo_title: str | None
     meta_description: str | None
     focus_keyword: str | None
@@ -91,10 +90,10 @@ class SeoMetaRead(BaseModel):
     canonical_url: str | None
     og_title: str | None
     og_description: str | None
-    og_image_media_id: uuid.UUID | None
+    og_image_media_id: str | None
     twitter_card_type: str | None
     twitter_title: str | None
     twitter_description: str | None
-    twitter_image_media_id: uuid.UUID | None
+    twitter_image_media_id: str | None
     robots: str | None
     schema_jsonld: dict | None

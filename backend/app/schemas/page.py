@@ -1,7 +1,6 @@
-import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from app.schemas.seo import SeoMetaInput, SeoMetaRead
 
@@ -9,7 +8,7 @@ from app.schemas.seo import SeoMetaInput, SeoMetaRead
 class BlockDefinitionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     key: str
     label: str
     is_active: bool
@@ -18,8 +17,8 @@ class BlockDefinitionRead(BaseModel):
 class PageBlockRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    block_definition_id: uuid.UUID
+    id: str
+    block_definition_id: str
     position: int
     config: dict
 
@@ -27,7 +26,7 @@ class PageBlockRead(BaseModel):
 class PageBlockCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    block_definition_id: uuid.UUID
+    block_definition_id: str
     position: int | None = None
     config: dict = {}
 
@@ -41,7 +40,7 @@ class PageBlockUpdate(BaseModel):
 class BlocksReorderRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    order: list[uuid.UUID]
+    order: list[str]
 
 
 class PageUpdate(BaseModel):
@@ -60,7 +59,7 @@ class ScheduleRequest(BaseModel):
 class PageRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     page_type: str
     slug: str
     title: str
@@ -71,13 +70,23 @@ class PageRead(BaseModel):
     blocks: list[PageBlockRead]
     updated_at: datetime
 
+    @field_validator("page_type", "status", mode="before")
+    @classmethod
+    def to_lower(cls, v: str | None) -> str | None:
+        return v.lower() if isinstance(v, str) else str(v).lower() if v is not None else None
+
 
 class PageListItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     page_type: str
     slug: str
     title: str
     status: str
     updated_at: datetime
+
+    @field_validator("page_type", "status", mode="before")
+    @classmethod
+    def to_lower(cls, v: str | None) -> str | None:
+        return v.lower() if isinstance(v, str) else str(v).lower() if v is not None else None

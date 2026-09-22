@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 
@@ -40,7 +39,7 @@ async def create_gallery_item(
 
 @router.put("/{item_id}")
 async def update_gallery_item(
-    item_id: uuid.UUID,
+    item_id: str,
     payload: GalleryItemUpdate,
     gallery: GalleryService = Depends(get_gallery_service),
     user: User = Depends(get_current_user),
@@ -52,7 +51,7 @@ async def update_gallery_item(
 
 @router.delete("/{item_id}")
 async def delete_gallery_item(
-    item_id: uuid.UUID,
+    item_id: str,
     gallery: GalleryService = Depends(get_gallery_service),
     user: User = Depends(get_current_user),
     _=Depends(require_permission("gallery.manage")),

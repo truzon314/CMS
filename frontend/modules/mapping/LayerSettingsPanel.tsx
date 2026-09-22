@@ -103,7 +103,7 @@ function featureLabel(
   idx: number,
 ): string {
   const props = feature.properties;
-  const label = props?.Plot || props?.name || props?.label || props?.fid;
+  const label = props?.Plot ?? props?.Name ?? props?.name ?? props?.label ?? props?.Label ?? props?.LABEL ?? props?.fid ?? props?.FID ?? props?.id ?? props?.ID;
   return label != null ? String(label) : `Feature #${idx + 1}`;
 }
 
@@ -183,6 +183,16 @@ export default function LayerSettingsPanel({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const layerRawLabel = (layer.label ?? "").trim() || "Feature";
+  const layerTerm = layerRawLabel.endsWith("s") || layerRawLabel.endsWith("S")
+    ? layerRawLabel.slice(0, -1)
+    : layerRawLabel;
+  const layerTermPlural = layerRawLabel.endsWith("s") || layerRawLabel.endsWith("S")
+    ? layerRawLabel
+    : layerRawLabel + "s";
+  const layerTermUpper = layerTerm.toUpperCase();
+  const layerTermPluralUpper = layerTermPlural.toUpperCase();
+
   useEffect(() => {
     mappingService
       .getLayerGeoJson(layer.id)
@@ -195,7 +205,35 @@ export default function LayerSettingsPanel({
         }) => {
           const features = geojson.features ?? [];
           setFeatureCache(features);
-          const keys = Object.keys(features[0]?.properties ?? {});
+          const keySet = new Set<string>();
+
+          // Include configured properties first
+          if (layer.labelProperty) keySet.add(layer.labelProperty);
+          if (layer.popupProperties) {
+            for (const p of layer.popupProperties) keySet.add(p);
+          }
+          if (layer.colorRules) {
+            for (const r of layer.colorRules) {
+              if (r.property) keySet.add(r.property);
+            }
+          }
+
+          // Scan all features for properties (handling objects & stringified JSON)
+          for (const f of features) {
+            let props = f.properties;
+            if (typeof props === "string") {
+              try {
+                props = JSON.parse(props);
+              } catch {}
+            }
+            if (props && typeof props === "object") {
+              for (const k of Object.keys(props)) {
+                if (k) keySet.add(k);
+              }
+            }
+          }
+
+          const keys = Array.from(keySet);
           setProperties(keys);
           setCategoryProperty((current) => current || keys[0] || "");
           setIndividualProperty(
@@ -208,7 +246,7 @@ export default function LayerSettingsPanel({
         },
       )
       .catch(() => setPropertiesLoaded(true));
-  }, [layer.id, layer.labelProperty]);
+  }, [layer.id, layer.labelProperty, layer.popupProperties, layer.colorRules]);
 
   const generateCategoryRules = () => {
     setCategoryError(null);
@@ -345,7 +383,7 @@ export default function LayerSettingsPanel({
   const applyIndividualColor = () => {
     setIndividualError(null);
     if (!individualProperty || individualSelected.length === 0) {
-      setIndividualError("Pick a property and at least one plot.");
+      setIndividualError(`Pick a property and at least one ${layerTerm}.`);
       return;
     }
     setRules((current) => {
@@ -451,10 +489,16 @@ export default function LayerSettingsPanel({
       const geojson = await mappingService.getLayerGeoJson(layer.id);
       const features = geojson.features ?? [];
       setFeatureCache(features);
-      setProperties(Object.keys(features[0]?.properties ?? {}));
+      const updatedKeySet = new Set<string>();
+      for (const f of features) {
+        if (f.properties) {
+          for (const k of Object.keys(f.properties)) updatedKeySet.add(k);
+        }
+      }
+      setProperties(Array.from(updatedKeySet));
       setNewAttrKey("");
       setNewAttrDefaultValue("");
-      setAddAttrMsg(`✓ Added "${key}" to ${result.addedCount ?? 0} plot(s)`);
+      setAddAttrMsg(`✓ Added "${key}" to ${result.addedCount ?? 0} ${layerTerm}(s)`);
     } catch {
       setAddAttrMsg("❌ Error adding attribute");
     } finally {
@@ -475,7 +519,7 @@ export default function LayerSettingsPanel({
     if (!key) return;
     if (
       !window.confirm(
-        `Delete attribute "${key}" from all ${featureCache.length} plot(s) in this layer? This cannot be undone.`,
+        `Delete attribute "${key}" from all ${featureCache.length} ${layerTermPlural} in this layer? This cannot be undone.`,
       )
     )
       return;
@@ -490,7 +534,7 @@ export default function LayerSettingsPanel({
       setFeatureCache(features);
       setProperties(Object.keys(features[0]?.properties ?? {}));
       setDeleteAttrKey("");
-      setDeleteAttrMsg(`✓ Removed "${key}" from ${result.removedCount ?? 0} plot(s)`);
+      setDeleteAttrMsg(`✓ Removed "${key}" from ${result.removedCount ?? 0} ${layerTerm}(s)`);
     } catch {
       setDeleteAttrMsg("❌ Error deleting attribute");
     } finally {
@@ -576,9 +620,9 @@ export default function LayerSettingsPanel({
       });
       const geojson = await mappingService.getLayerGeoJson(layer.id);
       setFeatureCache(geojson.features ?? []);
-      setBulkEditMsg(`✓ Set "${bulkEditProperty}" on ${result.updatedCount ?? 0} plot(s)`);
+      setBulkEditMsg(`✓ Set "${bulkEditProperty}" on ${result.updatedCount ?? 0} ${layerTerm}(s)`);
     } catch {
-      setBulkEditMsg("❌ Error updating plots");
+      setBulkEditMsg("❌ Error updating features");
     } finally {
       setBulkEditSaving(false);
     }
@@ -761,7 +805,7 @@ export default function LayerSettingsPanel({
                   🏷️ Label On Map
                 </h3>
                 <p className="mb-3 text-[11px] text-zinc-500">
-                  Display property values as text labels directly on map plots.
+                  Display property values as text labels directly on map {layerTermPlural.toLowerCase()}.
                 </p>
                 <select
                   value={labelProperty}
@@ -836,9 +880,13 @@ export default function LayerSettingsPanel({
                         </button>
                       )}
                     </div>
-                    {propertiesLoaded && properties.length === 0 ? (
+                    {!propertiesLoaded ? (
                       <p className="text-xs text-zinc-400">
-                        No properties in layer.
+                        Loading properties…
+                      </p>
+                    ) : properties.length === 0 ? (
+                      <p className="text-xs text-zinc-400 leading-relaxed">
+                        No property fields found on features. Add one using &quot;Add Custom Attribute&quot; in the middle column.
                       </p>
                     ) : (
                       <div className="max-h-40 overflow-y-auto space-y-1 rounded-lg border border-zinc-200 p-2">
@@ -872,17 +920,17 @@ export default function LayerSettingsPanel({
               {/* Single Feature Attribute Editor */}
               <section className="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 shadow-sm">
                 <h3 className="mb-1 text-xs font-bold uppercase tracking-wider text-zinc-900 flex items-center gap-1.5">
-                  ✏️ Edit Specific Feature / Plot
+                  ✏️ Edit Specific {layerTerm}
                 </h3>
                 <p className="mb-3 text-[11px] text-zinc-500">
-                  Select a specific feature (by ID or Plot name) and edit all
+                  Select a specific {layerTerm} (by ID or name) and edit all
                   its attribute values directly.
                 </p>
 
                 <div className="space-y-3">
                   <div>
                     <label className="text-[11px] font-bold uppercase tracking-wide text-zinc-500 block mb-1">
-                      Select Feature / Plot(s)
+                      Select Feature / {layerTerm}(s)
                     </label>
 
                     {editSelectedIndices.length > 0 && (
@@ -910,7 +958,7 @@ export default function LayerSettingsPanel({
                         value={featureSearch}
                         onChange={(e) => setFeatureSearch(e.target.value)}
                         onKeyDown={handleFeatureSearchKeyDown}
-                        placeholder="Search plots, e.g. A-12"
+                        placeholder={`Search ${layerTermPlural.toLowerCase()}, e.g. A-12`}
                         className="min-w-0 flex-1 h-9 rounded-lg border border-zinc-300 px-3 text-xs text-zinc-900"
                       />
                       <button
@@ -962,7 +1010,7 @@ export default function LayerSettingsPanel({
 
                   <div className="pt-1">
                     <label className="text-[11px] font-bold uppercase tracking-wide text-zinc-500 block mb-1">
-                      Add Custom Attribute (all plots)
+                      Add Custom Attribute (ALL {layerTermPluralUpper})
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -988,13 +1036,13 @@ export default function LayerSettingsPanel({
                         disabled={addAttrSaving || !newAttrKey.trim()}
                         className="shrink-0 h-9 rounded-lg bg-blue-600 px-3.5 text-xs font-bold text-white shadow hover:bg-blue-700 disabled:opacity-50"
                       >
-                        {addAttrSaving ? "Adding..." : "+ Add to All Plots"}
+                        {addAttrSaving ? "Adding..." : `+ Add to All ${layerTermPlural}`}
                       </button>
                     </div>
                     <p className="mt-1 text-[11px] text-zinc-500">
-                      Adds this field to every plot in the layer, set to the
+                      Adds this field to every {layerTerm} in the layer, set to the
                       default value above (or empty if left blank) — edit it
-                      per plot below.
+                      per {layerTerm} below.
                     </p>
                     {addAttrMsg && (
                       <p
@@ -1007,7 +1055,7 @@ export default function LayerSettingsPanel({
 
                   <div className="pt-1">
                     <label className="text-[11px] font-bold uppercase tracking-wide text-zinc-500 block mb-1">
-                      Delete Attribute (all plots)
+                      Delete Attribute (ALL {layerTermPluralUpper})
                     </label>
                     <div className="flex gap-2">
                       <select
@@ -1033,7 +1081,7 @@ export default function LayerSettingsPanel({
                       </button>
                     </div>
                     <p className="mt-1 text-[11px] text-zinc-500">
-                      Permanently removes this field from every plot in the
+                      Permanently removes this field from every {layerTerm} in the
                       layer.
                     </p>
                     {deleteAttrMsg && (
@@ -1098,7 +1146,7 @@ export default function LayerSettingsPanel({
                   {editSelectedIndices.length >= 2 && (
                     <div className="mt-3 pt-3 border-t border-zinc-200 space-y-2">
                       <label className="text-[11px] font-bold uppercase tracking-wide text-zinc-500 block">
-                        Set Attribute Value ({editSelectedIndices.length} plots)
+                        Set Attribute Value ({editSelectedIndices.length} {layerTermPlural})
                       </label>
                       <div className="flex gap-2">
                         <select
@@ -1132,11 +1180,11 @@ export default function LayerSettingsPanel({
                       >
                         {bulkEditSaving
                           ? "Applying..."
-                          : `Apply to ${editSelectedIndices.length} Plot(s)`}
+                          : `Apply to ${editSelectedIndices.length} ${layerTerm}(s)`}
                       </button>
                       <p className="text-[11px] text-zinc-500">
                         Sets this one attribute to this value on every
-                        selected plot — their other fields are untouched.
+                        selected {layerTerm} — their other fields are untouched.
                       </p>
                       {bulkEditMsg && (
                         <p
@@ -1277,13 +1325,13 @@ export default function LayerSettingsPanel({
                 />
               </section>
 
-              {/* Color individual plots */}
+              {/* Color individual features */}
               <section className="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 shadow-sm">
                 <h3 className="mb-1 text-xs font-bold uppercase tracking-wider text-zinc-900 flex items-center gap-1.5">
-                  🔍 Color Individual Plots
+                  🔍 Color Individual {layerTermPlural}
                 </h3>
                 <p className="mb-3 text-[11px] text-zinc-500">
-                  Search &amp; select specific plots to apply custom color
+                  Search &amp; select specific {layerTermPlural.toLowerCase()} to apply custom color
                   overrides.
                 </p>
 
@@ -1330,7 +1378,7 @@ export default function LayerSettingsPanel({
                     value={individualSearch}
                     onChange={(e) => setIndividualSearch(e.target.value)}
                     onKeyDown={handleSearchKeyDown}
-                    placeholder="Search plots, e.g. A-12"
+                    placeholder={`Search ${layerTermPlural.toLowerCase()}, e.g. A-12`}
                     className="min-w-0 flex-1 h-9 rounded-lg border border-zinc-300 px-3 text-xs text-zinc-900"
                   />
                   <button
@@ -1406,7 +1454,7 @@ export default function LayerSettingsPanel({
                 >
                   Set color
                   {individualSelected.length > 0
-                    ? `(${individualSelected.length} plot${individualSelected.length === 1 ? "" : "s"})`
+                    ? ` (${individualSelected.length} ${individualSelected.length === 1 ? layerTerm : layerTermPlural})`
                     : ""}
                 </button>
                 {individualError && (

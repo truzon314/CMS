@@ -93,11 +93,11 @@ class PublicService:
         self.gallery = gallery
         self.testimonials = testimonials
 
-    async def _media_url(self, media_id: uuid.UUID | None) -> str | None:
+    async def _media_url(self, media_id: uuid.UUID | str | None) -> str | None:
         if not media_id:
             return None
 
-        media = await self.media.get_by_id(media_id)
+        media = await self.media.get_by_id(str(media_id))
         if not media or not media.url:
             return None
 
@@ -169,15 +169,17 @@ class PublicService:
 
     async def get_page(self, page_type: PageType) -> PublicPage:
         page: Page | None = await self.pages.get_by_type(page_type)
-        if not page or page.status != PageStatus.PUBLISHED:
+        status_val = page.status.value if page and hasattr(page.status, "value") else (str(page.status) if page else "")
+        if not page or status_val.lower() != PageStatus.PUBLISHED.value.lower():
             raise NotFoundError("Page not found.")
 
         blocks = [
             PublicBlock(id=str(b.id), type=b.block_definition.key, position=b.position, config=self._normalize_media_config(b.config))
             for b in sorted(page.blocks, key=lambda b: b.position)
         ]
+        pt_val = page.page_type.value if hasattr(page.page_type, "value") else str(page.page_type)
         return PublicPage(
-            page_type=page.page_type.value,
+            page_type=pt_val.lower(),
             slug=page.slug,
             title=page.title,
             seo=await self._public_seo(page.seo),
@@ -257,9 +259,11 @@ class PublicService:
             is_signature=signature,
         )
 
-    async def get_property(self, slug: str) -> Property:
-        property_ = await self.properties.get_by_slug(slug)
-        if not property_ or property_.status != PropertyStatus.PUBLISHED:
+    async def get_property(self, id_or_slug: str) -> Property:
+        property_ = await self.properties.get_by_slug(id_or_slug)
+        if not property_:
+            property_ = await self.properties.get_by_id(id_or_slug)
+        if not property_ or not property_.is_active:
             raise NotFoundError("Property not found.")
         return property_
 
@@ -295,7 +299,7 @@ class PublicService:
             PublicPropertyAmenity(
                 name=item.get("name", ""),
                 image_url=(
-                    await self._media_url(uuid.UUID(item["image_media_id"])) if item.get("image_media_id") else None
+                    await self._media_url(item["image_media_id"]) if item.get("image_media_id") else None
                 ),
             )
             for item in (property_.amenities or [])

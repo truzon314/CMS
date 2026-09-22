@@ -23,12 +23,13 @@ REFRESH_COOKIE_NAME = "refresh_token"
 
 
 def _set_refresh_cookie(response: Response, token: str) -> None:
+    is_dev = settings.environment == "development"
     response.set_cookie(
         key=REFRESH_COOKIE_NAME,
         value=token,
         httponly=True,
-        secure=settings.environment != "development",
-        samesite="none",
+        secure=not is_dev,
+        samesite="lax" if is_dev else "none",
         max_age=settings.refresh_token_expire_days * 86400,
         path="/",
     )

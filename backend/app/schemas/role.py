@@ -1,4 +1,3 @@
-import uuid
 
 from pydantic import BaseModel, ConfigDict
 
@@ -22,13 +21,13 @@ class RoleUpdate(BaseModel):
 class RolePermissionsUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    permission_ids: list[uuid.UUID]
+    permission_ids: list[str]
 
 
 class RoleRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: str
     name: str
     description: str | None
     is_system: bool

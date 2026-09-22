@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mail, Phone, Send, User } from "lucide-react";
+import { Loader2, Mail, Phone, Send, User } from "lucide-react";
 import { AppDrawer } from "@/components/ui/app-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SelectField } from "@/components/forms/SelectField";
 import { useConversationThread, useSendAdminReply, useUpdateConversation } from "@/hooks/useCrm";
 import { cn } from "@/lib/utils";
-import type { ChatConversationStatus } from "@/types/crm";
+import type { ChatConversation, ChatConversationStatus } from "@/types/crm";
 
 const STATUS_OPTIONS = [
   { value: "open", label: "Open" },
@@ -20,23 +20,26 @@ function shortId(id: string) {
 }
 
 interface ConversationThreadDrawerProps {
-  conversationId: string | null;
+  conversation: ChatConversation | null;
   open: boolean;
   onClose: () => void;
 }
 
-export function ConversationThreadDrawer({ conversationId, open, onClose }: ConversationThreadDrawerProps) {
+export function ConversationThreadDrawer({ conversation, open, onClose }: ConversationThreadDrawerProps) {
   const [reply, setReply] = useState("");
-  const { data: thread } = useConversationThread(conversationId);
+  const conversationId = conversation?.id ?? null;
+  const { data: thread, isLoading } = useConversationThread(conversationId);
   const sendReply = useSendAdminReply();
   const updateConversation = useUpdateConversation();
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const activeConversation = thread?.conversation ?? conversation;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [thread?.messages.length]);
 
-  if (!conversationId) return null;
+  if (!conversationId || !activeConversation) return null;
 
   const handleSend = () => {
     const body = reply.trim();
@@ -46,6 +49,8 @@ export function ConversationThreadDrawer({ conversationId, open, onClose }: Conv
       { onSuccess: () => setReply("") }
     );
   };
+
+  const messages = thread?.messages ?? [];
 
   return (
     <AppDrawer
@@ -59,7 +64,7 @@ export function ConversationThreadDrawer({ conversationId, open, onClose }: Conv
             value={reply}
             onChange={(e) => setReply(e.target.value)}
             placeholder="Type a reply…"
-            className="min-h-10"
+            className="min-h-10 text-sm"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -73,70 +78,91 @@ export function ConversationThreadDrawer({ conversationId, open, onClose }: Conv
         </div>
       }
     >
-      <div className="flex flex-col gap-4 py-4">
-        {thread ? (
-          <>
-            <div className="flex flex-col gap-2 rounded-md border p-3 text-sm">
-              <div className="flex items-center gap-2">
-                <User size={14} className="shrink-0 text-neutral-400" />
-                <span className="font-medium">{thread.conversation.visitor_name ?? "Not provided"}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone size={14} className="shrink-0 text-neutral-400" />
-                {thread.conversation.visitor_phone ? (
-                  <a href={`tel:${thread.conversation.visitor_phone}`} className="text-emerald-700 hover:underline">
-                    {thread.conversation.visitor_phone}
-                  </a>
-                ) : (
-                  <span className="text-neutral-400">Not provided</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail size={14} className="shrink-0 text-neutral-400" />
-                {thread.conversation.visitor_email ? (
-                  <a href={`mailto:${thread.conversation.visitor_email}`} className="text-emerald-700 hover:underline">
-                    {thread.conversation.visitor_email}
-                  </a>
-                ) : (
-                  <span className="text-neutral-400">Not provided</span>
-                )}
-              </div>
-            </div>
+      <div className="flex flex-col gap-4 py-4 h-full">
+        {/* Visitor Info Card */}
+        <div className="flex flex-col gap-2 rounded-md border p-3 text-sm bg-neutral-50/50">
+          <div className="flex items-center gap-2">
+            <User size={14} className="shrink-0 text-neutral-400" />
+            <span className="font-medium text-neutral-900">
+              {activeConversation.visitor_name ?? "Not provided"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Phone size={14} className="shrink-0 text-neutral-400" />
+            {activeConversation.visitor_phone ? (
+              <a href={`tel:${activeConversation.visitor_phone}`} className="text-emerald-700 hover:underline font-medium">
+                {activeConversation.visitor_phone}
+              </a>
+            ) : (
+              <span className="text-neutral-400">Not provided</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Mail size={14} className="shrink-0 text-neutral-400" />
+            {activeConversation.visitor_email ? (
+              <a href={`mailto:${activeConversation.visitor_email}`} className="text-emerald-700 hover:underline">
+                {activeConversation.visitor_email}
+              </a>
+            ) : (
+              <span className="text-neutral-400">Not provided</span>
+            )}
+          </div>
+        </div>
 
-            <SelectField
-              id="conversation_status"
-              label="Status"
-              value={thread.conversation.status}
-              onChange={(v) =>
-                updateConversation.mutate({ conversationId, payload: { status: v as ChatConversationStatus } })
-              }
-              options={STATUS_OPTIONS}
-            />
-          </>
-        ) : null}
+        {/* Status Dropdown */}
+        <SelectField
+          id="conversation_status"
+          label="Status"
+          value={activeConversation.status}
+          onChange={(v) =>
+            updateConversation.mutate({ conversationId, payload: { status: v as ChatConversationStatus } })
+          }
+          options={STATUS_OPTIONS}
+        />
 
-        <div ref={scrollRef} className="flex max-h-[55vh] flex-col gap-3 overflow-y-auto pr-1">
-          {(thread?.messages ?? []).map((m) => (
-            <div
-              key={m.id}
-              className={cn(
-                "max-w-[85%] rounded-lg px-3 py-2 text-sm",
-                m.sender === "visitor"
-                  ? "self-start bg-neutral-100 text-neutral-800"
-                  : m.sender === "auto"
-                    ? "self-end bg-amber-50 text-amber-900 border border-amber-200"
-                    : "self-end bg-emerald-600 text-white"
-              )}
-            >
-              <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide opacity-70">
-                {m.sender === "visitor" ? "Visitor" : m.sender === "auto" ? "Auto-reply" : "You"}
+        {/* Thread Messages */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+            Messages
+          </div>
+
+          <div ref={scrollRef} className="flex-1 flex flex-col gap-3 overflow-y-auto pr-1 min-h-[300px] max-h-[50vh]">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 text-neutral-400 gap-2">
+                <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />
+                <span className="text-xs">Loading message history…</span>
               </div>
-              <div className="whitespace-pre-wrap">{m.body}</div>
-              <div className="mt-1 text-[10px] opacity-60">{new Date(m.created_at).toLocaleTimeString()}</div>
-            </div>
-          ))}
+            ) : messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-neutral-400 text-xs">
+                No messages in this conversation yet.
+              </div>
+            ) : (
+              messages.map((m) => (
+                <div
+                  key={m.id}
+                  className={cn(
+                    "max-w-[85%] rounded-lg px-3 py-2 text-sm shadow-xs",
+                    m.sender === "visitor"
+                      ? "self-start bg-neutral-100 text-neutral-800 border border-neutral-200/60"
+                      : m.sender === "auto"
+                        ? "self-end bg-amber-50 text-amber-900 border border-amber-200/80"
+                        : "self-end bg-emerald-600 text-white"
+                  )}
+                >
+                  <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide opacity-75">
+                    {m.sender === "visitor" ? "Visitor" : m.sender === "auto" ? "Auto-reply" : "You"}
+                  </div>
+                  <div className="whitespace-pre-wrap leading-relaxed">{m.body}</div>
+                  <div className="mt-1 text-[10px] opacity-60 text-right">
+                    {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </AppDrawer>
   );
 }
+

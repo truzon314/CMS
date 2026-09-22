@@ -11,8 +11,8 @@ class SqlAlchemyMediaRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, media_id: uuid.UUID, include_deleted: bool = False) -> Media | None:
-        stmt = select(Media).where(Media.id == media_id)
+    async def get_by_id(self, media_id: uuid.UUID | str, include_deleted: bool = False) -> Media | None:
+        stmt = select(Media).where(Media.id == str(media_id))
         if not include_deleted:
             stmt = stmt.where(Media.deleted_at.is_(None))
         return (await self.session.execute(stmt)).scalar_one_or_none()
@@ -22,7 +22,7 @@ class SqlAlchemyMediaRepository:
         *,
         page: int,
         per_page: int,
-        folder_id: uuid.UUID | None = None,
+        folder_id: uuid.UUID | str | None = None,
         mime_type: str | None = None,
         search: str | None = None,
     ) -> tuple[list[Media], int]:
@@ -30,8 +30,9 @@ class SqlAlchemyMediaRepository:
         count_stmt = select(func.count()).select_from(Media).where(Media.deleted_at.is_(None))
 
         if folder_id is not None:
-            stmt = stmt.where(Media.folder_id == folder_id)
-            count_stmt = count_stmt.where(Media.folder_id == folder_id)
+            fid_str = str(folder_id)
+            stmt = stmt.where(Media.folder_id == fid_str)
+            count_stmt = count_stmt.where(Media.folder_id == fid_str)
         if mime_type:
             stmt = stmt.where(Media.mime_type == mime_type)
             count_stmt = count_stmt.where(Media.mime_type == mime_type)
@@ -84,10 +85,10 @@ class SqlAlchemyMediaRepository:
         media.deleted_at = None
         await self.session.commit()
 
-    async def count_in_folder(self, folder_id: uuid.UUID) -> int:
+    async def count_in_folder(self, folder_id: uuid.UUID | str) -> int:
         # Deliberately counts soft-deleted rows too: they still hold a real FK
         # to this folder (soft-delete doesn't clear `folder_id`), so deleting
         # the folder while one exists would 500 on the DB constraint instead
         # of the clean 409 this check is supposed to produce.
-        stmt = select(func.count()).select_from(Media).where(Media.folder_id == folder_id)
+        stmt = select(func.count()).select_from(Media).where(Media.folder_id == str(folder_id))
         return (await self.session.execute(stmt)).scalar_one()

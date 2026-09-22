@@ -45,7 +45,7 @@ class PageService:
         definitions = await self.block_definitions.list()
         return [BlockDefinitionRead.model_validate(d) for d in definitions]
 
-    async def update(self, page_type: PageType, payload: PageUpdate, user_id: uuid.UUID) -> Page:
+    async def update(self, page_type: PageType, payload: PageUpdate, user_id: str) -> Page:
         page = await self.get(page_type)
         if payload.title is not None:
             page.title = payload.title
@@ -59,7 +59,7 @@ class PageService:
         await self._snapshot(page, user_id, "Updated page details")
         return page
 
-    async def publish(self, page_type: PageType, user_id: uuid.UUID) -> Page:
+    async def publish(self, page_type: PageType, user_id: str) -> Page:
         page = await self.get(page_type)
         page.status = PageStatus.PUBLISHED
         page.published_at = datetime.now(timezone.utc)
@@ -69,7 +69,7 @@ class PageService:
         await self._snapshot(page, user_id, "Published")
         return page
 
-    async def unpublish(self, page_type: PageType, user_id: uuid.UUID) -> Page:
+    async def unpublish(self, page_type: PageType, user_id: str) -> Page:
         page = await self.get(page_type)
         page.status = PageStatus.UNPUBLISHED
         page.updated_by = user_id
@@ -77,7 +77,7 @@ class PageService:
         await self._snapshot(page, user_id, "Unpublished")
         return page
 
-    async def schedule(self, page_type: PageType, scheduled_at: datetime, user_id: uuid.UUID) -> Page:
+    async def schedule(self, page_type: PageType, scheduled_at: datetime, user_id: str) -> Page:
         page = await self.get(page_type)
         page.status = PageStatus.SCHEDULED
         page.scheduled_at = scheduled_at
@@ -86,7 +86,7 @@ class PageService:
         await self._snapshot(page, user_id, f"Scheduled for {scheduled_at.isoformat()}")
         return page
 
-    async def add_block(self, page_type: PageType, payload: PageBlockCreate, user_id: uuid.UUID) -> Page:
+    async def add_block(self, page_type: PageType, payload: PageBlockCreate, user_id: str) -> Page:
         page = await self.get(page_type)
         definition = await self.block_definitions.get_by_id(payload.block_definition_id)
         if not definition:
@@ -107,7 +107,7 @@ class PageService:
         return page
 
     async def update_block(
-        self, page_type: PageType, block_id: uuid.UUID, payload: PageBlockUpdate, user_id: uuid.UUID
+        self, page_type: PageType, block_id: str, payload: PageBlockUpdate, user_id: str
     ) -> Page:
         page = await self.get(page_type)
         block = await self._get_page_block(page, block_id)
@@ -119,7 +119,7 @@ class PageService:
         await self._snapshot(page, user_id, "Edited a block")
         return page
 
-    async def delete_block(self, page_type: PageType, block_id: uuid.UUID, user_id: uuid.UUID) -> Page:
+    async def delete_block(self, page_type: PageType, block_id: str, user_id: str) -> Page:
         page = await self.get(page_type)
         block = await self._get_page_block(page, block_id)
         await self._clear_block_media_usage(page.id, block.id)
@@ -128,7 +128,7 @@ class PageService:
         await self._snapshot(page, user_id, "Removed a block")
         return page
 
-    async def reorder_blocks(self, page_type: PageType, ordered_ids: list[uuid.UUID], user_id: uuid.UUID) -> Page:
+    async def reorder_blocks(self, page_type: PageType, ordered_ids: list[str], user_id: str) -> Page:
         page = await self.get(page_type)
         await self.pages.reorder_blocks(page.id, ordered_ids)
         page = await self.get(page_type)
@@ -139,7 +139,7 @@ class PageService:
         page = await self.get(page_type)
         return await self.versions.list_for_entity(EntityType.PAGE, page.id)
 
-    async def restore_version(self, page_type: PageType, version_id: uuid.UUID, user_id: uuid.UUID) -> Page:
+    async def restore_version(self, page_type: PageType, version_id: str, user_id: str) -> Page:
         page = await self.get(page_type)
         version = await self.versions.get_by_id(version_id)
         if not version or version.entity_id != page.id:
@@ -153,7 +153,7 @@ class PageService:
             await self.pages.delete_block(block)
 
         for block_data in snapshot["blocks"]:
-            definition_id = uuid.UUID(block_data["block_definition_id"])
+            definition_id = str(block_data["block_definition_id"])
             new_block = await self.pages.add_block(
                 PageBlock(
                     page_id=page.id,
@@ -172,7 +172,7 @@ class PageService:
         return page
 
     async def _sync_block_media_usage(
-        self, page_id: uuid.UUID, block_id: uuid.UUID, block_key: str, config: dict
+        self, page_id: str, block_id: str, block_key: str, config: dict
     ) -> None:
         field = MEDIA_ID_FIELDS.get(block_key)
         if not field:
@@ -180,11 +180,11 @@ class PageService:
         raw_media_id = config.get(field)
         field_name = f"block:{block_id}"
         if raw_media_id:
-            await self.media_usage.upsert(MediaUsageEntityType.PAGE, page_id, field_name, uuid.UUID(raw_media_id))
+            await self.media_usage.upsert(MediaUsageEntityType.PAGE, page_id, field_name, str(raw_media_id))
         else:
             await self.media_usage.delete_for_field(MediaUsageEntityType.PAGE, page_id, field_name)
 
-    async def _clear_block_media_usage(self, page_id: uuid.UUID, block_id: uuid.UUID) -> None:
+    async def _clear_block_media_usage(self, page_id: str, block_id: str) -> None:
         await self.media_usage.delete_for_field(MediaUsageEntityType.PAGE, page_id, f"block:{block_id}")
 
     def _validate_config(self, block_key: str, config: dict) -> dict:
@@ -193,7 +193,7 @@ class PageService:
         except ValidationError as exc:
             raise ValidationAppError("Invalid block content.", details={"errors": exc.errors()}) from exc
 
-    async def _get_page_block(self, page: Page, block_id: uuid.UUID) -> PageBlock:
+    async def _get_page_block(self, page: Page, block_id: str) -> PageBlock:
         block = await self.pages.get_block(block_id)
         if not block or block.page_id != page.id:
             raise NotFoundError("Block not found.")

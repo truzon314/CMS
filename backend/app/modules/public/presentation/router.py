@@ -1,5 +1,4 @@
 import math
-import uuid
 
 from fastapi import APIRouter, Depends, Header, Request, Response
 from fastapi.responses import PlainTextResponse
@@ -17,14 +16,114 @@ from app.shared.utils.common import PaginationMeta, ok
 router = APIRouter(prefix="/public", tags=["public"])
 
 
+def _get_feature_centroid(feat: dict) -> tuple[float, float] | None:
+    """Return (lat, lng) centroid of a GeoJSON feature, or None if not computable."""
+    try:
+        coords = feat["geometry"]["coordinates"]
+        gtype = feat["geometry"]["type"]
+        pts: list[tuple[float, float]] = []
+
+        def _collect(obj: object) -> None:
+            if isinstance(obj, list):
+                if obj and isinstance(obj[0], (int, float)):
+                    pts.append((float(obj[1]), float(obj[0])))  # (lat, lng)
+                else:
+                    for item in obj:
+                        _collect(item)
+
+        _collect(coords)
+        if not pts:
+            return None
+        return (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
+    except Exception:
+        return None
+
+
+def _filter_geojson_by_bounds(geojson: dict, bounds: dict | None) -> dict:
+    """
+    Drop features whose centroid lies outside the project's stored bounding box.
+
+    This prevents stray features from other projects (accidentally uploaded in
+    the same GeoJSON file) from appearing on the wrong property map.
+
+    Safe no-op when bounds is None — no features are ever removed in that case.
+    """
+    if not bounds or not isinstance(geojson, dict):
+        return geojson
+    features = geojson.get("features")
+    if not isinstance(features, list):
+        return geojson
+
+    min_lat = bounds.get("min_lat", -90)
+    max_lat = bounds.get("max_lat",  90)
+    min_lng = bounds.get("min_lng", -180)
+    max_lng = bounds.get("max_lng",  180)
+
+    filtered = []
+    for feat in features:
+        centroid = _get_feature_centroid(feat)
+        if centroid is None:
+            filtered.append(feat)  # can't determine location — keep it
+            continue
+        lat, lng = centroid
+        if min_lat <= lat <= max_lat and min_lng <= lng <= max_lng:
+            filtered.append(feat)
+        # else: silently drop — stray feature from another project
+
+    return {**geojson, "features": filtered}
+
+
+def _update_project_bounds(project, layer_geojson: dict | None) -> None:
+    """
+    Re-compute and update the project's geojson_filter_bounds in-place
+    after a layer's GeoJSON is saved.  Called by the CMS layer-save path
+    so bounds stay accurate as new data is uploaded.
+    """
+    if not layer_geojson or not isinstance(layer_geojson.get("features"), list):
+        return
+
+    features = layer_geojson["features"]
+    lats, lngs = [], []
+    for feat in features:
+        c = _get_feature_centroid(feat)
+        if c:
+            lats.append(c[0])
+            lngs.append(c[1])
+
+    if not lats:
+        return
+
+    pad = 0.008  # ~800 m buffer
+    new_bounds = {
+        "min_lat": min(lats) - pad,
+        "max_lat": max(lats) + pad,
+        "min_lng": min(lngs) - pad,
+        "max_lng": max(lngs) + pad,
+    }
+
+    existing = project.geojson_filter_bounds or {}
+    merged = {
+        "min_lat": min(existing.get("min_lat",  90), new_bounds["min_lat"]),
+        "max_lat": max(existing.get("max_lat", -90), new_bounds["max_lat"]),
+        "min_lng": min(existing.get("min_lng", 180), new_bounds["min_lng"]),
+        "max_lng": max(existing.get("max_lng", -180), new_bounds["max_lng"]),
+    }
+    project.geojson_filter_bounds = merged
+
+
 @router.get("/pages/{page_type}")
 async def get_public_page(
-    page_type: PageType,
+    page_type: str,
     response: Response,
     public_service: PublicService = Depends(get_public_service),
 ):
+    try:
+        pt_enum = PageType[page_type.upper()]
+    except KeyError:
+        from app.shared.exceptions.exceptions import NotFoundError
+        raise NotFoundError(f"Page type '{page_type}' not found.")
     response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
-    page = await public_service.get_page(page_type)
+    page = await public_service.get_page(pt_enum)
     return ok(page.model_dump(mode="json"))
 
 
@@ -33,8 +132,8 @@ async def list_public_blog_posts(
     response: Response,
     page: int = 1,
     per_page: int = 20,
-    category: uuid.UUID | None = None,
-    tag: uuid.UUID | None = None,
+    category: str | None = None,
+    tag: str | None = None,
     search: str | None = None,
     public_service: PublicService = Depends(get_public_service),
 ):
@@ -65,7 +164,7 @@ async def list_public_properties(
     page: int = 1,
     per_page: int = 20,
     city: str | None = None,
-    type: uuid.UUID | None = None,
+    type: str | None = None,
     budget: str | None = None,
     signature: bool | None = None,
     public_service: PublicService = Depends(get_public_service),
@@ -177,7 +276,7 @@ async def list_public_categories(
 
 @router.get("/mapping/project/{project_id}")
 async def get_public_map_project_by_id(
-    project_id: uuid.UUID,
+    project_id: str,
     response: Response,
     mapping: MappingService = Depends(get_mapping_service),
 ):
@@ -213,18 +312,22 @@ async def get_public_map_project_by_id(
 
 @router.get("/mapping/project/{project_id}/layers/{layer_id}")
 async def get_public_map_layer_geojson_by_project(
-    project_id: uuid.UUID,
-    layer_id: uuid.UUID,
+    project_id: str,
+    layer_id: str,
     response: Response,
     mapping: MappingService = Depends(get_mapping_service),
 ):
     response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
     layer = await mapping.get_layer(layer_id)
-    if layer.project_id != project_id:
+    if str(layer.project_id) != str(project_id):
         from app.shared.exceptions.exceptions import NotFoundError
-
         raise NotFoundError("Layer not found in this project.")
-    return ok(layer.geojson or {"type": "FeatureCollection", "features": []})
+
+    # Fetch project to get its stored bounds, then strip stray features
+    project = await mapping.get_project(project_id)
+    bounds = project.geojson_filter_bounds if project else None
+    geojson = layer.geojson or {"type": "FeatureCollection", "features": []}
+    return ok(_filter_geojson_by_bounds(geojson, bounds))
 
 
 @router.get("/mapping/{token}")
@@ -260,17 +363,18 @@ async def get_public_map_project(
 @router.get("/mapping/{token}/layers/{layer_id}")
 async def get_public_map_layer_geojson(
     token: str,
-    layer_id: uuid.UUID,
+    layer_id: str,
     x_share_password: str | None = Header(default=None),
     mapping: MappingService = Depends(get_mapping_service),
 ):
-    _project, layers = await mapping.resolve_public_project(token, x_share_password, count_view=False)
+    project, layers = await mapping.resolve_public_project(token, x_share_password, count_view=False)
     layer = next((l for l in layers if l.id == layer_id), None)
     if layer is None:
         from app.shared.exceptions.exceptions import NotFoundError
-
         raise NotFoundError("Layer not found in this shared project.")
-    return ok(layer.geojson or {"type": "FeatureCollection", "features": []})
+    bounds = project.geojson_filter_bounds if project else None
+    geojson = layer.geojson or {"type": "FeatureCollection", "features": []}
+    return ok(_filter_geojson_by_bounds(geojson, bounds))
 
 
 @router.post("/forms/{form_key}")
@@ -284,7 +388,9 @@ async def submit_public_form(
 
     ip_address = request.client.host if request.client else None
     submission = await public_service.submit_form(form_key, payload, ip_address)
-    return ok({"id": str(submission.id), "status": submission.status.value})
+    status_str = getattr(submission.status, "value", str(submission.status))
+    return ok({"id": str(submission.id), "status": status_str})
+
 
 
 @router.post("/chat/messages")
@@ -313,7 +419,7 @@ async def post_visitor_chat_message(
 
 @router.get("/chat/conversations/{conversation_id}/messages")
 async def get_visitor_chat_messages(
-    conversation_id: uuid.UUID,
+    conversation_id: str,
     crm: CrmService = Depends(get_crm_service),
 ):
     messages = await crm.list_messages_public(conversation_id)
